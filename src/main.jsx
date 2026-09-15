@@ -5,533 +5,473 @@ import {
   Heart,
   ShoppingBag,
   User,
-  ArrowRight,
-  Sparkles,
+  ArrowLeft,
   ChevronRight,
   Menu,
   X,
-  Star,
+  SlidersHorizontal,
 } from "lucide-react";
 import "./style.css";
 
-const categories = [
-  {
-    name: "Women",
-    label: "Fashion for her",
-    className: "category-women",
-    emoji: "🎀",
-  },
-  {
-    name: "Little Loves",
-    label: "Tiny fashion dreams",
-    className: "category-kids",
-    emoji: "🧸",
-  },
-  {
-    name: "Shoes",
-    label: "Step into pretty",
-    className: "category-shoes",
-    emoji: "👠",
-  },
-  {
-    name: "Bags",
-    label: "Carry your world",
-    className: "category-bags",
-    emoji: "👜",
-  },
-  {
-    name: "Accessories",
-    label: "The finishing touch",
-    className: "category-accessories",
-    emoji: "💎",
-  },
-  {
-    name: "Crochet Corner",
-    label: "Where yarn becomes art",
-    className: "category-crochet",
-    emoji: "🧶",
-  },
-];
+const categories = {
+  Women: [
+    "All Women",
+    "Dresses",
+    "Tops",
+    "Skirts",
+    "Pants",
+    "Jeans",
+    "Two-Piece Sets",
+    "Loungewear",
+    "Going Out",
+    "Soft Girl",
+    "Baddie",
+    "Elegant",
+  ],
+  "Little Loves": [
+    "All Little Loves",
+    "Baby",
+    "Toddler",
+    "Little Girls",
+    "Birthday",
+    "Mommy & Me",
+    "Handmade",
+  ],
+  Shoes: [
+    "All Shoes",
+    "Heels",
+    "Sneakers",
+    "Flats",
+    "Sandals",
+    "Boots",
+    "Slides",
+  ],
+  Bags: [
+    "All Bags",
+    "Handbags",
+    "Shoulder Bags",
+    "Crossbody",
+    "Mini Bags",
+    "Tote Bags",
+    "Crochet Bags",
+  ],
+  Accessories: [
+    "All Accessories",
+    "Jewelry",
+    "Earrings",
+    "Necklaces",
+    "Bracelets",
+    "Hair Accessories",
+    "Sunglasses",
+    "Belts",
+    "Hats",
+  ],
+  "Crochet Corner": [
+    "All Crochet",
+    "Crochet Bags",
+    "Crochet Clothing",
+    "Crochet Accessories",
+    "Crochet Home",
+    "Custom Crochet",
+  ],
+};
 
 const products = [
   {
+    id: 1,
     name: "Rosé Mini Dress",
-    price: "KES 3,800",
+    price: 3800,
     category: "Women",
+    subcategory: "Dresses",
+    seller: "Maison Rose",
     emoji: "👗",
     tag: "New",
   },
   {
+    id: 2,
     name: "Blush Bow Bag",
-    price: "KES 2,600",
+    price: 2600,
     category: "Bags",
+    subcategory: "Mini Bags",
+    seller: "Pretty Things",
     emoji: "👜",
     tag: "Trending",
   },
   {
+    id: 3,
     name: "Petal Crochet Bag",
-    price: "KES 3,200",
-    category: "Crochet",
+    price: 3200,
+    category: "Crochet Corner",
+    subcategory: "Crochet Bags",
+    seller: "Looped by Nia",
     emoji: "🧶",
     tag: "Handmade",
   },
   {
+    id: 4,
     name: "Little Princess Set",
-    price: "KES 2,900",
+    price: 2900,
     category: "Little Loves",
+    subcategory: "Toddler",
+    seller: "Tiny Bloom",
     emoji: "🎀",
     tag: "Little Loves",
   },
-];
-
-const looks = [
   {
-    title: "Soft Girl",
-    description: "Pretty, effortless and feminine.",
+    id: 5,
+    name: "Pretty Pearl Heels",
+    price: 4500,
+    category: "Shoes",
+    subcategory: "Heels",
+    seller: "Sole Society",
+    emoji: "👠",
+    tag: "Best Seller",
+  },
+  {
+    id: 6,
+    name: "Butterfly Hair Clips",
+    price: 850,
+    category: "Accessories",
+    subcategory: "Hair Accessories",
+    seller: "Blush & Bow",
+    emoji: "🦋",
+    tag: "Cute",
+  },
+  {
+    id: 7,
+    name: "Pink Satin Co-Ord",
+    price: 4200,
+    category: "Women",
+    subcategory: "Two-Piece Sets",
+    seller: "The Pink Edit",
     emoji: "🌸",
-    className: "look-soft",
+    tag: "Trending",
   },
   {
-    title: "The It Girl",
-    description: "Main character energy.",
-    emoji: "💋",
-    className: "look-it",
+    id: 8,
+    name: "Tiny Bow Dress",
+    price: 2400,
+    category: "Little Loves",
+    subcategory: "Little Girls",
+    seller: "Little Bloom",
+    emoji: "🎀",
+    tag: "New",
   },
   {
-    title: "Little Princess",
-    description: "The sweetest little looks.",
-    emoji: "👑",
-    className: "look-princess",
+    id: 9,
+    name: "Heart Pendant",
+    price: 1200,
+    category: "Accessories",
+    subcategory: "Necklaces",
+    seller: "Lumière",
+    emoji: "💎",
+    tag: "Pretty",
+  },
+  {
+    id: 10,
+    name: "Cloud Crochet Top",
+    price: 2800,
+    category: "Crochet Corner",
+    subcategory: "Crochet Clothing",
+    seller: "Knot & Bloom",
+    emoji: "☁️",
+    tag: "Handmade",
+  },
+  {
+    id: 11,
+    name: "Classic White Sneakers",
+    price: 3900,
+    category: "Shoes",
+    subcategory: "Sneakers",
+    seller: "Sole Society",
+    emoji: "👟",
+    tag: "Everyday",
+  },
+  {
+    id: 12,
+    name: "Mini Pearl Shoulder Bag",
+    price: 3100,
+    category: "Bags",
+    subcategory: "Shoulder Bags",
+    seller: "Pretty Things",
+    emoji: "🤍",
+    tag: "New",
   },
 ];
 
 function App() {
   const [menuOpen, setMenuOpen] = useState(false);
+  const [shopOpen, setShopOpen] = useState(false);
+  const [selectedCategory, setSelectedCategory] = useState("Women");
+  const [selectedSubcategory, setSelectedSubcategory] = useState("All Women");
+  const [search, setSearch] = useState("");
+  const [wishlist, setWishlist] = useState([]);
+  const [cart, setCart] = useState([]);
+
+  const filteredProducts = products.filter((product) => {
+    const matchesCategory =
+      product.category === selectedCategory &&
+      (selectedSubcategory.startsWith("All ") ||
+        product.subcategory === selectedSubcategory);
+
+    const matchesSearch =
+      product.name.toLowerCase().includes(search.toLowerCase()) ||
+      product.seller.toLowerCase().includes(search.toLowerCase());
+
+    return matchesCategory && matchesSearch;
+  });
+
+  const openCategory = (category) => {
+    setSelectedCategory(category);
+    setSelectedSubcategory(categories[category][0]);
+    setShopOpen(true);
+    setMenuOpen(false);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
+  const toggleWishlist = (id) => {
+    setWishlist((current) =>
+      current.includes(id)
+        ? current.filter((item) => item !== id)
+        : [...current, id]
+    );
+  };
+
+  const addToCart = (product) => {
+    setCart((current) => [...current, product]);
+  };
 
   return (
     <div className="app">
-      {/* HEADER */}
-      <header className="site-header">
+      <header className="header">
         <div className="header-inner">
           <button
             className="mobile-menu"
             onClick={() => setMenuOpen(!menuOpen)}
-            aria-label="Open menu"
           >
-            {menuOpen ? <X size={22} /> : <Menu size={22} />}
+            {menuOpen ? <X /> : <Menu />}
           </button>
 
-          <a href="#" className="logo">
-            <span className="logo-bow">🎀</span>
+          <button className="logo" onClick={() => setShopOpen(false)}>
             LOOPA
-          </a>
+          </button>
 
-          <nav className={`main-nav ${menuOpen ? "open" : ""}`}>
-            <a href="#women">Women</a>
-            <a href="#little-loves">Little Loves</a>
-            <a href="#shop">Shop</a>
-            <a href="#crochet">Crochet Corner</a>
-            <a href="#custom">Custom</a>
+          <nav className={`nav ${menuOpen ? "nav-open" : ""}`}>
+            {Object.keys(categories).map((category) => (
+              <button
+                key={category}
+                onClick={() => openCategory(category)}
+              >
+                {category}
+              </button>
+            ))}
           </nav>
 
           <div className="header-actions">
-            <button aria-label="Search">
-              <Search size={20} />
-            </button>
-            <button aria-label="Wishlist">
+            <div className="search-box">
+              <Search size={18} />
+              <input
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder="Search LOOPA..."
+              />
+            </div>
+
+            <button className="icon-button">
               <Heart size={20} />
+              {wishlist.length > 0 && (
+                <span className="count">{wishlist.length}</span>
+              )}
             </button>
-            <button aria-label="Account">
+
+            <button className="icon-button">
               <User size={20} />
             </button>
-            <button aria-label="Shopping bag" className="bag-button">
+
+            <button className="icon-button">
               <ShoppingBag size={20} />
-              <span>0</span>
+              {cart.length > 0 && (
+                <span className="count">{cart.length}</span>
+              )}
             </button>
           </div>
         </div>
       </header>
 
-      {/* HERO */}
-      <section className="hero">
-        <div className="hero-decoration hero-heart">♡</div>
-        <div className="hero-decoration hero-star">✦</div>
-        <div className="hero-decoration hero-flower">✿</div>
+      {!shopOpen ? (
+        <main>
+          <section className="hero">
+            <div className="hero-content">
+              <p className="eyebrow">WELCOME TO LOOPA</p>
+              <h1>
+                Your Style.
+                <br />
+                <em>Your World.</em>
+              </h1>
+              <p>
+                A feminine fashion marketplace made for women,
+                little loves and everything beautifully you.
+              </p>
+              <button
+                className="primary-button"
+                onClick={() => openCategory("Women")}
+              >
+                Shop Women <ArrowLeft size={18} />
+              </button>
+            </div>
+          </section>
 
-        <div className="hero-content">
-          <p className="eyebrow">
-            <Sparkles size={15} /> WELCOME TO LOOPA
-          </p>
-
-          <h1>
-            Your Style.
-            <br />
-            <em>Your World.</em>
-          </h1>
-
-          <p className="hero-text">
-            A dreamy marketplace for fashion, beautiful finds,
-            handmade treasures and little loves.
-          </p>
-
-          <div className="hero-buttons">
-            <a href="#shop" className="button button-dark">
-              Explore LOOPA <ArrowRight size={17} />
-            </a>
-            <a href="#little-loves" className="button button-light">
-              Shop Little Loves
-            </a>
-          </div>
-        </div>
-
-        <div className="hero-art">
-          <div className="hero-circle hero-circle-one"></div>
-          <div className="hero-circle hero-circle-two"></div>
-
-          <div className="fashion-card card-main">
-            <div className="fashion-placeholder">👗</div>
-            <span>NEW SEASON</span>
-          </div>
-
-          <div className="floating-card floating-bow">
-            🎀
-          </div>
-
-          <div className="floating-card floating-heart">
-            ♡
-          </div>
-        </div>
-      </section>
-
-      {/* SHOP YOUR LOOPA */}
-      <section className="section category-section" id="shop">
-        <div className="section-heading centered">
-          <p className="eyebrow">FIND YOUR WORLD</p>
-          <h2>Shop your LOOPA</h2>
-          <p>
-            From everyday pretty to one-of-a-kind pieces,
-            there’s a little world waiting for you.
-          </p>
-        </div>
-
-        <div className="category-grid">
-          {categories.map((category) => (
-            <a
-              href="#"
-              className={`category-card ${category.className}`}
-              key={category.name}
-            >
-              <span className="category-emoji">{category.emoji}</span>
+          <section className="section">
+            <div className="section-heading">
               <div>
-                <h3>{category.name}</h3>
-                <p>{category.label}</p>
+                <p className="eyebrow">DISCOVER</p>
+                <h2>Shop your LOOPA</h2>
               </div>
-              <ChevronRight className="category-arrow" size={20} />
-            </a>
-          ))}
-        </div>
-      </section>
+            </div>
 
-      {/* WOMEN */}
-      <section className="women-world section" id="women">
-        <div className="world-image women-image">
-          <span>🎀</span>
-          <div className="image-caption">THE WOMEN'S EDIT</div>
-        </div>
+            <div className="category-grid">
+              {Object.keys(categories).map((category) => (
+                <button
+                  key={category}
+                  className={`category-card category-${category
+                    .toLowerCase()
+                    .replaceAll(" ", "-")}`}
+                  onClick={() => openCategory(category)}
+                >
+                  <span className="category-emoji">
+                    {category === "Women" && "🎀"}
+                    {category === "Little Loves" && "🧸"}
+                    {category === "Shoes" && "👠"}
+                    {category === "Bags" && "👜"}
+                    {category === "Accessories" && "💎"}
+                    {category === "Crochet Corner" && "🧶"}
+                  </span>
 
-        <div className="world-copy">
-          <p className="eyebrow">FOR THE GIRL WHO LOVES FASHION</p>
-          <h2>Pretty looks.<br />Big energy.</h2>
-          <p>
-            Discover dresses, tops, skirts, sets, shoes, bags
-            and accessories from independent sellers and
-            fashion creators.
-          </p>
+                  <div>
+                    <h3>{category}</h3>
+                    <p>{categories[category][1]}</p>
+                  </div>
 
-          <div className="mini-links">
-            <a href="#">New Arrivals <ArrowRight size={16} /></a>
-            <a href="#">Going Out <ArrowRight size={16} /></a>
-            <a href="#">Soft Girl <ArrowRight size={16} /></a>
-            <a href="#">Baddie <ArrowRight size={16} /></a>
-          </div>
-
-          <a href="#" className="text-link">
-            Shop Women's Fashion <ArrowRight size={17} />
-          </a>
-        </div>
-      </section>
-
-      {/* LITTLE LOVES */}
-      <section className="little-loves" id="little-loves">
-        <div className="cloud cloud-one">☁</div>
-        <div className="cloud cloud-two">☁</div>
-        <div className="kids-stars">✦　♡　✦</div>
-
-        <div className="kids-intro">
-          <p className="eyebrow">🎀 A TINY WORLD OF BEAUTIFUL THINGS</p>
-          <h2>
-            LOOPA
-            <br />
-            <span>Little Loves</span>
-          </h2>
-          <p>
-            The sweetest little corner of LOOPA,
-            made for tiny personalities and big little dreams.
-          </p>
-        </div>
-
-        <div className="kids-boutique">
-          <div className="kids-card teddy-card">
-            <span className="big-kids-icon">🧸</span>
-            <h3>Baby & Toddler</h3>
-            <p>0–4 years</p>
-            <a href="#">Shop now <ArrowRight size={15} /></a>
-          </div>
-
-          <div className="kids-card princess-card">
-            <span className="big-kids-icon">👑</span>
-            <h3>Little Girls</h3>
-            <p>5–12 years</p>
-            <a href="#">Shop now <ArrowRight size={15} /></a>
-          </div>
-
-          <div className="kids-card bow-card">
-            <span className="big-kids-icon">🎀</span>
-            <h3>Little Celebrations</h3>
-            <p>Birthdays & special days</p>
-            <a href="#">Shop now <ArrowRight size={15} /></a>
-          </div>
-
-          <div className="kids-card mommy-card">
-            <span className="big-kids-icon">💗</span>
-            <h3>Mommy & Me</h3>
-            <p>Matching moments</p>
-            <a href="#">Shop now <ArrowRight size={15} /></a>
-          </div>
-        </div>
-
-        <div className="kids-bottom">
-          <span>☁ Dreamy</span>
-          <span>♡ Sweet</span>
-          <span>✦ Playful</span>
-          <span>🎀 Pretty</span>
-        </div>
-      </section>
-
-      {/* TRENDING PRODUCTS */}
-      <section className="section products-section">
-        <div className="section-heading">
-          <div>
-            <p className="eyebrow">SHOP WHAT'S NEW</p>
-            <h2>Trending on LOOPA</h2>
-          </div>
-
-          <a href="#" className="text-link">
-            View all <ArrowRight size={17} />
-          </a>
-        </div>
-
-        <div className="product-grid">
-          {products.map((product) => (
-            <article className="product-card" key={product.name}>
-              <div className="product-image">
-                <span className="product-tag">{product.tag}</span>
-                <button className="product-heart">
-                  <Heart size={18} />
+                  <ChevronRight />
                 </button>
-                <div className="product-placeholder">{product.emoji}</div>
-              </div>
+              ))}
+            </div>
+          </section>
+        </main>
+      ) : (
+        <main className="shop-page">
+          <div className="shop-top">
+            <button
+              className="back-button"
+              onClick={() => setShopOpen(false)}
+            >
+              <ArrowLeft size={18} />
+              Back to LOOPA
+            </button>
 
-              <div className="product-info">
-                <p>{product.category}</p>
-                <h3>{product.name}</h3>
-                <strong>{product.price}</strong>
-              </div>
-            </article>
-          ))}
-        </div>
-      </section>
-
-      {/* SHOP THE LOOK */}
-      <section className="section looks-section">
-        <div className="section-heading centered">
-          <p className="eyebrow">GET THE VIBE</p>
-          <h2>Shop the Look</h2>
-          <p>
-            One outfit. One mood. Everything you need.
-          </p>
-        </div>
-
-        <div className="looks-grid">
-          {looks.map((look) => (
-            <a href="#" className={`look-card ${look.className}`} key={look.title}>
-              <div className="look-icon">{look.emoji}</div>
-              <div className="look-content">
-                <p>LOOPA LOOK</p>
-                <h3>{look.title}</h3>
-                <span>{look.description}</span>
-                <strong>Shop the look <ArrowRight size={16} /></strong>
-              </div>
-            </a>
-          ))}
-        </div>
-      </section>
-
-      {/* CROCHET CORNER */}
-      <section className="crochet-world" id="crochet">
-        <div className="yarn-decoration yarn-left">🧶</div>
-        <div className="yarn-decoration yarn-right">🧶</div>
-
-        <div className="crochet-content">
-          <p className="eyebrow">🧶 LOOPA ARTISAN</p>
-
-          <h2>
-            Welcome to the
-            <br />
-            <span>Crochet Corner.</span>
-          </h2>
-
-          <p>
-            Where yarn becomes art. Discover beautifully handmade
-            crochet fashion, bags, accessories and tiny treasures
-            created stitch by stitch.
-          </p>
-
-          <div className="crochet-features">
-            <span>✦ Handmade</span>
-            <span>✦ One of a kind</span>
-            <span>✦ Made with love</span>
-          </div>
-
-          <a href="#" className="button button-cream">
-            Explore Crochet Corner <ArrowRight size={17} />
-          </a>
-        </div>
-
-        <div className="crochet-art">
-          <div className="yarn-ball">🧶</div>
-          <div className="crochet-flower">🌸</div>
-          <div className="crochet-bag">👜</div>
-          <div className="stitch-card">
-            <span>HANDMADE</span>
-            <strong>STITCH</strong>
-            <small>♡ by LOOPA artisans</small>
-          </div>
-        </div>
-      </section>
-
-      {/* CUSTOM */}
-      <section className="custom-section" id="custom">
-        <div className="custom-content">
-          <p className="eyebrow">MAKE IT YOURS</p>
-          <h2>Dream it.<br />Create it.</h2>
-          <p>
-            Have something special in mind? Connect with a LOOPA
-            creator and bring your dream piece to life.
-          </p>
-
-          <a href="#" className="button button-dark">
-            Start a Custom Request <ArrowRight size={17} />
-          </a>
-        </div>
-
-        <div className="custom-art">
-          <span>✂</span>
-          <span>🎀</span>
-          <span>🧵</span>
-          <span>♡</span>
-        </div>
-      </section>
-
-      {/* CREATOR */}
-      <section className="section creator-section">
-        <div className="creator-copy">
-          <p className="eyebrow">FOR THE CREATIVE GIRLS</p>
-          <h2>Turn your talent<br />into a brand.</h2>
-          <p>
-            Sell your fashion, handmade pieces and creative
-            work on LOOPA. Build your shop, connect with customers
-            and grow your brand.
-          </p>
-
-          <a href="#" className="text-link">
-            Sell on LOOPA <ArrowRight size={17} />
-          </a>
-        </div>
-
-        <div className="creator-card">
-          <div className="creator-avatar">✨</div>
-          <div>
-            <p>LOOPA CREATOR</p>
-            <h3>Your creativity belongs here.</h3>
-            <div className="rating">
-              <Star size={14} fill="currentColor" />
-              <Star size={14} fill="currentColor" />
-              <Star size={14} fill="currentColor" />
-              <Star size={14} fill="currentColor" />
-              <Star size={14} fill="currentColor" />
+            <div className="shop-title">
+              <p className="eyebrow">SHOP LOOPA</p>
+              <h1>{selectedCategory}</h1>
+              <p>
+                Discover pieces made to make you feel like you.
+              </p>
             </div>
           </div>
-        </div>
-      </section>
 
-      {/* NEWSLETTER */}
-      <section className="newsletter">
-        <div>
-          <p className="eyebrow">STAY IN THE LOOP</p>
-          <h2>Pretty things are coming.</h2>
-          <p>Get new drops, dreamy finds and LOOPA news.</p>
-        </div>
+          <div className="shop-layout">
+            <aside className="shop-sidebar">
+              <div className="filter-heading">
+                <h3>Shop by</h3>
+                <SlidersHorizontal size={18} />
+              </div>
 
-        <form onSubmit={(e) => e.preventDefault()}>
-          <input type="email" placeholder="Your email address" />
-          <button type="submit">
-            Join LOOPA <ArrowRight size={17} />
-          </button>
-        </form>
-      </section>
+              {categories[selectedCategory].map((subcategory) => (
+                <button
+                  key={subcategory}
+                  className={
+                    selectedSubcategory === subcategory
+                      ? "subcategory active"
+                      : "subcategory"
+                  }
+                  onClick={() => setSelectedSubcategory(subcategory)}
+                >
+                  {subcategory}
+                </button>
+              ))}
+            </aside>
 
-      {/* FOOTER */}
+            <section className="product-area">
+              <div className="product-toolbar">
+                <p>
+                  <strong>{filteredProducts.length}</strong> pieces to love
+                </p>
+                <button className="sort-button">Sort: Featured</button>
+              </div>
+
+              {filteredProducts.length > 0 ? (
+                <div className="shop-product-grid">
+                  {filteredProducts.map((product) => (
+                    <article className="product-card" key={product.id}>
+                      <div className="product-image">
+                        <span className="product-emoji">
+                          {product.emoji}
+                        </span>
+
+                        <span className="product-tag">{product.tag}</span>
+
+                        <button
+                          className="wishlist-button"
+                          onClick={() => toggleWishlist(product.id)}
+                        >
+                          <Heart
+                            size={19}
+                            fill={
+                              wishlist.includes(product.id)
+                                ? "currentColor"
+                                : "none"
+                            }
+                          />
+                        </button>
+                      </div>
+
+                      <div className="product-info">
+                        <p className="seller">{product.seller}</p>
+                        <h3>{product.name}</h3>
+                        <p className="price">
+                          KES {product.price.toLocaleString()}
+                        </p>
+
+                        <button
+                          className="add-button"
+                          onClick={() => addToCart(product)}
+                        >
+                          Add to Bag
+                        </button>
+                      </div>
+                    </article>
+                  ))}
+                </div>
+              ) : (
+                <div className="empty-shop">
+                  <span>🎀</span>
+                  <h2>Nothing here yet</h2>
+                  <p>
+                    We're getting this LOOPA world ready for you.
+                  </p>
+                </div>
+              )}
+            </section>
+          </div>
+        </main>
+      )}
+
       <footer className="footer">
-        <div className="footer-top">
-          <div className="footer-brand">
-            <a href="#" className="logo">
-              <span className="logo-bow">🎀</span>
-              LOOPA
-            </a>
-            <p>Your Style. Your World.</p>
-          </div>
-
-          <div className="footer-column">
-            <h4>Shop</h4>
-            <a href="#">Women</a>
-            <a href="#">Little Loves</a>
-            <a href="#">Shoes</a>
-            <a href="#">Bags</a>
-            <a href="#">Accessories</a>
-          </div>
-
-          <div className="footer-column">
-            <h4>Discover</h4>
-            <a href="#">Crochet Corner</a>
-            <a href="#">Shop the Look</a>
-            <a href="#">Custom</a>
-            <a href="#">Creators</a>
-          </div>
-
-          <div className="footer-column">
-            <h4>LOOPA</h4>
-            <a href="#">About us</a>
-            <a href="#">Sell on LOOPA</a>
-            <a href="#">Help</a>
-            <a href="#">Contact</a>
-          </div>
+        <div>
+          <h2>LOOPA</h2>
+          <p>Your Style. Your World.</p>
         </div>
 
-        <div className="footer-bottom">
-          <span>© 2026 LOOPA. All rights reserved.</span>
-          <span>Made for girls who love beautiful things ♡</span>
-        </div>
+        <p>© 2026 LOOPA. Made with love.</p>
       </footer>
     </div>
   );
