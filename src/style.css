@@ -424,14 +424,14 @@ em {
 }
 
 /* =========================================================
-   LITTLE LOVES
+   LITTLE LOVES — DREAMY KIDS WORLD
 ========================================================= */
 
 .little-world {
   position: relative;
   overflow: hidden;
 
-  min-height: 570px;
+  min-height: 600px;
   padding: 80px max(34px, calc((100% - 1330px) / 2));
 
   display: grid;
@@ -440,21 +440,26 @@ em {
 
   background:
     radial-gradient(
-      circle at 15% 25%,
+      circle at 12% 18%,
       #ffffff 0,
-      transparent 24%
+      transparent 20%
+    ),
+    radial-gradient(
+      circle at 88% 78%,
+      #fff1c9 0,
+      transparent 23%
     ),
     linear-gradient(
       135deg,
       #fff0f7,
-      #eef7ff 52%,
-      #fff8e7
+      #edf7ff 50%,
+      #fff8df
     );
 }
 
 .little-content {
   position: relative;
-  z-index: 2;
+  z-index: 4;
   max-width: 580px;
 }
 
@@ -462,7 +467,7 @@ em {
   display: inline-flex;
   padding: 9px 14px;
   border-radius: 999px;
-  background: rgba(255,255,255,0.8);
+  background: rgba(255,255,255,0.85);
   color: #7e6170;
   font-size: 11px;
   font-weight: 800;
@@ -512,7 +517,7 @@ em {
 .little-pills span {
   padding: 8px 12px;
   border-radius: 999px;
-  background: rgba(255,255,255,0.75);
+  background: rgba(255,255,255,0.78);
   font-size: 12px;
 }
 
@@ -520,15 +525,15 @@ em {
   display: flex;
   justify-content: center;
   position: relative;
-  z-index: 2;
+  z-index: 3;
 }
 
 .cloud-card {
-  width: 330px;
-  min-height: 350px;
+  width: 340px;
+  min-height: 365px;
 
-  border-radius: 45% 45% 35% 35%;
-  background: rgba(255,255,255,0.82);
+  border-radius: 48% 48% 38% 38%;
+  background: rgba(255,255,255,0.86);
 
   display: flex;
   flex-direction: column;
@@ -539,7 +544,7 @@ em {
 }
 
 .teddy {
-  font-size: 110px;
+  font-size: 120px;
 }
 
 .tiny-bows {
@@ -553,15 +558,18 @@ em {
 }
 
 .little-cloud,
-.little-star {
+.little-star,
+.little-rainbow,
+.little-toy {
   position: absolute;
   pointer-events: none;
+  z-index: 1;
 }
 
 .cloud-one {
   top: 40px;
-  left: 42%;
-  font-size: 70px;
+  left: 39%;
+  font-size: 72px;
 }
 
 .cloud-two {
@@ -580,6 +588,26 @@ em {
   bottom: 18%;
   left: 48%;
   font-size: 22px;
+}
+
+.little-rainbow {
+  left: 5%;
+  bottom: 8%;
+  font-size: 75px;
+  transform: rotate(-8deg);
+}
+
+.toy-one {
+  right: 4%;
+  top: 14%;
+  font-size: 65px;
+  transform: rotate(8deg);
+}
+
+.toy-two {
+  left: 44%;
+  top: 8%;
+  font-size: 45px;
 }
 
 /* =========================================================
@@ -739,11 +767,11 @@ em {
 }
 
 /* =========================================================
-   CROCHET
+   CROCHET WORLD — ARTISAN STUDIO
 ========================================================= */
 
 .crochet-world {
-  min-height: 580px;
+  min-height: 620px;
   padding: 90px max(34px, calc((100% - 1330px) / 2));
 
   display: grid;
@@ -757,7 +785,12 @@ em {
       #fff6e7,
       transparent 28%
     ),
-    #f7efe7;
+    radial-gradient(
+      circle at 20% 80%,
+      #ead8c2,
+      transparent 22%
+    ),
+    #f4eadf;
 
   position: relative;
   overflow: hidden;
@@ -765,6 +798,8 @@ em {
 
 .crochet-content {
   max-width: 560px;
+  position: relative;
+  z-index: 3;
 }
 
 .crochet-content h2 {
@@ -819,6 +854,7 @@ em {
   min-height: 420px;
   display: grid;
   place-items: center;
+  z-index: 2;
 }
 
 .yarn-circle {
@@ -826,7 +862,13 @@ em {
   height: 310px;
 
   border-radius: 50%;
-  background: #d6a978;
+  background:
+    radial-gradient(
+      circle at 38% 32%,
+      #e4bd91,
+      #c9935f 55%,
+      #a8754d
+    );
 
   display: grid;
   place-items: center;
@@ -834,7 +876,8 @@ em {
   font-size: 120px;
 
   box-shadow:
-    25px 25px 0 #ead5bf;
+    25px 25px 0 #ead5bf,
+    inset -20px -20px 30px rgba(84, 51, 30, 0.12);
 }
 
 .yarn-small {
@@ -851,10 +894,14 @@ em {
   font-size: 55px;
 }
 
-.yarn-decoration {
+.yarn-decoration,
+.crochet-needle,
+.crochet-hook,
+.crochet-beads {
   position: absolute;
   font-size: 55px;
-  opacity: 0.7;
+  opacity: 0.8;
+  pointer-events: none;
 }
 
 .yarn-one {
@@ -865,6 +912,409 @@ em {
 .yarn-two {
   bottom: 30px;
   left: 7%;
+}
+
+.needle-one {
+  top: 13%;
+  left: 5%;
+  transform: rotate(-25deg);
+}
+
+.hook-one {
+  bottom: 15%;
+  right: 4%;
+  transform: rotate(20deg);
+}
+
+.beads-one {
+  top: 48%;
+  left: 46%;
+  font-size: 42px;
+}
+
+/* =========================================================
+   SPECIAL SHOP PAGES
+========================================================= */
+
+.shop-page-little {
+  background:
+    radial-gradient(
+      circle at 5% 8%,
+      #fff3c9,
+      transparent 18%
+    ),
+    radial-gradient(
+      circle at 96% 75%,
+      #e9ddff,
+      transparent 20%
+    ),
+    linear-gradient(
+      180deg,
+      #fffaff 0%,
+      #f4faff 48%,
+      #fff9e9 100%
+    );
+
+  max-width: none;
+  padding-left: max(34px, calc((100% - 1400px) / 2));
+  padding-right: max(34px, calc((100% - 1400px) / 2));
+
+  position: relative;
+}
+
+.shop-page-little::before {
+  content: "🧸";
+  position: absolute;
+  top: 85px;
+  left: 4%;
+  font-size: 65px;
+  transform: rotate(-10deg);
+}
+
+.shop-page-little::after {
+  content: "🌈";
+  position: absolute;
+  top: 110px;
+  right: 5%;
+  font-size: 60px;
+  transform: rotate(8deg);
+}
+
+.shop-page-little .shop-header {
+  position: relative;
+}
+
+.shop-page-little .shop-header h1 {
+  color: #604b5a;
+  font-weight: 900;
+}
+
+.shop-page-little .shop-header h1::after {
+  content: " 🧸";
+}
+
+.shop-page-little .eyebrow {
+  color: #d77aa4;
+}
+
+.shop-page-little .shop-sidebar {
+  border-color: #dcebf2;
+}
+
+.shop-page-little .subcategory {
+  color: #7b7180;
+}
+
+.shop-page-little .subcategory:hover,
+.shop-page-little .subcategory.active {
+  color: #d66d9c;
+}
+
+.shop-page-little .subcategory.active {
+  background: #ffddeb;
+}
+
+.shop-page-little .empty-shop {
+  background:
+    radial-gradient(
+      circle at 50% 10%,
+      #ffffff,
+      transparent 42%
+    ),
+    #f9f4ff;
+
+  border-color: #e6cce0;
+  border-radius: 38px;
+  box-shadow: 0 20px 55px rgba(108, 81, 103, 0.08);
+}
+
+.shop-page-little .empty-shop span {
+  font-size: 78px;
+}
+
+.shop-page-little .empty-shop h2 {
+  color: #655064;
+}
+
+.shop-page-little .empty-shop p {
+  color: #87788a;
+}
+
+.shop-page-crochet {
+  background:
+    radial-gradient(
+      circle at 8% 15%,
+      #fff3de,
+      transparent 20%
+    ),
+    radial-gradient(
+      circle at 92% 82%,
+      #ead7c0,
+      transparent 22%
+    ),
+    #f8f0e7;
+
+  max-width: none;
+  padding-left: max(34px, calc((100% - 1400px) / 2));
+  padding-right: max(34px, calc((100% - 1400px) / 2));
+
+  position: relative;
+}
+
+.shop-page-crochet::before {
+  content: "🧶";
+  position: absolute;
+  top: 82px;
+  left: 4%;
+  font-size: 68px;
+  transform: rotate(-10deg);
+}
+
+.shop-page-crochet::after {
+  content: "🪡";
+  position: absolute;
+  top: 110px;
+  right: 5%;
+  font-size: 60px;
+  transform: rotate(18deg);
+}
+
+.shop-page-crochet .shop-header h1 {
+  color: #493a32;
+}
+
+.shop-page-crochet .eyebrow {
+  color: #9b704c;
+}
+
+.shop-page-crochet .shop-sidebar {
+  border-color: #dfd0c0;
+}
+
+.shop-page-crochet .subcategory {
+  color: #76655b;
+}
+
+.shop-page-crochet .subcategory:hover,
+.shop-page-crochet .subcategory.active {
+  color: #765039;
+}
+
+.shop-page-crochet .subcategory.active {
+  background: #e5c5a1;
+  color: #46352d;
+}
+
+.shop-page-crochet .empty-shop {
+  background:
+    radial-gradient(
+      circle at 50% 10%,
+      #fffaf3,
+      transparent 45%
+    ),
+    #f4e8da;
+
+  border-color: #d6b99a;
+  border-radius: 35px;
+  box-shadow: 0 20px 55px rgba(89, 63, 43, 0.08);
+}
+
+.shop-page-crochet .empty-shop span {
+  font-size: 78px;
+}
+
+.shop-page-crochet .empty-shop h2 {
+  color: #4d3b31;
+}
+
+.shop-page-crochet .empty-shop p {
+  color: #7c6b60;
+}
+
+/* =========================================================
+   SPECIAL SHOP PILLS
+========================================================= */
+
+.special-shop-pills {
+  max-width: 850px;
+  margin: 25px auto 0;
+
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.special-shop-pills span {
+  padding: 10px 14px;
+  border-radius: 999px;
+  background: rgba(255,255,255,0.82);
+  border: 1px solid rgba(255,255,255,0.8);
+
+  font-size: 12px;
+  font-weight: 650;
+
+  box-shadow: 0 7px 20px rgba(70, 50, 60, 0.04);
+}
+
+.shop-page-little .special-shop-pills span {
+  color: #806477;
+}
+
+.shop-page-crochet .special-shop-pills span {
+  color: #6b5548;
+}
+
+/* =========================================================
+   SPECIAL EMPTY DECOR
+========================================================= */
+
+.special-empty-wrapper {
+  position: relative;
+  min-height: 390px;
+  display: grid;
+  place-items: center;
+}
+
+.special-empty {
+  width: min(100%, 780px);
+  min-height: 340px;
+  position: relative;
+  z-index: 3;
+}
+
+.special-empty-wrapper > .special-empty {
+  margin: 0 auto;
+}
+
+.little-shop-decor,
+.crochet-shop-decor {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.little-shop-decor span,
+.crochet-shop-decor span {
+  position: absolute;
+  display: block;
+}
+
+.little-shop-decor span:nth-child(1) {
+  top: 3%;
+  left: 6%;
+  font-size: 55px;
+}
+
+.little-shop-decor span:nth-child(2) {
+  top: 8%;
+  right: 7%;
+  font-size: 62px;
+}
+
+.little-shop-decor span:nth-child(3) {
+  bottom: 8%;
+  left: 7%;
+  font-size: 60px;
+}
+
+.little-shop-decor span:nth-child(4) {
+  top: 43%;
+  left: 2%;
+  font-size: 42px;
+}
+
+.little-shop-decor span:nth-child(5) {
+  bottom: 7%;
+  right: 9%;
+  font-size: 35px;
+}
+
+.little-shop-decor span:nth-child(6) {
+  top: 34%;
+  right: 2%;
+  font-size: 48px;
+}
+
+.little-shop-decor span:nth-child(7) {
+  bottom: 3%;
+  left: 30%;
+  font-size: 38px;
+}
+
+.little-shop-decor span:nth-child(8) {
+  top: 2%;
+  left: 46%;
+  font-size: 38px;
+}
+
+.little-shop-decor span:nth-child(9) {
+  top: 64%;
+  right: 28%;
+  font-size: 32px;
+}
+
+.crochet-shop-decor span:nth-child(1) {
+  top: 2%;
+  left: 5%;
+  font-size: 58px;
+}
+
+.crochet-shop-decor span:nth-child(2) {
+  top: 8%;
+  right: 8%;
+  font-size: 55px;
+  transform: rotate(20deg);
+}
+
+.crochet-shop-decor span:nth-child(3) {
+  bottom: 8%;
+  left: 6%;
+  font-size: 55px;
+}
+
+.crochet-shop-decor span:nth-child(4) {
+  top: 43%;
+  left: 2%;
+  font-size: 45px;
+}
+
+.crochet-shop-decor span:nth-child(5) {
+  bottom: 8%;
+  right: 8%;
+  font-size: 42px;
+}
+
+.crochet-shop-decor span:nth-child(6) {
+  top: 37%;
+  right: 2%;
+  font-size: 45px;
+  transform: rotate(-18deg);
+}
+
+.crochet-shop-decor span:nth-child(7) {
+  bottom: 2%;
+  left: 31%;
+  font-size: 38px;
+}
+
+.crochet-shop-decor span:nth-child(8) {
+  top: 2%;
+  left: 47%;
+  font-size: 35px;
+}
+
+.crochet-shop-decor span:nth-child(9) {
+  top: 68%;
+  right: 28%;
+  font-size: 35px;
+}
+
+.empty-character-row {
+  margin-top: 25px;
+  font-size: 28px;
+  letter-spacing: 8px;
 }
 
 /* =========================================================
@@ -1601,6 +2051,16 @@ em {
     color: white;
   }
 
+  .shop-page-little .subcategory.active {
+    background: #ffddeb;
+    color: #d66d9c;
+  }
+
+  .shop-page-crochet .subcategory.active {
+    background: #e5c5a1;
+    color: #46352d;
+  }
+
   .footer {
     grid-template-columns: 1fr;
     text-align: center;
@@ -1608,6 +2068,22 @@ em {
 
   .footer-links {
     justify-content: center;
+  }
+
+  .little-rainbow,
+  .toy-one,
+  .toy-two,
+  .crochet-needle,
+  .crochet-hook,
+  .crochet-beads {
+    opacity: 0.55;
+  }
+
+  .shop-page-little::before,
+  .shop-page-little::after,
+  .shop-page-crochet::before,
+  .shop-page-crochet::after {
+    opacity: 0.45;
   }
 
 }
@@ -1703,10 +2179,54 @@ em {
     min-height: 300px;
   }
 
+  .teddy {
+    font-size: 95px;
+  }
+
   .yarn-circle {
     width: 245px;
     height: 245px;
     font-size: 90px;
+  }
+
+  .shop-page-little,
+  .shop-page-crochet {
+    padding-left: 18px;
+    padding-right: 18px;
+  }
+
+  .shop-page-little::before,
+  .shop-page-little::after,
+  .shop-page-crochet::before,
+  .shop-page-crochet::after {
+    font-size: 42px;
+  }
+
+  .shop-header {
+    padding: 50px 10px 40px;
+  }
+
+  .shop-header h1 {
+    font-size: 48px;
+  }
+
+  .special-shop-pills span {
+    font-size: 11px;
+    padding: 8px 10px;
+  }
+
+  .special-empty {
+    min-height: 300px;
+  }
+
+  .little-shop-decor span,
+  .crochet-shop-decor span {
+    opacity: 0.55;
+  }
+
+  .empty-character-row {
+    font-size: 21px;
+    letter-spacing: 4px;
   }
 
 }
