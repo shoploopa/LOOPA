@@ -10,6 +10,10 @@ import {
   Menu,
   X,
   Sparkles,
+  Eye,
+  EyeOff,
+  LogOut,
+  UserCircle,
 } from "lucide-react";
 import "./style.css";
 import { supabase } from "./supabase";
@@ -107,6 +111,104 @@ function App() {
   const [cart, setCart] = useState([]);
 
   /* ---------------------------------------
+     AUTH STATE
+  ---------------------------------------- */
+
+  const [user, setUser] = useState(null);
+  const [profile, setProfile] = useState(null);
+  const [authLoading, setAuthLoading] = useState(true);
+
+  /* ---------------------------------------
+     AUTH FORM
+  ---------------------------------------- */
+
+  const [authMode, setAuthMode] = useState("login");
+
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] =
+    useState("");
+  const [fullName, setFullName] = useState("");
+
+  const [showPassword, setShowPassword] =
+    useState(false);
+
+  const [showConfirmPassword, setShowConfirmPassword] =
+    useState(false);
+
+  const [authMessage, setAuthMessage] = useState("");
+  const [authError, setAuthError] = useState("");
+  const [authSubmitting, setAuthSubmitting] =
+    useState(false);
+
+  /* ---------------------------------------
+     CHECK CURRENT USER
+  ---------------------------------------- */
+
+  useEffect(() => {
+    const getCurrentUser = async () => {
+      setAuthLoading(true);
+
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+
+      if (user) {
+        setUser(user);
+        await loadProfile(user.id);
+      }
+
+      setAuthLoading(false);
+    };
+
+    getCurrentUser();
+
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange(
+      async (_event, session) => {
+        const currentUser = session?.user || null;
+
+        setUser(currentUser);
+
+        if (currentUser) {
+          await loadProfile(currentUser.id);
+        } else {
+          setProfile(null);
+        }
+      }
+    );
+
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, []);
+
+  /* ---------------------------------------
+     LOAD PROFILE
+  ---------------------------------------- */
+
+  const loadProfile = async (userId) => {
+    const { data, error } = await supabase
+      .from("profiles")
+      .select(
+        "id, full_name, email, phone, avatar_url, role"
+      )
+      .eq("id", userId)
+      .maybeSingle();
+
+    if (error) {
+      console.error(
+        "LOOPA profile loading error:",
+        error
+      );
+      return;
+    }
+
+    setProfile(data);
+  };
+
+  /* ---------------------------------------
      LOAD CATEGORIES + PRODUCTS
   ---------------------------------------- */
 
@@ -115,14 +217,14 @@ function App() {
       setLoadingCategories(true);
       setLoadingProducts(true);
 
-      /* GET CATEGORIES */
-
       const {
         data: categoryData,
         error: categoryError,
       } = await supabase
         .from("categories")
-        .select("id, name, description, image_url")
+        .select(
+          "id, name, description, image_url"
+        )
         .order("name");
 
       if (categoryError) {
@@ -133,8 +235,6 @@ function App() {
       } else {
         setDbCategories(categoryData || []);
       }
-
-      /* GET PRODUCTS */
 
       const {
         data: productData,
@@ -157,7 +257,9 @@ function App() {
         `
         )
         .eq("status", "approved")
-        .order("created_at", { ascending: false });
+        .order("created_at", {
+          ascending: false,
+        });
 
       if (productError) {
         console.error(
@@ -182,7 +284,8 @@ function App() {
   const getCategoryId = (categoryName) => {
     const category = dbCategories.find(
       (item) =>
-        item.name.toLowerCase() === categoryName.toLowerCase()
+        item.name.toLowerCase() ===
+        categoryName.toLowerCase()
     );
 
     return category?.id || null;
@@ -196,11 +299,35 @@ function App() {
     setActiveCategory(category);
 
     const subcategories =
-      categoryStructure[category] || [`All ${category}`];
+      categoryStructure[category] ||
+      [`All ${category}`];
 
     setActiveSubcategory(subcategories[0]);
 
     setPage("shop");
+    setMenuOpen(false);
+
+    window.scrollTo({
+      top: 0,
+      behavior: "smooth",
+    });
+  };
+
+  /* ---------------------------------------
+     OPEN AUTH
+  ---------------------------------------- */
+
+  const openAuth = (mode = "login") => {
+    setAuthMode(mode);
+    setAuthMessage("");
+    setAuthError("");
+
+    setEmail("");
+    setPassword("");
+    setConfirmPassword("");
+    setFullName("");
+
+    setPage("auth");
     setMenuOpen(false);
 
     window.scrollTo({
@@ -220,21 +347,27 @@ function App() {
      FILTER PRODUCTS
   ---------------------------------------- */
 
-  const filteredProducts = dbProducts.filter((product) => {
-    const categoryMatch =
-      product.category_id === activeCategoryId;
+  const filteredProducts = dbProducts.filter(
+    (product) => {
+      const categoryMatch =
+        product.category_id ===
+        activeCategoryId;
 
-    const searchText = search.toLowerCase().trim();
+      const searchText =
+        search.toLowerCase().trim();
 
-    const searchMatch =
-      !searchText ||
-      product.name?.toLowerCase().includes(searchText) ||
-      product.description
-        ?.toLowerCase()
-        .includes(searchText);
+      const searchMatch =
+        !searchText ||
+        product.name
+          ?.toLowerCase()
+          .includes(searchText) ||
+        product.description
+          ?.toLowerCase()
+          .includes(searchText);
 
-    return categoryMatch && searchMatch;
-  });
+      return categoryMatch && searchMatch;
+    }
+  );
 
   /* ---------------------------------------
      HOME PRODUCTS
@@ -263,13 +396,174 @@ function App() {
   };
 
   /* ---------------------------------------
+     LOGIN
+  ---------------------------------------- */
+
+  const handleLogin = async (e) => {
+    e.preventDefault();
+
+    setAuthError("");
+    setAuthMessage("");
+    setAuthSubmitting(true);
+
+    const { data, error } =
+      await supabase.auth.signInWithPassword({
+        email: email.trim(),
+        password,
+      });
+
+    if (error) {
+      setAuthError(
+        error.message ||
+          "We couldn't log you in. Please check your details."
+      );
+      setAuthSubmitting(false);
+      return;
+    }
+
+    setUser(data.user);
+
+    await loadProfile(data.user.id);
+
+    setAuthMessage(
+      "Welcome back to LOOPA 💕"
+    );
+
+    setAuthSubmitting(false);
+
+    setTimeout(() => {
+      setPage("home");
+    }, 700);
+  };
+
+  /* ---------------------------------------
+     SIGN UP
+  ---------------------------------------- */
+
+  const handleSignup = async (e) => {
+    e.preventDefault();
+
+    setAuthError("");
+    setAuthMessage("");
+
+    if (!fullName.trim()) {
+      setAuthError(
+        "Please enter your full name."
+      );
+      return;
+    }
+
+    if (!email.trim()) {
+      setAuthError(
+        "Please enter your email address."
+      );
+      return;
+    }
+
+    if (password.length < 6) {
+      setAuthError(
+        "Your password must be at least 6 characters."
+      );
+      return;
+    }
+
+    if (password !== confirmPassword) {
+      setAuthError(
+        "Your passwords do not match."
+      );
+      return;
+    }
+
+    setAuthSubmitting(true);
+
+    const { data, error } =
+      await supabase.auth.signUp({
+        email: email.trim(),
+        password,
+        options: {
+          data: {
+            full_name: fullName.trim(),
+          },
+        },
+      });
+
+    if (error) {
+      setAuthError(
+        error.message ||
+          "We couldn't create your account."
+      );
+      setAuthSubmitting(false);
+      return;
+    }
+
+    /*
+      The database trigger already creates the
+      profiles row with the user's email.
+
+      If Supabase immediately returns a session,
+      we also update the profile with the name.
+    */
+
+    if (data.user && data.session) {
+      await supabase
+        .from("profiles")
+        .update({
+          full_name: fullName.trim(),
+        })
+        .eq("id", data.user.id);
+
+      setUser(data.user);
+
+      await loadProfile(data.user.id);
+
+      setAuthMessage(
+        "Your LOOPA account is ready 💕"
+      );
+
+      setTimeout(() => {
+        setPage("home");
+      }, 800);
+    } else {
+      setAuthMessage(
+        "Account created! Please check your email to confirm your account, then log in. 💕"
+      );
+
+      setAuthMode("login");
+      setPassword("");
+      setConfirmPassword("");
+    }
+
+    setAuthSubmitting(false);
+  };
+
+  /* ---------------------------------------
+     LOG OUT
+  ---------------------------------------- */
+
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+
+    setUser(null);
+    setProfile(null);
+
+    setPage("home");
+
+    window.scrollTo({
+      top: 0,
+      behavior: "smooth",
+    });
+  };
+
+  /* ---------------------------------------
      PRODUCT CARD
   ---------------------------------------- */
 
   const ProductCard = ({ product }) => {
     return (
       <article className="product-card">
+
         <div className="product-image">
+
           <span className="product-tag">
             {product.made_to_order
               ? "Made to Order"
@@ -295,9 +589,11 @@ function App() {
           <span className="product-emoji">
             🛍️
           </span>
+
         </div>
 
         <div className="product-info">
+
           <p className="seller">
             LOOPA Creator
           </p>
@@ -306,7 +602,9 @@ function App() {
 
           <p className="price">
             KES{" "}
-            {Number(product.price).toLocaleString()}
+            {Number(
+              product.price
+            ).toLocaleString()}
           </p>
 
           {product.stock !== null && (
@@ -319,7 +617,9 @@ function App() {
 
           <button
             className="add-button"
-            onClick={() => addToBag(product)}
+            onClick={() =>
+              addToBag(product)
+            }
             disabled={
               product.stock !== null &&
               product.stock <= 0
@@ -330,8 +630,344 @@ function App() {
               ? "Out of Stock"
               : "Add to Bag"}
           </button>
+
         </div>
+
       </article>
+    );
+  };
+
+  /* ---------------------------------------
+     AUTH PAGE
+  ---------------------------------------- */
+
+  const AuthPage = () => {
+    return (
+      <main className="auth-page">
+
+        <div className="auth-decoration auth-bow">
+          🎀
+        </div>
+
+        <div className="auth-decoration auth-flower">
+          🌸
+        </div>
+
+        <div className="auth-card">
+
+          <button
+            className="auth-back"
+            onClick={() =>
+              setPage("home")
+            }
+          >
+            ← Back to LOOPA
+          </button>
+
+          <div className="auth-logo">
+            LOOPA
+          </div>
+
+          <p className="eyebrow">
+            {authMode === "login"
+              ? "WELCOME BACK"
+              : "JOIN THE LOOPA WORLD"}
+          </p>
+
+          <h1>
+            {authMode === "login"
+              ? "Welcome back."
+              : "Create your account."}
+          </h1>
+
+          <p className="auth-intro">
+            {authMode === "login"
+              ? "Log in to save your favorites, manage your bag and keep shopping."
+              : "Create your free LOOPA account and make your fashion world yours."}
+          </p>
+
+          {authError && (
+            <div className="auth-alert error">
+              {authError}
+            </div>
+          )}
+
+          {authMessage && (
+            <div className="auth-alert success">
+              {authMessage}
+            </div>
+          )}
+
+          <form
+            className="auth-form"
+            onSubmit={
+              authMode === "login"
+                ? handleLogin
+                : handleSignup
+            }
+          >
+
+            {authMode === "signup" && (
+              <div className="form-field">
+
+                <label>
+                  Full Name
+                </label>
+
+                <input
+                  type="text"
+                  placeholder="Your full name"
+                  value={fullName}
+                  onChange={(e) =>
+                    setFullName(
+                      e.target.value
+                    )
+                  }
+                  autoComplete="name"
+                />
+
+              </div>
+            )}
+
+            <div className="form-field">
+
+              <label>
+                Email Address
+              </label>
+
+              <input
+                type="email"
+                placeholder="you@example.com"
+                value={email}
+                onChange={(e) =>
+                  setEmail(e.target.value)
+                }
+                autoComplete="email"
+              />
+
+            </div>
+
+            <div className="form-field">
+
+              <label>
+                Password
+              </label>
+
+              <div className="password-input">
+
+                <input
+                  type={
+                    showPassword
+                      ? "text"
+                      : "password"
+                  }
+                  placeholder="Enter your password"
+                  value={password}
+                  onChange={(e) =>
+                    setPassword(
+                      e.target.value
+                    )
+                  }
+                  autoComplete={
+                    authMode === "login"
+                      ? "current-password"
+                      : "new-password"
+                  }
+                />
+
+                <button
+                  type="button"
+                  onClick={() =>
+                    setShowPassword(
+                      !showPassword
+                    )
+                  }
+                >
+                  {showPassword ? (
+                    <EyeOff size={18} />
+                  ) : (
+                    <Eye size={18} />
+                  )}
+                </button>
+
+              </div>
+
+            </div>
+
+            {authMode === "signup" && (
+              <div className="form-field">
+
+                <label>
+                  Confirm Password
+                </label>
+
+                <div className="password-input">
+
+                  <input
+                    type={
+                      showConfirmPassword
+                        ? "text"
+                        : "password"
+                    }
+                    placeholder="Confirm your password"
+                    value={
+                      confirmPassword
+                    }
+                    onChange={(e) =>
+                      setConfirmPassword(
+                        e.target.value
+                      )
+                    }
+                    autoComplete="new-password"
+                  />
+
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setShowConfirmPassword(
+                        !showConfirmPassword
+                      )
+                    }
+                  >
+                    {showConfirmPassword ? (
+                      <EyeOff size={18} />
+                    ) : (
+                      <Eye size={18} />
+                    )}
+                  </button>
+
+                </div>
+
+              </div>
+            )}
+
+            {authMode === "login" && (
+              <button
+                type="button"
+                className="forgot-password"
+                onClick={() => {
+                  setAuthMessage(
+                    "Password reset is coming next. 💕"
+                  );
+                  setAuthError("");
+                }}
+              >
+                Forgot password?
+              </button>
+            )}
+
+            <button
+              type="submit"
+              className="auth-submit"
+              disabled={authSubmitting}
+            >
+              {authSubmitting
+                ? "Please wait..."
+                : authMode === "login"
+                ? "Log In"
+                : "Create Account"}
+
+              {!authSubmitting && (
+                <ArrowRight size={18} />
+              )}
+            </button>
+
+          </form>
+
+          <div className="auth-switch">
+
+            <span>
+              {authMode === "login"
+                ? "Don't have a LOOPA account?"
+                : "Already have a LOOPA account?"}
+            </span>
+
+            <button
+              onClick={() =>
+                openAuth(
+                  authMode === "login"
+                    ? "signup"
+                    : "login"
+                )
+              }
+            >
+              {authMode === "login"
+                ? "Sign Up"
+                : "Log In"}
+            </button>
+
+          </div>
+
+          <div className="auth-love">
+            🎀 Your Style. Your World. 🎀
+          </div>
+
+        </div>
+
+      </main>
+    );
+  };
+
+  /* ---------------------------------------
+     ACCOUNT PAGE
+  ---------------------------------------- */
+
+  const AccountPage = () => {
+    return (
+      <main className="account-page">
+
+        <div className="account-card">
+
+          <div className="account-avatar">
+            <UserCircle size={58} />
+          </div>
+
+          <p className="eyebrow">
+            MY LOOPA
+          </p>
+
+          <h1>
+            {profile?.full_name ||
+              "Welcome to LOOPA"}
+          </h1>
+
+          <p className="account-email">
+            {user?.email}
+          </p>
+
+          <div className="account-menu">
+
+            <button>
+              <User size={19} />
+              My Profile
+              <ChevronRight size={17} />
+            </button>
+
+            <button>
+              <Heart size={19} />
+              My Wishlist
+              <ChevronRight size={17} />
+            </button>
+
+            <button>
+              <ShoppingBag size={19} />
+              My Orders
+              <ChevronRight size={17} />
+            </button>
+
+          </div>
+
+          <button
+            className="logout-button"
+            onClick={handleLogout}
+          >
+            <LogOut size={18} />
+            Log Out
+          </button>
+
+        </div>
+
+      </main>
     );
   };
 
@@ -345,6 +981,7 @@ function App() {
       {/* HEADER */}
 
       <header className="header">
+
         <div className="header-inner">
 
           <button
@@ -353,7 +990,11 @@ function App() {
               setMenuOpen(!menuOpen)
             }
           >
-            {menuOpen ? <X /> : <Menu />}
+            {menuOpen ? (
+              <X />
+            ) : (
+              <Menu />
+            )}
           </button>
 
           <button
@@ -368,43 +1009,77 @@ function App() {
 
           <nav
             className={`nav ${
-              menuOpen ? "nav-open" : ""
+              menuOpen
+                ? "nav-open"
+                : ""
             }`}
           >
-            {Object.keys(categoryStructure).map(
-              (category) => (
-                <button
-                  key={category}
-                  onClick={() =>
-                    openShop(category)
-                  }
-                >
-                  {category}
-                </button>
-              )
-            )}
+
+            {Object.keys(
+              categoryStructure
+            ).map((category) => (
+
+              <button
+                key={category}
+                onClick={() =>
+                  openShop(category)
+                }
+              >
+                {category}
+              </button>
+
+            ))}
+
           </nav>
 
           <div className="header-actions">
 
             <div className="search-box">
+
               <Search size={17} />
 
               <input
                 placeholder="Search LOOPA..."
                 value={search}
                 onChange={(e) =>
-                  setSearch(e.target.value)
+                  setSearch(
+                    e.target.value
+                  )
                 }
                 onKeyDown={(e) => {
-                  if (e.key === "Enter") {
+                  if (
+                    e.key === "Enter"
+                  ) {
                     openShop("Women");
                   }
                 }}
               />
+
             </div>
 
-            <button className="icon-button">
+            <button
+              className="icon-button"
+              onClick={() => {
+                if (!user) {
+                  openAuth("login");
+                } else {
+                  setPage("account");
+                }
+              }}
+              aria-label="Account"
+            >
+              <User size={20} />
+            </button>
+
+            <button
+              className="icon-button"
+              onClick={() => {
+                if (!user) {
+                  openAuth("login");
+                }
+              }}
+              aria-label="Wishlist"
+            >
               <Heart size={20} />
 
               {wishlist.length > 0 && (
@@ -414,11 +1089,15 @@ function App() {
               )}
             </button>
 
-            <button className="icon-button">
-              <User size={20} />
-            </button>
-
-            <button className="icon-button">
+            <button
+              className="icon-button"
+              onClick={() => {
+                if (!user) {
+                  openAuth("login");
+                }
+              }}
+              aria-label="Shopping bag"
+            >
               <ShoppingBag size={20} />
 
               {cart.length > 0 && (
@@ -429,8 +1108,23 @@ function App() {
             </button>
 
           </div>
+
         </div>
+
       </header>
+
+      {/* AUTH */}
+
+      {page === "auth" && (
+        <AuthPage />
+      )}
+
+      {/* ACCOUNT */}
+
+      {page === "account" &&
+        user && (
+          <AccountPage />
+        )}
 
       {/* =====================================
           HOME
@@ -464,9 +1158,10 @@ function App() {
               </h1>
 
               <p className="hero-copy">
-                A fashion marketplace for beautiful
-                pieces, creative sellers and every
-                version of you.
+                A fashion marketplace for
+                beautiful pieces, creative
+                sellers and every version
+                of you.
               </p>
 
               <button
@@ -480,6 +1175,7 @@ function App() {
               </button>
 
             </div>
+
           </section>
 
           {/* SHOP YOUR LOOPA */}
@@ -489,11 +1185,15 @@ function App() {
             <div className="section-heading">
 
               <div>
+
                 <p className="eyebrow">
                   DISCOVER YOUR WORLD
                 </p>
 
-                <h2>Shop your LOOPA</h2>
+                <h2>
+                  Shop your LOOPA
+                </h2>
+
               </div>
 
             </div>
@@ -512,7 +1212,9 @@ function App() {
 
                 <div>
                   <h3>Women</h3>
-                  <p>Fashion for her</p>
+                  <p>
+                    Fashion for her
+                  </p>
                 </div>
 
                 <ChevronRight />
@@ -521,7 +1223,9 @@ function App() {
               <button
                 className="category-card little-card"
                 onClick={() =>
-                  openShop("Little Loves")
+                  openShop(
+                    "Little Loves"
+                  )
                 }
               >
                 <span className="category-icon">
@@ -529,8 +1233,13 @@ function App() {
                 </span>
 
                 <div>
-                  <h3>Little Loves</h3>
-                  <p>Tiny fashion dreams</p>
+                  <h3>
+                    Little Loves
+                  </h3>
+                  <p>
+                    Tiny fashion
+                    dreams
+                  </p>
                 </div>
 
                 <ChevronRight />
@@ -548,7 +1257,9 @@ function App() {
 
                 <div>
                   <h3>Shoes</h3>
-                  <p>Step into pretty</p>
+                  <p>
+                    Step into pretty
+                  </p>
                 </div>
 
                 <ChevronRight />
@@ -566,7 +1277,9 @@ function App() {
 
                 <div>
                   <h3>Bags</h3>
-                  <p>Carry your world</p>
+                  <p>
+                    Carry your world
+                  </p>
                 </div>
 
                 <ChevronRight />
@@ -575,7 +1288,9 @@ function App() {
               <button
                 className="category-card accessories-card"
                 onClick={() =>
-                  openShop("Accessories")
+                  openShop(
+                    "Accessories"
+                  )
                 }
               >
                 <span className="category-icon">
@@ -583,8 +1298,13 @@ function App() {
                 </span>
 
                 <div>
-                  <h3>Accessories</h3>
-                  <p>The finishing touch</p>
+                  <h3>
+                    Accessories
+                  </h3>
+                  <p>
+                    The finishing
+                    touch
+                  </p>
                 </div>
 
                 <ChevronRight />
@@ -593,7 +1313,9 @@ function App() {
               <button
                 className="category-card crochet-card"
                 onClick={() =>
-                  openShop("Crochet Corner")
+                  openShop(
+                    "Crochet Corner"
+                  )
                 }
               >
                 <span className="category-icon">
@@ -601,14 +1323,20 @@ function App() {
                 </span>
 
                 <div>
-                  <h3>Crochet Corner</h3>
-                  <p>Where yarn becomes art</p>
+                  <h3>
+                    Crochet Corner
+                  </h3>
+                  <p>
+                    Where yarn
+                    becomes art
+                  </p>
                 </div>
 
                 <ChevronRight />
               </button>
 
             </div>
+
           </section>
 
           {/* LITTLE LOVES */}
@@ -640,13 +1368,17 @@ function App() {
               <h2>
                 Tiny clothes.
                 <br />
-                <em>Big little moments.</em>
+                <em>
+                  Big little moments.
+                </em>
               </h2>
 
               <p>
-                A dreamy little world filled with
-                adorable pieces for babies,
-                toddlers and little girls.
+                A dreamy little world
+                filled with adorable
+                pieces for babies,
+                toddlers and little
+                girls.
               </p>
 
               <div className="little-buttons">
@@ -654,7 +1386,9 @@ function App() {
                 <button
                   className="little-primary"
                   onClick={() =>
-                    openShop("Little Loves")
+                    openShop(
+                      "Little Loves"
+                    )
                   }
                 >
                   Explore Little Loves
@@ -664,10 +1398,23 @@ function App() {
               </div>
 
               <div className="little-pills">
-                <span>🎀 Baby</span>
-                <span>🧸 Toddler</span>
-                <span>🌸 Little Girls</span>
-                <span>🎂 Birthdays</span>
+
+                <span>
+                  🎀 Baby
+                </span>
+
+                <span>
+                  🧸 Toddler
+                </span>
+
+                <span>
+                  🌸 Little Girls
+                </span>
+
+                <span>
+                  🎂 Birthdays
+                </span>
+
               </div>
 
             </div>
@@ -685,7 +1432,8 @@ function App() {
                 </div>
 
                 <p>
-                  made for little loves
+                  made for little
+                  loves
                 </p>
 
               </div>
@@ -701,11 +1449,15 @@ function App() {
             <div className="section-heading split-heading">
 
               <div>
+
                 <p className="eyebrow">
                   THE LOOPA EDIT
                 </p>
 
-                <h2>Trending now</h2>
+                <h2>
+                  Trending now
+                </h2>
+
               </div>
 
               <button
@@ -721,24 +1473,34 @@ function App() {
             </div>
 
             {loadingProducts ? (
+
               <div className="empty-shop">
+
                 <span>🎀</span>
-                <h2>Loading LOOPA...</h2>
+
+                <h2>
+                  Loading LOOPA...
+                </h2>
+
                 <p>
-                  Bringing the latest pieces
-                  to you.
+                  Bringing the latest
+                  pieces to you.
                 </p>
+
               </div>
+
             ) : homeProducts.length > 0 ? (
 
               <div className="home-products">
 
-                {homeProducts.map((product) => (
-                  <ProductCard
-                    key={product.id}
-                    product={product}
-                  />
-                ))}
+                {homeProducts.map(
+                  (product) => (
+                    <ProductCard
+                      key={product.id}
+                      product={product}
+                    />
+                  )
+                )}
 
               </div>
 
@@ -748,14 +1510,18 @@ function App() {
 
                 <span>🎀</span>
 
-                <h2>Coming to LOOPA</h2>
+                <h2>
+                  Coming to LOOPA
+                </h2>
 
                 <p>
-                  Beautiful pieces from LOOPA
-                  creators will appear here.
+                  Beautiful pieces from
+                  LOOPA creators will
+                  appear here.
                 </p>
 
               </div>
+
             )}
 
           </section>
@@ -801,21 +1567,34 @@ function App() {
               </h2>
 
               <p>
-                Slow-made pieces, beautiful
-                stitches and handmade creations
-                made with love.
+                Slow-made pieces,
+                beautiful stitches and
+                handmade creations made
+                with love.
               </p>
 
               <div className="crochet-tags">
-                <span>🧶 Crochet Bags</span>
-                <span>🌼 Handmade</span>
-                <span>🪡 Custom Pieces</span>
+
+                <span>
+                  🧶 Crochet Bags
+                </span>
+
+                <span>
+                  🌼 Handmade
+                </span>
+
+                <span>
+                  🪡 Custom Pieces
+                </span>
+
               </div>
 
               <button
                 className="crochet-button"
                 onClick={() =>
-                  openShop("Crochet Corner")
+                  openShop(
+                    "Crochet Corner"
+                  )
                 }
               >
                 Enter Crochet Corner
@@ -839,16 +1618,26 @@ function App() {
               <h2>
                 Dream it.
                 <br />
-                <em>Make it LOOPA.</em>
+                <em>
+                  Make it LOOPA.
+                </em>
               </h2>
 
               <p>
-                Want something custom? Connect
-                with a LOOPA creator and bring
-                your dream piece to life.
+                Want something custom?
+                Connect with a LOOPA
+                creator and bring your
+                dream piece to life.
               </p>
 
-              <button className="primary-button">
+              <button
+                className="primary-button"
+                onClick={() => {
+                  if (!user) {
+                    openAuth("login");
+                  }
+                }}
+              >
                 Start a Custom Request
                 <Sparkles size={17} />
               </button>
@@ -869,7 +1658,9 @@ function App() {
 
           <button
             className="back-home"
-            onClick={() => setPage("home")}
+            onClick={() =>
+              setPage("home")
+            }
           >
             ← Back to LOOPA
           </button>
@@ -880,11 +1671,13 @@ function App() {
               SHOP LOOPA
             </p>
 
-            <h1>{activeCategory}</h1>
+            <h1>
+              {activeCategory}
+            </h1>
 
             <p>
-              Discover pieces made to make you
-              feel like you.
+              Discover pieces made to
+              make you feel like you.
             </p>
 
           </div>
@@ -899,26 +1692,28 @@ function App() {
                 categoryStructure[
                   activeCategory
                 ] || []
-              ).map((subcategory) => (
+              ).map(
+                (subcategory) => (
 
-                <button
-                  key={subcategory}
-                  className={
-                    activeSubcategory ===
-                    subcategory
-                      ? "subcategory active"
-                      : "subcategory"
-                  }
-                  onClick={() =>
-                    setActiveSubcategory(
+                  <button
+                    key={subcategory}
+                    className={
+                      activeSubcategory ===
                       subcategory
-                    )
-                  }
-                >
-                  {subcategory}
-                </button>
+                        ? "subcategory active"
+                        : "subcategory"
+                    }
+                    onClick={() =>
+                      setActiveSubcategory(
+                        subcategory
+                      )
+                    }
+                  >
+                    {subcategory}
+                  </button>
 
-              ))}
+                )
+              )}
 
             </aside>
 
@@ -949,13 +1744,14 @@ function App() {
                   </h2>
 
                   <p>
-                    We're bringing the pieces
-                    in.
+                    We're bringing the
+                    pieces in.
                   </p>
 
                 </div>
 
-              ) : filteredProducts.length > 0 ? (
+              ) : filteredProducts.length >
+                0 ? (
 
                 <div className="shop-product-grid">
 
@@ -981,8 +1777,9 @@ function App() {
                   </h2>
 
                   <p>
-                    We're filling this little
-                    corner with beautiful pieces.
+                    We're filling this
+                    little corner with
+                    beautiful pieces.
                   </p>
 
                 </div>
@@ -1001,10 +1798,13 @@ function App() {
       <footer className="footer">
 
         <div>
+
           <h2>LOOPA</h2>
+
           <p>
             Your Style. Your World.
           </p>
+
         </div>
 
         <div className="footer-links">
@@ -1027,11 +1827,33 @@ function App() {
 
           <button
             onClick={() =>
-              openShop("Crochet Corner")
+              openShop(
+                "Crochet Corner"
+              )
             }
           >
             Crochet Corner
           </button>
+
+          {!user && (
+            <button
+              onClick={() =>
+                openAuth("signup")
+              }
+            >
+              Sign Up
+            </button>
+          )}
+
+          {user && (
+            <button
+              onClick={() =>
+                setPage("account")
+              }
+            >
+              My Account
+            </button>
+          )}
 
         </div>
 
