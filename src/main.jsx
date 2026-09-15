@@ -87,6 +87,50 @@ const categoryStructure = {
 };
 
 /* ---------------------------------------
+   SPECIAL WORLDS
+---------------------------------------- */
+
+const worldContent = {
+  "Little Loves": {
+    eyebrow: "A LITTLE WORLD OF LOVE",
+    title: "Little Loves",
+    description:
+      "A dreamy little world filled with adorable pieces for babies, toddlers and little girls.",
+    emptyIcon: "🧸",
+    emptyTitle: "Something sweet is coming...",
+    emptyText:
+      "We're bringing beautiful little things to Little Loves.",
+    pills: [
+      "🧸 Baby",
+      "🌈 Toddler",
+      "🎀 Little Girls",
+      "🎂 Birthdays",
+      "👯 Mommy & Me",
+      "🌸 Handmade",
+    ],
+  },
+
+  "Crochet Corner": {
+    eyebrow: "LOOPA ARTISAN",
+    title: "Crochet Corner",
+    description:
+      "A cozy handmade world of yarn, stitches, beads, hooks and beautiful creations made by hand.",
+    emptyIcon: "🧶",
+    emptyTitle: "The yarn is still spinning...",
+    emptyText:
+      "Beautiful handmade creations from LOOPA artisans will appear here.",
+    pills: [
+      "🧶 Crochet",
+      "🪡 Needles",
+      "🧵 Thread",
+      "📿 Beads",
+      "🪝 Hooks",
+      "✂️ Handmade",
+    ],
+  },
+};
+
+/* ---------------------------------------
    APP
 ---------------------------------------- */
 
@@ -101,7 +145,9 @@ function App() {
 
   const [page, setPage] = useState("home");
 
-  const [activeCategory, setActiveCategory] = useState("Women");
+  const [activeCategory, setActiveCategory] =
+    useState("Women");
+
   const [activeSubcategory, setActiveSubcategory] =
     useState("All Women");
 
@@ -495,14 +541,6 @@ function App() {
       setAuthSubmitting(false);
       return;
     }
-
-    /*
-      The database trigger already creates the
-      profiles row with the user's email.
-
-      If Supabase immediately returns a session,
-      we also update the profile with the name.
-    */
 
     if (data.user && data.session) {
       await supabase
@@ -972,6 +1010,46 @@ function App() {
   };
 
   /* ---------------------------------------
+     SPECIAL SHOP EMPTY STATE
+  ---------------------------------------- */
+
+  const SpecialShopDecor = () => {
+    if (activeCategory === "Little Loves") {
+      return (
+        <div className="little-shop-decor" aria-hidden="true">
+          <span>☁️</span>
+          <span>🌈</span>
+          <span>🧸</span>
+          <span>🎀</span>
+          <span>⭐</span>
+          <span>🪆</span>
+          <span>🧸</span>
+          <span>☁️</span>
+          <span>🌸</span>
+        </div>
+      );
+    }
+
+    if (activeCategory === "Crochet Corner") {
+      return (
+        <div className="crochet-shop-decor" aria-hidden="true">
+          <span>🧶</span>
+          <span>🪝</span>
+          <span>🧵</span>
+          <span>📿</span>
+          <span>🪡</span>
+          <span>✂️</span>
+          <span>🧶</span>
+          <span>🧵</span>
+          <span>📿</span>
+        </div>
+      );
+    }
+
+    return null;
+  };
+
+  /* ---------------------------------------
      RENDER
   ---------------------------------------- */
 
@@ -1105,6 +1183,7 @@ function App() {
                   {cart.length}
                 </span>
               )}
+
             </button>
 
           </div>
@@ -1339,7 +1418,7 @@ function App() {
 
           </section>
 
-          {/* LITTLE LOVES */}
+          {/* LITTLE LOVES WORLD */}
 
           <section className="little-world">
 
@@ -1357,6 +1436,18 @@ function App() {
 
             <div className="little-star star-two">
               ✨
+            </div>
+
+            <div className="little-rainbow">
+              🌈
+            </div>
+
+            <div className="little-toy toy-one">
+              🧸
+            </div>
+
+            <div className="little-toy toy-two">
+              🪆
             </div>
 
             <div className="little-content">
@@ -1538,6 +1629,18 @@ function App() {
               🧵
             </div>
 
+            <div className="crochet-needle needle-one">
+              🪡
+            </div>
+
+            <div className="crochet-hook hook-one">
+              🪝
+            </div>
+
+            <div className="crochet-beads beads-one">
+              📿
+            </div>
+
             <div className="crochet-visual">
 
               <div className="yarn-circle">
@@ -1580,11 +1683,15 @@ function App() {
                 </span>
 
                 <span>
-                  🌼 Handmade
+                  📿 Beaded Pieces
                 </span>
 
                 <span>
-                  🪡 Custom Pieces
+                  🪡 Needlework
+                </span>
+
+                <span>
+                  🪝 Crochet Hooks
                 </span>
 
               </div>
@@ -1654,7 +1761,15 @@ function App() {
       ====================================== */}
 
       {page === "shop" && (
-        <main className="shop-page">
+        <main
+          className={`shop-page ${
+            activeCategory === "Little Loves"
+              ? "shop-page-little"
+              : activeCategory === "Crochet Corner"
+              ? "shop-page-crochet"
+              : ""
+          }`}
+        >
 
           <button
             className="back-home"
@@ -1668,7 +1783,11 @@ function App() {
           <div className="shop-header">
 
             <p className="eyebrow">
-              SHOP LOOPA
+              {activeCategory === "Little Loves"
+                ? "🧸 A LITTLE WORLD"
+                : activeCategory === "Crochet Corner"
+                ? "🧶 THE HANDMADE STUDIO"
+                : "SHOP LOOPA"}
             </p>
 
             <h1>
@@ -1676,9 +1795,22 @@ function App() {
             </h1>
 
             <p>
-              Discover pieces made to
-              make you feel like you.
+              {worldContent[activeCategory]
+                ?.description ||
+                "Discover pieces made to make you feel like you."}
             </p>
+
+            {worldContent[activeCategory] && (
+              <div className="special-shop-pills">
+                {worldContent[
+                  activeCategory
+                ].pills.map((pill) => (
+                  <span key={pill}>
+                    {pill}
+                  </span>
+                ))}
+              </div>
+            )}
 
           </div>
 
@@ -1737,7 +1869,15 @@ function App() {
 
                 <div className="empty-shop">
 
-                  <span>🎀</span>
+                  <span>
+                    {activeCategory ===
+                    "Little Loves"
+                      ? "🧸"
+                      : activeCategory ===
+                        "Crochet Corner"
+                      ? "🧶"
+                      : "🎀"}
+                  </span>
 
                   <h2>
                     Loading LOOPA...
@@ -1768,19 +1908,47 @@ function App() {
 
               ) : (
 
-                <div className="empty-shop">
+                <div className="special-empty-wrapper">
 
-                  <span>🎀</span>
+                  <SpecialShopDecor />
 
-                  <h2>
-                    Coming to LOOPA
-                  </h2>
+                  <div className="empty-shop special-empty">
 
-                  <p>
-                    We're filling this
-                    little corner with
-                    beautiful pieces.
-                  </p>
+                    <span>
+                      {worldContent[
+                        activeCategory
+                      ]?.emptyIcon || "🎀"}
+                    </span>
+
+                    <h2>
+                      {worldContent[
+                        activeCategory
+                      ]?.emptyTitle ||
+                        "Coming to LOOPA"}
+                    </h2>
+
+                    <p>
+                      {worldContent[
+                        activeCategory
+                      ]?.emptyText ||
+                        "We're filling this little corner with beautiful pieces."}
+                    </p>
+
+                    {activeCategory ===
+                      "Little Loves" && (
+                      <div className="empty-character-row">
+                        🧸 ☁️ 🌈 🎀 🪆 ⭐
+                      </div>
+                    )}
+
+                    {activeCategory ===
+                      "Crochet Corner" && (
+                      <div className="empty-character-row">
+                        🧶 🪝 🧵 📿 🪡 ✂️
+                      </div>
+                    )}
+
+                  </div>
 
                 </div>
 
