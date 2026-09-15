@@ -18,9 +18,9 @@ import {
 import "./style.css";
 import { supabase } from "./supabase";
 
-/* =========================================================
+/* ---------------------------------------
    LOOPA SHOP STRUCTURE
-========================================================= */
+---------------------------------------- */
 
 const categoryStructure = {
   Women: [
@@ -86,106 +86,53 @@ const categoryStructure = {
   ],
 };
 
-/* =========================================================
-   LOOPA WORLD INFORMATION
-========================================================= */
+/* ---------------------------------------
+   SPECIAL WORLDS
+---------------------------------------- */
 
-const worldInfo = {
-  Women: {
-    eyebrow: "LOOPA WOMEN • THE EDIT",
-    title: "Your wardrobe, your world.",
-    description:
-      "Pieces for every version of you — from everyday pretty to dressed all the way up.",
-    emptyIcon: "W",
-    emptyTitle:
-      "Your wardrobe is about to get prettier.",
-    emptyText:
-      "Beautiful pieces from LOOPA creators are coming soon.",
-    visuals: ["W", "01", "02", "03"],
-  },
-
+const worldContent = {
   "Little Loves": {
-    eyebrow: "LITTLE LOVES • TINY TREASURES",
-    title: "A little world of lovely things.",
+    eyebrow: "A LITTLE WORLD OF LOVE",
+    title: "Little Loves",
     description:
-      "Dreamy pieces for babies, toddlers and little girls — made for tiny moments and big memories.",
+      "A dreamy little world filled with adorable pieces for babies, toddlers and little girls.",
     emptyIcon: "🧸",
-    emptyTitle: "Tiny treasures are coming.",
+    emptyTitle: "Something sweet is coming...",
     emptyText:
-      "Our little boutique is getting ready for its first beautiful drop.",
-    visuals: [
-      "🧸",
-      "🌈",
-      "🎀",
-      "🪆",
-      "🧸",
-      "☁️",
-      "🧸",
+      "We're bringing beautiful little things to Little Loves.",
+    pills: [
+      "🧸 Baby",
+      "🌈 Toddler",
+      "🎀 Little Girls",
+      "🎂 Birthdays",
+      "👯 Mommy & Me",
+      "🌸 Handmade",
     ],
   },
 
-  Shoes: {
-    eyebrow: "LOOPA SHOES • THE SHOE EDIT",
-    title: "Give your outfit a little lift.",
-    description:
-      "Heels, sneakers, sandals and more for every mood, moment and main-character entrance.",
-    emptyIcon: "S",
-    emptyTitle:
-      "Your next favorite pair is coming.",
-    emptyText:
-      "We're getting the LOOPA shoe closet ready.",
-    visuals: ["S", "01", "02", "03"],
-  },
-
-  Bags: {
-    eyebrow: "LOOPA BAGS • THE BAG EDIT",
-    title: "Carry something beautiful.",
-    description:
-      "Mini bags, everyday favorites and statement pieces made to complete your look.",
-    emptyIcon: "B",
-    emptyTitle:
-      "Something pretty is on the way.",
-    emptyText:
-      "Your next everyday obsession is coming soon.",
-    visuals: ["B", "01", "02", "03"],
-  },
-
-  Accessories: {
-    eyebrow: "LOOPA ACCESSORIES • THE FINISHING TOUCH",
-    title: "Little details. Big energy.",
-    description:
-      "Jewelry, hair pieces, sunglasses and finishing touches that make the whole look.",
-    emptyIcon: "A",
-    emptyTitle:
-      "The finishing touches are coming.",
-    emptyText:
-      "Beautiful details for your LOOPA look are coming soon.",
-    visuals: ["A", "01", "02", "03"],
-  },
-
   "Crochet Corner": {
-    eyebrow: "LOOPA ARTISAN • CROCHET CORNER",
-    title: "Made stitch by stitch.",
+    eyebrow: "LOOPA ARTISAN",
+    title: "Crochet Corner",
     description:
-      "Yarn, stitches, beads and handmade pieces created with patience, personality and love.",
+      "A cozy handmade world of yarn, stitches, beads, hooks and beautiful creations made by hand.",
     emptyIcon: "🧶",
-    emptyTitle: "The yarn is warming up.",
+    emptyTitle: "The yarn is still spinning...",
     emptyText:
-      "Handmade pieces are coming soon.",
-    visuals: [
-      "🧶",
-      "🪡",
-      "🧵",
-      "📿",
-      "✂️",
-      "🧶",
+      "Beautiful handmade creations from LOOPA artisans will appear here.",
+    pills: [
+      "🧶 Crochet",
+      "🪡 Needles",
+      "🧵 Thread",
+      "📿 Beads",
+      "🪝 Hooks",
+      "✂️ Handmade",
     ],
   },
 };
 
-/* =========================================================
+/* ---------------------------------------
    APP
-========================================================= */
+---------------------------------------- */
 
 function App() {
   const [menuOpen, setMenuOpen] = useState(false);
@@ -193,11 +140,8 @@ function App() {
   const [dbCategories, setDbCategories] = useState([]);
   const [dbProducts, setDbProducts] = useState([]);
 
-  const [loadingProducts, setLoadingProducts] =
-    useState(true);
-
-  const [loadingCategories, setLoadingCategories] =
-    useState(true);
+  const [loadingProducts, setLoadingProducts] = useState(true);
+  const [loadingCategories, setLoadingCategories] = useState(true);
 
   const [page, setPage] = useState("home");
 
@@ -212,27 +156,25 @@ function App() {
   const [wishlist, setWishlist] = useState([]);
   const [cart, setCart] = useState([]);
 
-  /* =========================================================
-     AUTH
-  ========================================================= */
+  /* ---------------------------------------
+     AUTH STATE
+  ---------------------------------------- */
 
   const [user, setUser] = useState(null);
   const [profile, setProfile] = useState(null);
-  const [authLoading, setAuthLoading] =
-    useState(true);
+  const [authLoading, setAuthLoading] = useState(true);
 
-  const [authMode, setAuthMode] =
-    useState("login");
+  /* ---------------------------------------
+     AUTH FORM
+  ---------------------------------------- */
+
+  const [authMode, setAuthMode] = useState("login");
 
   const [email, setEmail] = useState("");
-  const [password, setPassword] =
-    useState("");
-
+  const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] =
     useState("");
-
-  const [fullName, setFullName] =
-    useState("");
+  const [fullName, setFullName] = useState("");
 
   const [showPassword, setShowPassword] =
     useState(false);
@@ -240,18 +182,14 @@ function App() {
   const [showConfirmPassword, setShowConfirmPassword] =
     useState(false);
 
-  const [authMessage, setAuthMessage] =
-    useState("");
-
-  const [authError, setAuthError] =
-    useState("");
-
+  const [authMessage, setAuthMessage] = useState("");
+  const [authError, setAuthError] = useState("");
   const [authSubmitting, setAuthSubmitting] =
     useState(false);
 
-  /* =========================================================
+  /* ---------------------------------------
      CHECK CURRENT USER
-  ========================================================= */
+  ---------------------------------------- */
 
   useEffect(() => {
     const getCurrentUser = async () => {
@@ -273,42 +211,37 @@ function App() {
 
     const {
       data: { subscription },
-    } =
-      supabase.auth.onAuthStateChange(
-        async (_event, session) => {
-          const currentUser =
-            session?.user || null;
+    } = supabase.auth.onAuthStateChange(
+      async (_event, session) => {
+        const currentUser = session?.user || null;
 
-          setUser(currentUser);
+        setUser(currentUser);
 
-          if (currentUser) {
-            await loadProfile(
-              currentUser.id
-            );
-          } else {
-            setProfile(null);
-          }
+        if (currentUser) {
+          await loadProfile(currentUser.id);
+        } else {
+          setProfile(null);
         }
-      );
+      }
+    );
 
     return () => {
       subscription.unsubscribe();
     };
   }, []);
 
-  /* =========================================================
+  /* ---------------------------------------
      LOAD PROFILE
-  ========================================================= */
+  ---------------------------------------- */
 
   const loadProfile = async (userId) => {
-    const { data, error } =
-      await supabase
-        .from("profiles")
-        .select(
-          "id, full_name, email, phone, avatar_url, role"
-        )
-        .eq("id", userId)
-        .maybeSingle();
+    const { data, error } = await supabase
+      .from("profiles")
+      .select(
+        "id, full_name, email, phone, avatar_url, role"
+      )
+      .eq("id", userId)
+      .maybeSingle();
 
     if (error) {
       console.error(
@@ -321,9 +254,9 @@ function App() {
     setProfile(data);
   };
 
-  /* =========================================================
-     LOAD STORE
-  ========================================================= */
+  /* ---------------------------------------
+     LOAD CATEGORIES + PRODUCTS
+  ---------------------------------------- */
 
   useEffect(() => {
     const loadStore = async () => {
@@ -333,13 +266,12 @@ function App() {
       const {
         data: categoryData,
         error: categoryError,
-      } =
-        await supabase
-          .from("categories")
-          .select(
-            "id, name, description, image_url"
-          )
-          .order("name");
+      } = await supabase
+        .from("categories")
+        .select(
+          "id, name, description, image_url"
+        )
+        .order("name");
 
       if (categoryError) {
         console.error(
@@ -347,24 +279,33 @@ function App() {
           categoryError
         );
       } else {
-        setDbCategories(
-          categoryData || []
-        );
+        setDbCategories(categoryData || []);
       }
 
       const {
         data: productData,
         error: productError,
-      } =
-        await supabase
-          .from("products")
-          .select(
-            "id,name,description,price,stock,status,seller_id,category_id,made_to_order,production_days,created_at"
-          )
-          .eq("status", "approved")
-          .order("created_at", {
-            ascending: false,
-          });
+      } = await supabase
+        .from("products")
+        .select(
+          `
+          id,
+          name,
+          description,
+          price,
+          stock,
+          status,
+          seller_id,
+          category_id,
+          made_to_order,
+          production_days,
+          created_at
+        `
+        )
+        .eq("status", "approved")
+        .order("created_at", {
+          ascending: false,
+        });
 
       if (productError) {
         console.error(
@@ -372,9 +313,7 @@ function App() {
           productError
         );
       } else {
-        setDbProducts(
-          productData || []
-        );
+        setDbProducts(productData || []);
       }
 
       setLoadingCategories(false);
@@ -384,26 +323,23 @@ function App() {
     loadStore();
   }, []);
 
-  /* =========================================================
-     CATEGORY ID
-  ========================================================= */
+  /* ---------------------------------------
+     FIND CATEGORY ID
+  ---------------------------------------- */
 
-  const getCategoryId = (
-    categoryName
-  ) => {
-    const category =
-      dbCategories.find(
-        (item) =>
-          item.name.toLowerCase() ===
-          categoryName.toLowerCase()
-      );
+  const getCategoryId = (categoryName) => {
+    const category = dbCategories.find(
+      (item) =>
+        item.name.toLowerCase() ===
+        categoryName.toLowerCase()
+    );
 
     return category?.id || null;
   };
 
-  /* =========================================================
+  /* ---------------------------------------
      OPEN SHOP
-  ========================================================= */
+  ---------------------------------------- */
 
   const openShop = (category) => {
     setActiveCategory(category);
@@ -412,9 +348,7 @@ function App() {
       categoryStructure[category] ||
       [`All ${category}`];
 
-    setActiveSubcategory(
-      subcategories[0]
-    );
+    setActiveSubcategory(subcategories[0]);
 
     setPage("shop");
     setMenuOpen(false);
@@ -425,13 +359,11 @@ function App() {
     });
   };
 
-  /* =========================================================
+  /* ---------------------------------------
      OPEN AUTH
-  ========================================================= */
+  ---------------------------------------- */
 
-  const openAuth = (
-    mode = "login"
-  ) => {
+  const openAuth = (mode = "login") => {
     setAuthMode(mode);
     setAuthMessage("");
     setAuthError("");
@@ -450,122 +382,94 @@ function App() {
     });
   };
 
-  /* =========================================================
-     FILTER PRODUCTS
-  ========================================================= */
+  /* ---------------------------------------
+     CURRENT CATEGORY
+  ---------------------------------------- */
 
   const activeCategoryId =
-    getCategoryId(
-      activeCategory
-    );
+    getCategoryId(activeCategory);
 
-  const filteredProducts =
-    dbProducts.filter(
-      (product) => {
-        const categoryMatch =
-          product.category_id ===
-          activeCategoryId;
+  /* ---------------------------------------
+     FILTER PRODUCTS
+  ---------------------------------------- */
 
-        const searchText =
-          search.toLowerCase().trim();
+  const filteredProducts = dbProducts.filter(
+    (product) => {
+      const categoryMatch =
+        product.category_id ===
+        activeCategoryId;
 
-        const searchMatch =
-          !searchText ||
-          product.name
-            ?.toLowerCase()
-            .includes(searchText) ||
-          product.description
-            ?.toLowerCase()
-            .includes(searchText);
+      const searchText =
+        search.toLowerCase().trim();
 
-        return (
-          categoryMatch &&
-          searchMatch
-        );
-      }
-    );
+      const searchMatch =
+        !searchText ||
+        product.name
+          ?.toLowerCase()
+          .includes(searchText) ||
+        product.description
+          ?.toLowerCase()
+          .includes(searchText);
 
-  const homeProducts =
-    dbProducts.slice(0, 4);
-
-  /* =========================================================
-     WISHLIST
-  ========================================================= */
-
-  const toggleWishlist = (
-    id
-  ) => {
-    if (!user) {
-      openAuth("login");
-      return;
+      return categoryMatch && searchMatch;
     }
+  );
 
+  /* ---------------------------------------
+     HOME PRODUCTS
+  ---------------------------------------- */
+
+  const homeProducts = dbProducts.slice(0, 4);
+
+  /* ---------------------------------------
+     WISHLIST
+  ---------------------------------------- */
+
+  const toggleWishlist = (id) => {
     setWishlist((old) =>
       old.includes(id)
-        ? old.filter(
-            (item) => item !== id
-          )
+        ? old.filter((item) => item !== id)
         : [...old, id]
     );
   };
 
-  /* =========================================================
+  /* ---------------------------------------
      CART
-  ========================================================= */
+  ---------------------------------------- */
 
-  const addToBag = (
-    product
-  ) => {
-    if (!user) {
-      openAuth("login");
-      return;
-    }
-
-    setCart((old) => [
-      ...old,
-      product,
-    ]);
+  const addToBag = (product) => {
+    setCart((old) => [...old, product]);
   };
 
-  /* =========================================================
+  /* ---------------------------------------
      LOGIN
-  ========================================================= */
+  ---------------------------------------- */
 
-  const handleLogin = async (
-    e
-  ) => {
+  const handleLogin = async (e) => {
     e.preventDefault();
 
     setAuthError("");
     setAuthMessage("");
     setAuthSubmitting(true);
 
-    const {
-      data,
-      error,
-    } =
-      await supabase.auth.signInWithPassword(
-        {
-          email: email.trim(),
-          password,
-        }
-      );
+    const { data, error } =
+      await supabase.auth.signInWithPassword({
+        email: email.trim(),
+        password,
+      });
 
     if (error) {
       setAuthError(
         error.message ||
           "We couldn't log you in. Please check your details."
       );
-
       setAuthSubmitting(false);
       return;
     }
 
     setUser(data.user);
 
-    await loadProfile(
-      data.user.id
-    );
+    await loadProfile(data.user.id);
 
     setAuthMessage(
       "Welcome back to LOOPA 💕"
@@ -573,19 +477,16 @@ function App() {
 
     setAuthSubmitting(false);
 
-    setTimeout(
-      () => setPage("home"),
-      700
-    );
+    setTimeout(() => {
+      setPage("home");
+    }, 700);
   };
 
-  /* =========================================================
+  /* ---------------------------------------
      SIGN UP
-  ========================================================= */
+  ---------------------------------------- */
 
-  const handleSignup = async (
-    e
-  ) => {
+  const handleSignup = async (e) => {
     e.preventDefault();
 
     setAuthError("");
@@ -612,10 +513,7 @@ function App() {
       return;
     }
 
-    if (
-      password !==
-      confirmPassword
-    ) {
+    if (password !== confirmPassword) {
       setAuthError(
         "Your passwords do not match."
       );
@@ -624,62 +522,45 @@ function App() {
 
     setAuthSubmitting(true);
 
-    const {
-      data,
-      error,
-    } =
-      await supabase.auth.signUp(
-        {
-          email: email.trim(),
-          password,
-          options: {
-            data: {
-              full_name:
-                fullName.trim(),
-            },
+    const { data, error } =
+      await supabase.auth.signUp({
+        email: email.trim(),
+        password,
+        options: {
+          data: {
+            full_name: fullName.trim(),
           },
-        }
-      );
+        },
+      });
 
     if (error) {
       setAuthError(
         error.message ||
           "We couldn't create your account."
       );
-
       setAuthSubmitting(false);
       return;
     }
 
-    if (
-      data.user &&
-      data.session
-    ) {
+    if (data.user && data.session) {
       await supabase
         .from("profiles")
         .update({
-          full_name:
-            fullName.trim(),
+          full_name: fullName.trim(),
         })
-        .eq(
-          "id",
-          data.user.id
-        );
+        .eq("id", data.user.id);
 
       setUser(data.user);
 
-      await loadProfile(
-        data.user.id
-      );
+      await loadProfile(data.user.id);
 
       setAuthMessage(
         "Your LOOPA account is ready 💕"
       );
 
-      setTimeout(
-        () => setPage("home"),
-        800
-      );
+      setTimeout(() => {
+        setPage("home");
+      }, 800);
     } else {
       setAuthMessage(
         "Account created! Please check your email to confirm your account, then log in. 💕"
@@ -693,15 +574,16 @@ function App() {
     setAuthSubmitting(false);
   };
 
-  /* =========================================================
+  /* ---------------------------------------
      LOG OUT
-  ========================================================= */
+  ---------------------------------------- */
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
 
     setUser(null);
     setProfile(null);
+
     setPage("home");
 
     window.scrollTo({
@@ -710,924 +592,353 @@ function App() {
     });
   };
 
-  /* =========================================================
+  /* ---------------------------------------
      PRODUCT CARD
-  ========================================================= */
+  ---------------------------------------- */
 
-  const ProductCard = ({
-    product,
-  }) => (
-    <article
-      className={`product-card product-${activeCategory
-        .toLowerCase()
-        .replace(
-          /\s+/g,
-          "-"
-        )}`}
-    >
-      <div className="product-image">
-
-        <span className="product-tag">
-          {product.made_to_order
-            ? "Made to Order"
-            : "Available"}
-        </span>
-
-        <button
-          className="wishlist-button"
-          onClick={() =>
-            toggleWishlist(
-              product.id
-            )
-          }
-          aria-label="Add to wishlist"
-        >
-          <Heart
-            size={19}
-            fill={
-              wishlist.includes(
-                product.id
-              )
-                ? "currentColor"
-                : "none"
-            }
-          />
-        </button>
-
-        <span className="product-visual-placeholder">
-          {activeCategory ===
-          "Women"
-            ? "WOMEN"
-            : activeCategory ===
-              "Shoes"
-            ? "SHOES"
-            : activeCategory ===
-              "Bags"
-            ? "BAGS"
-            : activeCategory ===
-              "Accessories"
-            ? "DETAILS"
-            : ""}
-        </span>
-
-      </div>
-
-      <div className="product-info">
-
-        <p className="seller">
-          LOOPA Creator
-        </p>
-
-        <h3>
-          {product.name}
-        </h3>
-
-        <p className="price">
-          KES{" "}
-          {Number(
-            product.price
-          ).toLocaleString()}
-        </p>
-
-        {product.stock !==
-          null && (
-          <p className="seller">
-            {product.stock >
-            0
-              ? `${product.stock} available`
-              : "Out of stock"}
-          </p>
-        )}
-
-        <button
-          className="add-button"
-          onClick={() =>
-            addToBag(product)
-          }
-          disabled={
-            product.stock !==
-              null &&
-            product.stock <=
-              0
-          }
-        >
-          {product.stock !==
-            null &&
-          product.stock <=
-            0
-            ? "Out of Stock"
-            : "Add to Bag"}
-        </button>
-
-      </div>
-    </article>
-  );
-
-  /* =========================================================
-     WORLD VISUAL
-  ========================================================= */
-
-  const WorldVisual = () => {
-    const info =
-      worldInfo[
-        activeCategory
-      ];
-
-    /* LITTLE LOVES — UNTOUCHED */
-    if (
-      activeCategory ===
-      "Little Loves"
-    ) {
-      return (
-        <div className="world-visual little-world-visual">
-
-          <div className="little-cloud cloud-a">
-            ☁️
-          </div>
-
-          <div className="little-cloud cloud-b">
-            ☁️
-          </div>
-
-          <div className="rainbow rainbow-main">
-            🌈
-          </div>
-
-          <div className="toy toy-teddy">
-            🧸
-          </div>
-
-          <div className="toy toy-doll">
-            🪆
-          </div>
-
-          <div className="toy toy-bow">
-            🎀
-          </div>
-
-          <div className="toy toy-blocks">
-            🧸
-          </div>
-
-          <div className="little-stars">
-            ✦　✧　✦　✧
-          </div>
-
-        </div>
-      );
-    }
-
-    /* CROCHET CORNER — UNTOUCHED */
-    if (
-      activeCategory ===
-      "Crochet Corner"
-    ) {
-      return (
-        <div className="world-visual crochet-world-visual">
-
-          <div className="yarn-ball yarn-large">
-            🧶
-          </div>
-
-          <div className="yarn-ball yarn-small-one">
-            🧶
-          </div>
-
-          <div className="yarn-ball yarn-small-two">
-            🧶
-          </div>
-
-          <div className="craft-tool hook-one">
-            🪡
-          </div>
-
-          <div className="craft-tool hook-two">
-            🪡
-          </div>
-
-          <div className="bead-string">
-            ● ○ ● ○ ● ○ ●
-          </div>
-
-          <div className="thread-lines">
-            ∿∿∿∿∿
-          </div>
-
-          <div className="craft-flower">
-            🌸
-          </div>
-
-        </div>
-      );
-    }
-
-    /* WOMEN / SHOES / BAGS / ACCESSORIES */
+  const ProductCard = ({ product }) => {
     return (
-      <div
-        className={`world-visual standard-world-visual world-${activeCategory
-          .toLowerCase()
-          .replace(
-            /\s+/g,
-            "-"
-          )}`}
-      >
-        <div className="editorial-frame">
-          <span className="editorial-number">
-            01
+      <article className="product-card">
+
+        <div className="product-image">
+
+          <span className="product-tag">
+            {product.made_to_order
+              ? "Made to Order"
+              : "Available"}
           </span>
 
-          <span className="editorial-word">
-            {activeCategory ===
-            "Women"
-              ? "THE EDIT"
-              : activeCategory ===
-                "Shoes"
-              ? "THE SHOE EDIT"
-              : activeCategory ===
-                "Bags"
-              ? "THE BAG EDIT"
-              : "THE DETAIL EDIT"}
+          <button
+            className="wishlist-button"
+            onClick={() =>
+              toggleWishlist(product.id)
+            }
+          >
+            <Heart
+              size={19}
+              fill={
+                wishlist.includes(product.id)
+                  ? "currentColor"
+                  : "none"
+              }
+            />
+          </button>
+
+          <span className="product-emoji">
+            🛍️
           </span>
 
-          <span className="editorial-line" />
-
-          <span className="editorial-small">
-            LOOPA / 2026
-          </span>
         </div>
 
-        <div className="editorial-float float-one">
-          {activeCategory ===
-          "Women"
-            ? "W"
-            : activeCategory ===
-              "Shoes"
-            ? "S"
-            : activeCategory ===
-              "Bags"
-            ? "B"
-            : "A"}
+        <div className="product-info">
+
+          <p className="seller">
+            LOOPA Creator
+          </p>
+
+          <h3>{product.name}</h3>
+
+          <p className="price">
+            KES{" "}
+            {Number(
+              product.price
+            ).toLocaleString()}
+          </p>
+
+          {product.stock !== null && (
+            <p className="seller">
+              {product.stock > 0
+                ? `${product.stock} available`
+                : "Out of stock"}
+            </p>
+          )}
+
+          <button
+            className="add-button"
+            onClick={() =>
+              addToBag(product)
+            }
+            disabled={
+              product.stock !== null &&
+              product.stock <= 0
+            }
+          >
+            {product.stock !== null &&
+            product.stock <= 0
+              ? "Out of Stock"
+              : "Add to Bag"}
+          </button>
+
         </div>
 
-        <div className="editorial-float float-two">
-          02
-        </div>
-
-        <div className="editorial-float float-three">
-          03
-        </div>
-      </div>
+      </article>
     );
   };
 
-  /* =========================================================
+  /* ---------------------------------------
      AUTH PAGE
-  ========================================================= */
+  ---------------------------------------- */
 
-  const AuthPage = () => (
-    <main className="auth-page">
+  const AuthPage = () => {
+    return (
+      <main className="auth-page">
 
-      <div className="auth-decoration auth-bow">
-        🎀
-      </div>
-
-      <div className="auth-decoration auth-flower">
-        ✿
-      </div>
-
-      <div className="auth-card">
-
-        <button
-          className="auth-back"
-          onClick={() =>
-            setPage("home")
-          }
-        >
-          ← Back to LOOPA
-        </button>
-
-        <div className="auth-logo">
-          LOOPA
+        <div className="auth-decoration auth-bow">
+          🎀
         </div>
 
-        <div className="auth-card-heading">
+        <div className="auth-decoration auth-flower">
+          🌸
+        </div>
 
-          <span className="auth-mini-icon">
-            ♡
-          </span>
+        <div className="auth-card">
+
+          <button
+            className="auth-back"
+            onClick={() =>
+              setPage("home")
+            }
+          >
+            ← Back to LOOPA
+          </button>
+
+          <div className="auth-logo">
+            LOOPA
+          </div>
+
+          <p className="eyebrow">
+            {authMode === "login"
+              ? "WELCOME BACK"
+              : "JOIN THE LOOPA WORLD"}
+          </p>
 
           <h1>
-            {authMode ===
-            "login"
-              ? "Welcome back, babe."
-              : "Come join LOOPA."}
+            {authMode === "login"
+              ? "Welcome back."
+              : "Create your account."}
           </h1>
 
           <p className="auth-intro">
-            {authMode ===
-            "login"
-              ? "Your little fashion world is waiting."
-              : "Create your account and make LOOPA yours."}
+            {authMode === "login"
+              ? "Log in to save your favorites, manage your bag and keep shopping."
+              : "Create your free LOOPA account and make your fashion world yours."}
           </p>
 
-        </div>
-
-        {authError && (
-          <div className="auth-alert auth-error">
-            {authError}
-          </div>
-        )}
-
-        {authMessage && (
-          <div className="auth-alert auth-success">
-            {authMessage}
-          </div>
-        )}
-
-        <form
-          className="auth-form"
-          onSubmit={
-            authMode ===
-            "login"
-              ? handleLogin
-              : handleSignup
-          }
-        >
-
-          {authMode ===
-            "signup" && (
-            <label className="form-field">
-
-              <span>
-                Full name
-              </span>
-
-              <input
-                type="text"
-                value={fullName}
-                onChange={(e) =>
-                  setFullName(
-                    e.target.value
-                  )
-                }
-                placeholder="Your full name"
-                autoComplete="name"
-              />
-
-            </label>
+          {authError && (
+            <div className="auth-alert error">
+              {authError}
+            </div>
           )}
 
-          <label className="form-field">
+          {authMessage && (
+            <div className="auth-alert success">
+              {authMessage}
+            </div>
+          )}
 
-            <span>
-              Email address
-            </span>
+          <form
+            className="auth-form"
+            onSubmit={
+              authMode === "login"
+                ? handleLogin
+                : handleSignup
+            }
+          >
 
-            <input
-              type="email"
-              value={email}
-              onChange={(e) =>
-                setEmail(
-                  e.target.value
-                )
-              }
-              placeholder="you@example.com"
-              autoComplete="email"
-            />
+            {authMode === "signup" && (
+              <div className="form-field">
 
-          </label>
+                <label>
+                  Full Name
+                </label>
 
-          <label className="form-field">
+                <input
+                  type="text"
+                  placeholder="Your full name"
+                  value={fullName}
+                  onChange={(e) =>
+                    setFullName(
+                      e.target.value
+                    )
+                  }
+                  autoComplete="name"
+                />
 
-            <span>
-              Password
-            </span>
+              </div>
+            )}
 
-            <div className="password-input">
+            <div className="form-field">
+
+              <label>
+                Email Address
+              </label>
 
               <input
-                type={
-                  showPassword
-                    ? "text"
-                    : "password"
-                }
-                value={password}
+                type="email"
+                placeholder="you@example.com"
+                value={email}
                 onChange={(e) =>
-                  setPassword(
-                    e.target.value
-                  )
+                  setEmail(e.target.value)
                 }
-                placeholder="Your password"
-                autoComplete={
-                  authMode ===
-                  "login"
-                    ? "current-password"
-                    : "new-password"
-                }
+                autoComplete="email"
               />
-
-              <button
-                type="button"
-                onClick={() =>
-                  setShowPassword(
-                    !showPassword
-                  )
-                }
-                aria-label="Show password"
-              >
-                {showPassword ? (
-                  <EyeOff
-                    size={18}
-                  />
-                ) : (
-                  <Eye
-                    size={18}
-                  />
-                )}
-              </button>
 
             </div>
 
-          </label>
+            <div className="form-field">
 
-          {authMode ===
-            "signup" && (
-            <label className="form-field">
-
-              <span>
-                Confirm password
-              </span>
+              <label>
+                Password
+              </label>
 
               <div className="password-input">
 
                 <input
                   type={
-                    showConfirmPassword
+                    showPassword
                       ? "text"
                       : "password"
                   }
-                  value={
-                    confirmPassword
-                  }
+                  placeholder="Enter your password"
+                  value={password}
                   onChange={(e) =>
-                    setConfirmPassword(
+                    setPassword(
                       e.target.value
                     )
                   }
-                  placeholder="Repeat your password"
-                  autoComplete="new-password"
+                  autoComplete={
+                    authMode === "login"
+                      ? "current-password"
+                      : "new-password"
+                  }
                 />
 
                 <button
                   type="button"
                   onClick={() =>
-                    setShowConfirmPassword(
-                      !showConfirmPassword
+                    setShowPassword(
+                      !showPassword
                     )
                   }
-                  aria-label="Show password"
                 >
-                  {showConfirmPassword ? (
-                    <EyeOff
-                      size={18}
-                    />
+                  {showPassword ? (
+                    <EyeOff size={18} />
                   ) : (
-                    <Eye
-                      size={18}
-                    />
+                    <Eye size={18} />
                   )}
                 </button>
 
               </div>
 
-            </label>
-          )}
+            </div>
 
-          {authMode ===
-            "login" && (
+            {authMode === "signup" && (
+              <div className="form-field">
+
+                <label>
+                  Confirm Password
+                </label>
+
+                <div className="password-input">
+
+                  <input
+                    type={
+                      showConfirmPassword
+                        ? "text"
+                        : "password"
+                    }
+                    placeholder="Confirm your password"
+                    value={
+                      confirmPassword
+                    }
+                    onChange={(e) =>
+                      setConfirmPassword(
+                        e.target.value
+                      )
+                    }
+                    autoComplete="new-password"
+                  />
+
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setShowConfirmPassword(
+                        !showConfirmPassword
+                      )
+                    }
+                  >
+                    {showConfirmPassword ? (
+                      <EyeOff size={18} />
+                    ) : (
+                      <Eye size={18} />
+                    )}
+                  </button>
+
+                </div>
+
+              </div>
+            )}
+
+            {authMode === "login" && (
+              <button
+                type="button"
+                className="forgot-password"
+                onClick={() => {
+                  setAuthMessage(
+                    "Password reset is coming next. 💕"
+                  );
+                  setAuthError("");
+                }}
+              >
+                Forgot password?
+              </button>
+            )}
+
             <button
-              type="button"
-              className="forgot-password"
+              type="submit"
+              className="auth-submit"
+              disabled={authSubmitting}
+            >
+              {authSubmitting
+                ? "Please wait..."
+                : authMode === "login"
+                ? "Log In"
+                : "Create Account"}
+
+              {!authSubmitting && (
+                <ArrowRight size={18} />
+              )}
+            </button>
+
+          </form>
+
+          <div className="auth-switch">
+
+            <span>
+              {authMode === "login"
+                ? "Don't have a LOOPA account?"
+                : "Already have a LOOPA account?"}
+            </span>
+
+            <button
               onClick={() =>
-                setAuthMessage(
-                  "Password reset will be connected next 💕"
+                openAuth(
+                  authMode === "login"
+                    ? "signup"
+                    : "login"
                 )
               }
             >
-              Forgot password?
+              {authMode === "login"
+                ? "Sign Up"
+                : "Log In"}
             </button>
-          )}
-
-          <button
-            className="auth-submit"
-            type="submit"
-            disabled={
-              authSubmitting
-            }
-          >
-            {authSubmitting
-              ? "Please wait..."
-              : authMode ===
-                "login"
-              ? "Log In"
-              : "Create My Account"}
-          </button>
-
-        </form>
-
-        <div className="auth-switch">
-
-          <span>
-            {authMode ===
-            "login"
-              ? "Don't have a LOOPA account?"
-              : "Already have a LOOPA account?"}
-          </span>
-
-          <button
-            type="button"
-            onClick={() =>
-              openAuth(
-                authMode ===
-                  "login"
-                  ? "signup"
-                  : "login"
-              )
-            }
-          >
-            {authMode ===
-            "login"
-              ? "Sign Up"
-              : "Log In"}
-          </button>
-
-        </div>
-
-        <p className="auth-love">
-          Made for girls who love pretty things ♡
-        </p>
-
-      </div>
-
-    </main>
-  );
-
-  /* =========================================================
-     ACCOUNT PAGE
-  ========================================================= */
-
-  const AccountPage = () => (
-    <main className="account-page">
-
-      <button
-        className="back-home"
-        onClick={() =>
-          setPage("home")
-        }
-      >
-        ← Back to LOOPA
-      </button>
-
-      <div className="account-card">
-
-        <div className="account-avatar">
-          {profile?.full_name
-            ?.charAt(0)
-            ?.toUpperCase() ||
-            "♡"}
-        </div>
-
-        <p className="eyebrow">
-          MY LOOPA
-        </p>
-
-        <h1>
-          Hi,{" "}
-          {profile?.full_name?.split(
-            " "
-          )[0] || "babe"}
-          ♡
-        </h1>
-
-        <p className="account-email">
-          {profile?.email ||
-            user?.email}
-        </p>
-
-        <div className="account-menu">
-
-          <button
-            onClick={() => {
-              setPage("home");
-
-              window.scrollTo({
-                top: 0,
-                behavior: "smooth",
-              });
-            }}
-          >
-            <UserCircle
-              size={20}
-            />
-
-            <span>
-              My Profile
-            </span>
-
-            <ChevronRight
-              size={18}
-            />
-          </button>
-
-          <button
-            onClick={() => {
-              setPage("home");
-              setWishlist([]);
-            }}
-          >
-            <Heart size={20} />
-
-            <span>
-              My Wishlist
-            </span>
-
-            <ChevronRight
-              size={18}
-            />
-          </button>
-
-          <button
-            onClick={() =>
-              setPage("home")
-            }
-          >
-            <ShoppingBag
-              size={20}
-            />
-
-            <span>
-              My Orders
-            </span>
-
-            <ChevronRight
-              size={18}
-            />
-          </button>
-
-        </div>
-
-        <button
-          className="logout-button"
-          onClick={
-            handleLogout
-          }
-        >
-          <LogOut size={18} />
-          Log Out
-        </button>
-
-      </div>
-
-    </main>
-  );
-
-  /* =========================================================
-     SHOP PAGE
-  ========================================================= */
-
-  const ShopPage = () => {
-
-    const info =
-      worldInfo[
-        activeCategory
-      ];
-
-    const themeClass =
-      activeCategory ===
-      "Little Loves"
-        ? "little-shop-page"
-        : activeCategory ===
-          "Crochet Corner"
-        ? "crochet-shop-page"
-        : `standard-shop-page ${activeCategory
-            .toLowerCase()
-            .replace(
-              /\s+/g,
-              "-"
-            )}-shop-page`;
-
-    return (
-      <main
-        className={`shop-page ${themeClass}`}
-      >
-
-        <button
-          className="back-home"
-          onClick={() =>
-            setPage("home")
-          }
-        >
-          ← Back to LOOPA
-        </button>
-
-        <section className="shop-world-hero">
-
-          <div className="shop-world-copy">
-
-            <p className="eyebrow">
-              {info.eyebrow}
-            </p>
-
-            <h1>
-              {info.title}
-            </h1>
-
-            <p>
-              {info.description}
-            </p>
-
-            {activeCategory !==
-              "Little Loves" &&
-              activeCategory !==
-                "Crochet Corner" && (
-                <div className="world-meta">
-                  <span>
-                    CURATED BY LOOPA
-                  </span>
-
-                  <span>
-                    2026 EDIT
-                  </span>
-                </div>
-              )}
 
           </div>
 
-          <WorldVisual />
-
-        </section>
-
-        <div className="shop-layout">
-
-          <aside className="shop-sidebar">
-
-            <h3>
-              Shop by
-            </h3>
-
-            {(
-              categoryStructure[
-                activeCategory
-              ] || []
-            ).map(
-              (
-                subcategory
-              ) => (
-                <button
-                  key={
-                    subcategory
-                  }
-                  className={
-                    activeSubcategory ===
-                    subcategory
-                      ? "subcategory active"
-                      : "subcategory"
-                  }
-                  onClick={() =>
-                    setActiveSubcategory(
-                      subcategory
-                    )
-                  }
-                >
-                  {
-                    subcategory
-                  }
-                </button>
-              )
-            )}
-
-          </aside>
-
-          <section className="product-area">
-
-            <div className="product-toolbar">
-
-              <span>
-                {loadingProducts
-                  ? "Loading..."
-                  : `${filteredProducts.length} pieces`}
-              </span>
-
-              <span>
-                Featured ↓
-              </span>
-
-            </div>
-
-            {loadingProducts ? (
-
-              <div className="empty-shop loading-state">
-
-                <div className="empty-icon">
-                  •
-                </div>
-
-                <h2>
-                  Getting things pretty...
-                </h2>
-
-                <p>
-                  We're bringing your LOOPA pieces together.
-                </p>
-
-              </div>
-
-            ) : filteredProducts.length >
-              0 ? (
-
-              <div className="shop-product-grid">
-
-                {filteredProducts.map(
-                  (
-                    product
-                  ) => (
-                    <ProductCard
-                      key={
-                        product.id
-                      }
-                      product={
-                        product
-                      }
-                    />
-                  )
-                )}
-
-              </div>
-
-            ) : (
-
-              <div className="empty-shop">
-
-                <div className="empty-decor">
-
-                  {info.visuals
-                    .slice(0, 4)
-                    .map(
-                      (
-                        item,
-                        index
-                      ) => (
-                        <span
-                          key={
-                            index
-                          }
-                        >
-                          {
-                            item
-                          }
-                        </span>
-                      )
-                    )}
-
-                </div>
-
-                <div className="empty-icon">
-                  {
-                    info.emptyIcon
-                  }
-                </div>
-
-                <h2>
-                  {
-                    info.emptyTitle
-                  }
-                </h2>
-
-                <p>
-                  {
-                    info.emptyText
-                  }
-                </p>
-
-                <button
-                  className="empty-home-button"
-                  onClick={() =>
-                    setPage(
-                      "home"
-                    )
-                  }
-                >
-                  Explore LOOPA
-                  <ArrowRight
-                    size={17}
-                  />
-                </button>
-
-              </div>
-
-            )}
-
-          </section>
+          <div className="auth-love">
+            🎀 Your Style. Your World. 🎀
+          </div>
 
         </div>
 
@@ -1635,56 +946,167 @@ function App() {
     );
   };
 
-  /* =========================================================
-     HEADER
-  ========================================================= */
+  /* ---------------------------------------
+     ACCOUNT PAGE
+  ---------------------------------------- */
+
+  const AccountPage = () => {
+    return (
+      <main className="account-page">
+
+        <div className="account-card">
+
+          <div className="account-avatar">
+            <UserCircle size={58} />
+          </div>
+
+          <p className="eyebrow">
+            MY LOOPA
+          </p>
+
+          <h1>
+            {profile?.full_name ||
+              "Welcome to LOOPA"}
+          </h1>
+
+          <p className="account-email">
+            {user?.email}
+          </p>
+
+          <div className="account-menu">
+
+            <button>
+              <User size={19} />
+              My Profile
+              <ChevronRight size={17} />
+            </button>
+
+            <button>
+              <Heart size={19} />
+              My Wishlist
+              <ChevronRight size={17} />
+            </button>
+
+            <button>
+              <ShoppingBag size={19} />
+              My Orders
+              <ChevronRight size={17} />
+            </button>
+
+          </div>
+
+          <button
+            className="logout-button"
+            onClick={handleLogout}
+          >
+            <LogOut size={18} />
+            Log Out
+          </button>
+
+        </div>
+
+      </main>
+    );
+  };
+
+  /* ---------------------------------------
+     SPECIAL SHOP EMPTY STATE
+  ---------------------------------------- */
+
+  const SpecialShopDecor = () => {
+    if (activeCategory === "Little Loves") {
+      return (
+        <div className="little-shop-decor" aria-hidden="true">
+          <span>☁️</span>
+          <span>🌈</span>
+          <span>🧸</span>
+          <span>🎀</span>
+          <span>⭐</span>
+          <span>🪆</span>
+          <span>🧸</span>
+          <span>☁️</span>
+          <span>🌸</span>
+        </div>
+      );
+    }
+
+    if (activeCategory === "Crochet Corner") {
+      return (
+        <div className="crochet-shop-decor" aria-hidden="true">
+          <span>🧶</span>
+          <span>🪝</span>
+          <span>🧵</span>
+          <span>📿</span>
+          <span>🪡</span>
+          <span>✂️</span>
+          <span>🧶</span>
+          <span>🧵</span>
+          <span>📿</span>
+        </div>
+      );
+    }
+
+    return null;
+  };
+
+  /* ---------------------------------------
+     RENDER
+  ---------------------------------------- */
 
   return (
     <div className="app">
+
+      {/* HEADER */}
 
       <header className="header">
 
         <div className="header-inner">
 
           <button
+            className="mobile-menu"
+            onClick={() =>
+              setMenuOpen(!menuOpen)
+            }
+          >
+            {menuOpen ? (
+              <X />
+            ) : (
+              <Menu />
+            )}
+          </button>
+
+          <button
             className="logo"
             onClick={() => {
               setPage("home");
-              setMenuOpen(
-                false
-              );
-
-              window.scrollTo({
-                top: 0,
-                behavior: "smooth",
-              });
+              setMenuOpen(false);
             }}
           >
             LOOPA
           </button>
 
-          <nav className="nav">
+          <nav
+            className={`nav ${
+              menuOpen
+                ? "nav-open"
+                : ""
+            }`}
+          >
 
             {Object.keys(
               categoryStructure
-            ).map(
-              (category) => (
-                <button
-                  key={
-                    category
-                  }
-                  onClick={() =>
-                    openShop(
-                      category
-                    )
-                  }
-                >
-                  {
-                    category
-                  }
-                </button>
-              )
-            )}
+            ).map((category) => (
+
+              <button
+                key={category}
+                onClick={() =>
+                  openShop(category)
+                }
+              >
+                {category}
+              </button>
+
+            ))}
 
           </nav>
 
@@ -1695,8 +1117,7 @@ function App() {
               <Search size={17} />
 
               <input
-                type="text"
-                placeholder="Search LOOPA"
+                placeholder="Search LOOPA..."
                 value={search}
                 onChange={(e) =>
                   setSearch(
@@ -1705,12 +1126,9 @@ function App() {
                 }
                 onKeyDown={(e) => {
                   if (
-                    e.key ===
-                    "Enter"
+                    e.key === "Enter"
                   ) {
-                    openShop(
-                      "Women"
-                    );
+                    openShop("Women");
                   }
                 }}
               />
@@ -1719,15 +1137,13 @@ function App() {
 
             <button
               className="icon-button"
-              onClick={() =>
-                user
-                  ? setPage(
-                      "account"
-                    )
-                  : openAuth(
-                      "login"
-                    )
-              }
+              onClick={() => {
+                if (!user) {
+                  openAuth("login");
+                } else {
+                  setPage("account");
+                }
+              }}
               aria-label="Account"
             >
               <User size={20} />
@@ -1735,156 +1151,44 @@ function App() {
 
             <button
               className="icon-button"
-              onClick={() =>
-                user
-                  ? setPage(
-                      "account"
-                    )
-                  : openAuth(
-                      "login"
-                    )
-              }
+              onClick={() => {
+                if (!user) {
+                  openAuth("login");
+                }
+              }}
               aria-label="Wishlist"
             >
               <Heart size={20} />
 
-              {wishlist.length >
-                0 && (
+              {wishlist.length > 0 && (
                 <span className="count">
-                  {
-                    wishlist.length
-                  }
+                  {wishlist.length}
                 </span>
               )}
-
             </button>
 
             <button
               className="icon-button"
-              onClick={() =>
-                user
-                  ? setPage(
-                      "account"
-                    )
-                  : openAuth(
-                      "login"
-                    )
-              }
+              onClick={() => {
+                if (!user) {
+                  openAuth("login");
+                }
+              }}
               aria-label="Shopping bag"
             >
-              <ShoppingBag
-                size={20}
-              />
+              <ShoppingBag size={20} />
 
-              {cart.length >
-                0 && (
+              {cart.length > 0 && (
                 <span className="count">
-                  {
-                    cart.length
-                  }
+                  {cart.length}
                 </span>
               )}
 
-            </button>
-
-            <button
-              className="mobile-menu"
-              onClick={() =>
-                setMenuOpen(
-                  !menuOpen
-                )
-              }
-              aria-label="Menu"
-            >
-              {menuOpen ? (
-                <X size={22} />
-              ) : (
-                <Menu
-                  size={22}
-                />
-              )}
             </button>
 
           </div>
 
         </div>
-
-        {menuOpen && (
-          <div className="mobile-nav">
-
-            {Object.keys(
-              categoryStructure
-            ).map(
-              (category) => (
-                <button
-                  key={
-                    category
-                  }
-                  onClick={() =>
-                    openShop(
-                      category
-                    )
-                  }
-                >
-                  {
-                    category
-                  }
-
-                  <ChevronRight
-                    size={17}
-                  />
-                </button>
-              )
-            )}
-
-            {!user ? (
-              <>
-                <button
-                  onClick={() =>
-                    openAuth(
-                      "login"
-                    )
-                  }
-                >
-                  Log In
-                  <ChevronRight
-                    size={17}
-                  />
-                </button>
-
-                <button
-                  onClick={() =>
-                    openAuth(
-                      "signup"
-                    )
-                  }
-                >
-                  Sign Up
-                  <ChevronRight
-                    size={17}
-                  />
-                </button>
-              </>
-            ) : (
-              <button
-                onClick={() => {
-                  setPage(
-                    "account"
-                  );
-                  setMenuOpen(
-                    false
-                  );
-                }}
-              >
-                My Account
-                <ChevronRight
-                  size={17}
-                />
-              </button>
-            )}
-
-          </div>
-        )}
 
       </header>
 
@@ -1901,15 +1205,9 @@ function App() {
           <AccountPage />
         )}
 
-      {/* SHOP */}
-
-      {page === "shop" && (
-        <ShopPage />
-      )}
-
-      {/* =====================================================
+      {/* =====================================
           HOME
-      ====================================================== */}
+      ====================================== */}
 
       {page === "home" && (
         <main>
@@ -1918,6 +1216,14 @@ function App() {
 
           <section className="hero">
 
+            <div className="hero-decoration hero-bow">
+              🎀
+            </div>
+
+            <div className="hero-decoration hero-flower">
+              🌸
+            </div>
+
             <div className="hero-content">
 
               <p className="eyebrow">
@@ -1925,53 +1231,33 @@ function App() {
               </p>
 
               <h1>
-                Your style.
+                Your Style.
                 <br />
-                Your world.
+                <em>Your World.</em>
               </h1>
 
-              <p>
-                A feminine fashion
-                marketplace made
-                for women, girls
-                and little loves.
+              <p className="hero-copy">
+                A fashion marketplace for
+                beautiful pieces, creative
+                sellers and every version
+                of you.
               </p>
 
               <button
                 className="primary-button"
                 onClick={() =>
-                  openShop(
-                    "Women"
-                  )
+                  openShop("Women")
                 }
               >
                 Shop Women
-                <ArrowRight
-                  size={18}
-                />
+                <ArrowRight size={18} />
               </button>
-
-            </div>
-
-            <div className="hero-decoration">
-
-              <span className="hero-bow">
-                🎀
-              </span>
-
-              <span className="hero-flower">
-                ✿
-              </span>
-
-              <span className="hero-heart">
-                ♡
-              </span>
 
             </div>
 
           </section>
 
-          {/* CATEGORIES */}
+          {/* SHOP YOUR LOOPA */}
 
           <section className="section">
 
@@ -1980,28 +1266,14 @@ function App() {
               <div>
 
                 <p className="eyebrow">
-                  EXPLORE LOOPA
+                  DISCOVER YOUR WORLD
                 </p>
 
                 <h2>
-                  Shop your world.
+                  Shop your LOOPA
                 </h2>
 
               </div>
-
-              <button
-                className="text-button"
-                onClick={() =>
-                  openShop(
-                    "Women"
-                  )
-                }
-              >
-                View all
-                <ArrowRight
-                  size={17}
-                />
-              </button>
 
             </div>
 
@@ -2010,22 +1282,21 @@ function App() {
               <button
                 className="category-card women-card"
                 onClick={() =>
-                  openShop(
-                    "Women"
-                  )
+                  openShop("Women")
                 }
               >
                 <span className="category-icon">
-                  👗
+                  🎀
                 </span>
 
-                <span>
-                  Women
-                </span>
+                <div>
+                  <h3>Women</h3>
+                  <p>
+                    Fashion for her
+                  </p>
+                </div>
 
-                <ChevronRight
-                  size={18}
-                />
+                <ChevronRight />
               </button>
 
               <button
@@ -2040,55 +1311,57 @@ function App() {
                   🧸
                 </span>
 
-                <span>
-                  Little Loves
-                </span>
+                <div>
+                  <h3>
+                    Little Loves
+                  </h3>
+                  <p>
+                    Tiny fashion
+                    dreams
+                  </p>
+                </div>
 
-                <ChevronRight
-                  size={18}
-                />
+                <ChevronRight />
               </button>
 
               <button
                 className="category-card shoes-card"
                 onClick={() =>
-                  openShop(
-                    "Shoes"
-                  )
+                  openShop("Shoes")
                 }
               >
                 <span className="category-icon">
                   👠
                 </span>
 
-                <span>
-                  Shoes
-                </span>
+                <div>
+                  <h3>Shoes</h3>
+                  <p>
+                    Step into pretty
+                  </p>
+                </div>
 
-                <ChevronRight
-                  size={18}
-                />
+                <ChevronRight />
               </button>
 
               <button
                 className="category-card bags-card"
                 onClick={() =>
-                  openShop(
-                    "Bags"
-                  )
+                  openShop("Bags")
                 }
               >
                 <span className="category-icon">
                   👜
                 </span>
 
-                <span>
-                  Bags
-                </span>
+                <div>
+                  <h3>Bags</h3>
+                  <p>
+                    Carry your world
+                  </p>
+                </div>
 
-                <ChevronRight
-                  size={18}
-                />
+                <ChevronRight />
               </button>
 
               <button
@@ -2103,13 +1376,17 @@ function App() {
                   💎
                 </span>
 
-                <span>
-                  Accessories
-                </span>
+                <div>
+                  <h3>
+                    Accessories
+                  </h3>
+                  <p>
+                    The finishing
+                    touch
+                  </p>
+                </div>
 
-                <ChevronRight
-                  size={18}
-                />
+                <ChevronRight />
               </button>
 
               <button
@@ -2124,55 +1401,112 @@ function App() {
                   🧶
                 </span>
 
-                <span>
-                  Crochet Corner
-                </span>
+                <div>
+                  <h3>
+                    Crochet Corner
+                  </h3>
+                  <p>
+                    Where yarn
+                    becomes art
+                  </p>
+                </div>
 
-                <ChevronRight
-                  size={18}
-                />
+                <ChevronRight />
               </button>
 
             </div>
 
           </section>
 
-          {/* LITTLE LOVES — UNTOUCHED */}
+          {/* LITTLE LOVES WORLD */}
 
-          <section className="little-world home-world-section">
+          <section className="little-world">
+
+            <div className="little-cloud cloud-one">
+              ☁️
+            </div>
+
+            <div className="little-cloud cloud-two">
+              ☁️
+            </div>
+
+            <div className="little-star star-one">
+              ⭐
+            </div>
+
+            <div className="little-star star-two">
+              ✨
+            </div>
+
+            <div className="little-rainbow">
+              🌈
+            </div>
+
+            <div className="little-toy toy-one">
+              🧸
+            </div>
+
+            <div className="little-toy toy-two">
+              🪆
+            </div>
 
             <div className="little-content">
 
-              <span className="little-badge">
+              <div className="little-badge">
                 🧸 LITTLE LOVES
-              </span>
+              </div>
 
               <h2>
-                Tiny pieces for
+                Tiny clothes.
                 <br />
-                big little moments.
+                <em>
+                  Big little moments.
+                </em>
               </h2>
 
               <p>
-                A dreamy little
-                corner for babies,
-                toddlers and
-                little girls.
+                A dreamy little world
+                filled with adorable
+                pieces for babies,
+                toddlers and little
+                girls.
               </p>
 
-              <button
-                className="little-primary"
-                onClick={() =>
-                  openShop(
-                    "Little Loves"
-                  )
-                }
-              >
-                Enter Little Loves
-                <ArrowRight
-                  size={17}
-                />
-              </button>
+              <div className="little-buttons">
+
+                <button
+                  className="little-primary"
+                  onClick={() =>
+                    openShop(
+                      "Little Loves"
+                    )
+                  }
+                >
+                  Explore Little Loves
+                  <ArrowRight size={17} />
+                </button>
+
+              </div>
+
+              <div className="little-pills">
+
+                <span>
+                  🎀 Baby
+                </span>
+
+                <span>
+                  🧸 Toddler
+                </span>
+
+                <span>
+                  🌸 Little Girls
+                </span>
+
+                <span>
+                  🎂 Birthdays
+                </span>
+
+              </div>
 
             </div>
 
@@ -2180,139 +1514,131 @@ function App() {
 
               <div className="cloud-card">
 
-                ☁️
+                <div className="teddy">
+                  🧸
+                </div>
 
-                <strong>
-                  Sweet little things
-                </strong>
+                <div className="tiny-bows">
+                  🎀 🌸 🎀
+                </div>
 
-                <span>
-                  made for your little love
-                </span>
+                <p>
+                  made for little
+                  loves
+                </p>
 
-              </div>
-
-              <div className="teddy">
-                🧸
-              </div>
-
-              <div className="tiny-bows">
-                🎀 🎀 🎀
               </div>
 
             </div>
 
           </section>
 
-          {/* PRODUCTS */}
+          {/* TRENDING */}
 
-          {homeProducts.length >
-            0 && (
-            <section className="section">
+          <section className="section">
 
-              <div className="section-heading">
+            <div className="section-heading split-heading">
 
-                <div>
+              <div>
 
-                  <p className="eyebrow">
-                    NEW ON LOOPA
-                  </p>
+                <p className="eyebrow">
+                  THE LOOPA EDIT
+                </p>
 
-                  <h2>
-                    Fresh pieces.
-                  </h2>
-
-                </div>
-
-                <button
-                  className="text-button"
-                  onClick={() =>
-                    openShop(
-                      "Women"
-                    )
-                  }
-                >
-                  Shop women
-                  <ArrowRight
-                    size={17}
-                  />
-                </button>
+                <h2>
+                  Trending now
+                </h2>
 
               </div>
+
+              <button
+                className="text-button"
+                onClick={() =>
+                  openShop("Women")
+                }
+              >
+                Shop all
+                <ArrowRight size={17} />
+              </button>
+
+            </div>
+
+            {loadingProducts ? (
+
+              <div className="empty-shop">
+
+                <span>🎀</span>
+
+                <h2>
+                  Loading LOOPA...
+                </h2>
+
+                <p>
+                  Bringing the latest
+                  pieces to you.
+                </p>
+
+              </div>
+
+            ) : homeProducts.length > 0 ? (
 
               <div className="home-products">
 
                 {homeProducts.map(
                   (product) => (
                     <ProductCard
-                      key={
-                        product.id
-                      }
-                      product={
-                        product
-                      }
+                      key={product.id}
+                      product={product}
                     />
                   )
                 )}
 
               </div>
 
-            </section>
-          )}
+            ) : (
 
-          {/* CROCHET — UNTOUCHED */}
+              <div className="empty-shop">
 
-          <section className="crochet-world home-world-section">
+                <span>🎀</span>
 
-            <div className="crochet-content">
+                <h2>
+                  Coming to LOOPA
+                </h2>
 
-              <p className="eyebrow">
-                LOOPA ARTISAN
-              </p>
-
-              <h2>
-                Welcome to
-                <br />
-                Crochet Corner.
-              </h2>
-
-              <p>
-                Handmade pieces,
-                beautiful stitches
-                and a little bit
-                of yarn magic.
-              </p>
-
-              <div className="crochet-tags">
-
-                <span>
-                  🧶 Yarn
-                </span>
-
-                <span>
-                  🪡 Stitches
-                </span>
-
-                <span>
-                  📿 Beads
-                </span>
+                <p>
+                  Beautiful pieces from
+                  LOOPA creators will
+                  appear here.
+                </p>
 
               </div>
 
-              <button
-                className="crochet-button"
-                onClick={() =>
-                  openShop(
-                    "Crochet Corner"
-                  )
-                }
-              >
-                Explore Crochet
-                <ArrowRight
-                  size={17}
-                />
-              </button>
+            )}
 
+          </section>
+
+          {/* CROCHET WORLD */}
+
+          <section className="crochet-world">
+
+            <div className="yarn-decoration yarn-one">
+              🧶
+            </div>
+
+            <div className="yarn-decoration yarn-two">
+              🧵
+            </div>
+
+            <div className="crochet-needle needle-one">
+              🪡
+            </div>
+
+            <div className="crochet-hook hook-one">
+              🪝
+            </div>
+
+            <div className="crochet-beads beads-one">
+              📿
             </div>
 
             <div className="crochet-visual">
@@ -2326,12 +1652,61 @@ function App() {
               </div>
 
               <div className="crochet-flower">
-                🌸
+                🌼
               </div>
 
-              <div className="yarn-decoration">
-                ∿∿∿∿∿
+            </div>
+
+            <div className="crochet-content">
+
+              <p className="eyebrow">
+                LOOPA ARTISAN
+              </p>
+
+              <h2>
+                Crochet
+                <br />
+                <em>Corner</em>
+              </h2>
+
+              <p>
+                Slow-made pieces,
+                beautiful stitches and
+                handmade creations made
+                with love.
+              </p>
+
+              <div className="crochet-tags">
+
+                <span>
+                  🧶 Crochet Bags
+                </span>
+
+                <span>
+                  📿 Beaded Pieces
+                </span>
+
+                <span>
+                  🪡 Needlework
+                </span>
+
+                <span>
+                  🪝 Crochet Hooks
+                </span>
+
               </div>
+
+              <button
+                className="crochet-button"
+                onClick={() =>
+                  openShop(
+                    "Crochet Corner"
+                  )
+                }
+              >
+                Enter Crochet Corner
+                <ArrowRight size={17} />
+              </button>
 
             </div>
 
@@ -2339,44 +1714,249 @@ function App() {
 
           {/* CUSTOM */}
 
-          <section className="custom-section section">
+          <section className="custom-section">
 
             <div>
 
               <p className="eyebrow">
-                MADE YOUR WAY
+                MADE JUST FOR YOU
               </p>
 
               <h2>
-                Can't find exactly
+                Dream it.
                 <br />
-                what you're imagining?
+                <em>
+                  Make it LOOPA.
+                </em>
               </h2>
 
               <p>
-                Custom pieces are
-                coming to LOOPA —
-                made around your
-                vision.
+                Want something custom?
+                Connect with a LOOPA
+                creator and bring your
+                dream piece to life.
               </p>
+
+              <button
+                className="primary-button"
+                onClick={() => {
+                  if (!user) {
+                    openAuth("login");
+                  }
+                }}
+              >
+                Start a Custom Request
+                <Sparkles size={17} />
+              </button>
 
             </div>
 
-            <button
-              className="primary-button"
-              onClick={() =>
-                openShop(
-                  "Women"
-                )
-              }
-            >
-              Explore LOOPA
-              <ArrowRight
-                size={18}
-              />
-            </button>
-
           </section>
+
+        </main>
+      )}
+
+      {/* =====================================
+          SHOP
+      ====================================== */}
+
+      {page === "shop" && (
+        <main
+          className={`shop-page ${
+            activeCategory === "Little Loves"
+              ? "shop-page-little"
+              : activeCategory === "Crochet Corner"
+              ? "shop-page-crochet"
+              : ""
+          }`}
+        >
+
+          <button
+            className="back-home"
+            onClick={() =>
+              setPage("home")
+            }
+          >
+            ← Back to LOOPA
+          </button>
+
+          <div className="shop-header">
+
+            <p className="eyebrow">
+              {activeCategory === "Little Loves"
+                ? "🧸 A LITTLE WORLD"
+                : activeCategory === "Crochet Corner"
+                ? "🧶 THE HANDMADE STUDIO"
+                : "SHOP LOOPA"}
+            </p>
+
+            <h1>
+              {activeCategory}
+            </h1>
+
+            <p>
+              {worldContent[activeCategory]
+                ?.description ||
+                "Discover pieces made to make you feel like you."}
+            </p>
+
+            {worldContent[activeCategory] && (
+              <div className="special-shop-pills">
+                {worldContent[
+                  activeCategory
+                ].pills.map((pill) => (
+                  <span key={pill}>
+                    {pill}
+                  </span>
+                ))}
+              </div>
+            )}
+
+          </div>
+
+          <div className="shop-layout">
+
+            <aside className="shop-sidebar">
+
+              <h3>Shop by</h3>
+
+              {(
+                categoryStructure[
+                  activeCategory
+                ] || []
+              ).map(
+                (subcategory) => (
+
+                  <button
+                    key={subcategory}
+                    className={
+                      activeSubcategory ===
+                      subcategory
+                        ? "subcategory active"
+                        : "subcategory"
+                    }
+                    onClick={() =>
+                      setActiveSubcategory(
+                        subcategory
+                      )
+                    }
+                  >
+                    {subcategory}
+                  </button>
+
+                )
+              )}
+
+            </aside>
+
+            <section className="product-area">
+
+              <div className="product-toolbar">
+
+                <span>
+                  {loadingProducts
+                    ? "Loading..."
+                    : `${filteredProducts.length} pieces`}
+                </span>
+
+                <span>
+                  Featured ↓
+                </span>
+
+              </div>
+
+              {loadingProducts ? (
+
+                <div className="empty-shop">
+
+                  <span>
+                    {activeCategory ===
+                    "Little Loves"
+                      ? "🧸"
+                      : activeCategory ===
+                        "Crochet Corner"
+                      ? "🧶"
+                      : "🎀"}
+                  </span>
+
+                  <h2>
+                    Loading LOOPA...
+                  </h2>
+
+                  <p>
+                    We're bringing the
+                    pieces in.
+                  </p>
+
+                </div>
+
+              ) : filteredProducts.length >
+                0 ? (
+
+                <div className="shop-product-grid">
+
+                  {filteredProducts.map(
+                    (product) => (
+                      <ProductCard
+                        key={product.id}
+                        product={product}
+                      />
+                    )
+                  )}
+
+                </div>
+
+              ) : (
+
+                <div className="special-empty-wrapper">
+
+                  <SpecialShopDecor />
+
+                  <div className="empty-shop special-empty">
+
+                    <span>
+                      {worldContent[
+                        activeCategory
+                      ]?.emptyIcon || "🎀"}
+                    </span>
+
+                    <h2>
+                      {worldContent[
+                        activeCategory
+                      ]?.emptyTitle ||
+                        "Coming to LOOPA"}
+                    </h2>
+
+                    <p>
+                      {worldContent[
+                        activeCategory
+                      ]?.emptyText ||
+                        "We're filling this little corner with beautiful pieces."}
+                    </p>
+
+                    {activeCategory ===
+                      "Little Loves" && (
+                      <div className="empty-character-row">
+                        🧸 ☁️ 🌈 🎀 🪆 ⭐
+                      </div>
+                    )}
+
+                    {activeCategory ===
+                      "Crochet Corner" && (
+                      <div className="empty-character-row">
+                        🧶 🪝 🧵 📿 🪡 ✂️
+                      </div>
+                    )}
+
+                  </div>
+
+                </div>
+
+              )}
+
+            </section>
+
+          </div>
 
         </main>
       )}
@@ -2385,11 +1965,9 @@ function App() {
 
       <footer className="footer">
 
-        <div className="footer-brand">
+        <div>
 
-          <h3>
-            LOOPA
-          </h3>
+          <h2>LOOPA</h2>
 
           <p>
             Your Style. Your World.
@@ -2409,9 +1987,7 @@ function App() {
 
           <button
             onClick={() =>
-              openShop(
-                "Little Loves"
-              )
+              openShop("Little Loves")
             }
           >
             Little Loves
@@ -2427,22 +2003,20 @@ function App() {
             Crochet Corner
           </button>
 
-          {!user ? (
+          {!user && (
             <button
               onClick={() =>
-                openAuth(
-                  "signup"
-                )
+                openAuth("signup")
               }
             >
               Sign Up
             </button>
-          ) : (
+          )}
+
+          {user && (
             <button
               onClick={() =>
-                setPage(
-                  "account"
-                )
+                setPage("account")
               }
             >
               My Account
@@ -2451,7 +2025,7 @@ function App() {
 
         </div>
 
-        <p className="footer-copy">
+        <p>
           © 2026 LOOPA. Made with love.
         </p>
 
@@ -2462,9 +2036,5 @@ function App() {
 }
 
 createRoot(
-  document.getElementById(
-    "root"
-  )
-).render(
-  <App />
-);
+  document.getElementById("root")
+).render(<App />);
