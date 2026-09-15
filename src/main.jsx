@@ -5,11 +5,11 @@ import {
   Heart,
   ShoppingBag,
   User,
-  ArrowLeft,
+  ArrowRight,
   ChevronRight,
   Menu,
   X,
-  SlidersHorizontal,
+  Sparkles,
 } from "lucide-react";
 import "./style.css";
 
@@ -22,7 +22,6 @@ const categories = {
     "Pants",
     "Jeans",
     "Two-Piece Sets",
-    "Loungewear",
     "Going Out",
     "Soft Girl",
     "Baddie",
@@ -58,9 +57,6 @@ const categories = {
   Accessories: [
     "All Accessories",
     "Jewelry",
-    "Earrings",
-    "Necklaces",
-    "Bracelets",
     "Hair Accessories",
     "Sunglasses",
     "Belts",
@@ -115,11 +111,11 @@ const products = [
     subcategory: "Toddler",
     seller: "Tiny Bloom",
     emoji: "🎀",
-    tag: "Little Loves",
+    tag: "Little Love",
   },
   {
     id: 5,
-    name: "Pretty Pearl Heels",
+    name: "Pearl Heels",
     price: 4500,
     category: "Shoes",
     subcategory: "Heels",
@@ -157,94 +153,59 @@ const products = [
     emoji: "🎀",
     tag: "New",
   },
-  {
-    id: 9,
-    name: "Heart Pendant",
-    price: 1200,
-    category: "Accessories",
-    subcategory: "Necklaces",
-    seller: "Lumière",
-    emoji: "💎",
-    tag: "Pretty",
-  },
-  {
-    id: 10,
-    name: "Cloud Crochet Top",
-    price: 2800,
-    category: "Crochet Corner",
-    subcategory: "Crochet Clothing",
-    seller: "Knot & Bloom",
-    emoji: "☁️",
-    tag: "Handmade",
-  },
-  {
-    id: 11,
-    name: "Classic White Sneakers",
-    price: 3900,
-    category: "Shoes",
-    subcategory: "Sneakers",
-    seller: "Sole Society",
-    emoji: "👟",
-    tag: "Everyday",
-  },
-  {
-    id: 12,
-    name: "Mini Pearl Shoulder Bag",
-    price: 3100,
-    category: "Bags",
-    subcategory: "Shoulder Bags",
-    seller: "Pretty Things",
-    emoji: "🤍",
-    tag: "New",
-  },
 ];
 
 function App() {
   const [menuOpen, setMenuOpen] = useState(false);
-  const [shopOpen, setShopOpen] = useState(false);
-  const [selectedCategory, setSelectedCategory] = useState("Women");
-  const [selectedSubcategory, setSelectedSubcategory] = useState("All Women");
+  const [page, setPage] = useState("home");
+  const [activeCategory, setActiveCategory] = useState("Women");
+  const [activeSubcategory, setActiveSubcategory] =
+    useState("All Women");
   const [search, setSearch] = useState("");
   const [wishlist, setWishlist] = useState([]);
   const [cart, setCart] = useState([]);
 
-  const filteredProducts = products.filter((product) => {
-    const matchesCategory =
-      product.category === selectedCategory &&
-      (selectedSubcategory.startsWith("All ") ||
-        product.subcategory === selectedSubcategory);
-
-    const matchesSearch =
-      product.name.toLowerCase().includes(search.toLowerCase()) ||
-      product.seller.toLowerCase().includes(search.toLowerCase());
-
-    return matchesCategory && matchesSearch;
-  });
-
-  const openCategory = (category) => {
-    setSelectedCategory(category);
-    setSelectedSubcategory(categories[category][0]);
-    setShopOpen(true);
+  const openShop = (category) => {
+    setActiveCategory(category);
+    setActiveSubcategory(categories[category][0]);
+    setPage("shop");
     setMenuOpen(false);
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
+  const filteredProducts = products.filter((product) => {
+    const categoryMatch = product.category === activeCategory;
+
+    const subcategoryMatch =
+      activeSubcategory.startsWith("All ") ||
+      product.subcategory === activeSubcategory;
+
+    const searchMatch =
+      product.name.toLowerCase().includes(search.toLowerCase()) ||
+      product.seller.toLowerCase().includes(search.toLowerCase());
+
+    return categoryMatch && subcategoryMatch && searchMatch;
+  });
+
   const toggleWishlist = (id) => {
-    setWishlist((current) =>
-      current.includes(id)
-        ? current.filter((item) => item !== id)
-        : [...current, id]
+    setWishlist((old) =>
+      old.includes(id)
+        ? old.filter((item) => item !== id)
+        : [...old, id]
     );
   };
 
-  const addToCart = (product) => {
-    setCart((current) => [...current, product]);
+  const addToBag = (product) => {
+    setCart((old) => [...old, product]);
   };
 
   return (
     <div className="app">
+
+      {/* HEADER */}
       <header className="header">
         <div className="header-inner">
+
           <button
             className="mobile-menu"
             onClick={() => setMenuOpen(!menuOpen)}
@@ -252,7 +213,10 @@ function App() {
             {menuOpen ? <X /> : <Menu />}
           </button>
 
-          <button className="logo" onClick={() => setShopOpen(false)}>
+          <button
+            className="logo"
+            onClick={() => setPage("home")}
+          >
             LOOPA
           </button>
 
@@ -260,7 +224,7 @@ function App() {
             {Object.keys(categories).map((category) => (
               <button
                 key={category}
-                onClick={() => openCategory(category)}
+                onClick={() => openShop(category)}
               >
                 {category}
               </button>
@@ -268,12 +232,18 @@ function App() {
           </nav>
 
           <div className="header-actions">
+
             <div className="search-box">
-              <Search size={18} />
+              <Search size={17} />
               <input
+                placeholder="Search LOOPA..."
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                placeholder="Search LOOPA..."
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    openShop("Women");
+                  }
+                }}
               />
             </div>
 
@@ -294,134 +264,409 @@ function App() {
                 <span className="count">{cart.length}</span>
               )}
             </button>
+
           </div>
         </div>
       </header>
 
-      {!shopOpen ? (
+      {/* HOME */}
+      {page === "home" && (
         <main>
+
+          {/* HERO */}
           <section className="hero">
+            <div className="hero-decoration hero-bow">🎀</div>
+            <div className="hero-decoration hero-flower">🌸</div>
+
             <div className="hero-content">
               <p className="eyebrow">WELCOME TO LOOPA</p>
+
               <h1>
                 Your Style.
                 <br />
                 <em>Your World.</em>
               </h1>
-              <p>
-                A feminine fashion marketplace made for women,
-                little loves and everything beautifully you.
+
+              <p className="hero-copy">
+                A fashion marketplace for beautiful pieces,
+                creative sellers and every version of you.
               </p>
+
               <button
                 className="primary-button"
-                onClick={() => openCategory("Women")}
+                onClick={() => openShop("Women")}
               >
-                Shop Women <ArrowLeft size={18} />
+                Shop Women
+                <ArrowRight size={18} />
               </button>
             </div>
           </section>
 
+          {/* SHOP YOUR LOOPA */}
           <section className="section">
             <div className="section-heading">
               <div>
-                <p className="eyebrow">DISCOVER</p>
+                <p className="eyebrow">DISCOVER YOUR WORLD</p>
                 <h2>Shop your LOOPA</h2>
               </div>
             </div>
 
             <div className="category-grid">
-              {Object.keys(categories).map((category) => (
-                <button
-                  key={category}
-                  className={`category-card category-${category
-                    .toLowerCase()
-                    .replaceAll(" ", "-")}`}
-                  onClick={() => openCategory(category)}
-                >
-                  <span className="category-emoji">
-                    {category === "Women" && "🎀"}
-                    {category === "Little Loves" && "🧸"}
-                    {category === "Shoes" && "👠"}
-                    {category === "Bags" && "👜"}
-                    {category === "Accessories" && "💎"}
-                    {category === "Crochet Corner" && "🧶"}
-                  </span>
 
-                  <div>
-                    <h3>{category}</h3>
-                    <p>{categories[category][1]}</p>
-                  </div>
+              <button
+                className="category-card women-card"
+                onClick={() => openShop("Women")}
+              >
+                <span className="category-icon">🎀</span>
+                <div>
+                  <h3>Women</h3>
+                  <p>Fashion for her</p>
+                </div>
+                <ChevronRight />
+              </button>
 
-                  <ChevronRight />
-                </button>
-              ))}
+              <button
+                className="category-card little-card"
+                onClick={() => openShop("Little Loves")}
+              >
+                <span className="category-icon">🧸</span>
+                <div>
+                  <h3>Little Loves</h3>
+                  <p>Tiny fashion dreams</p>
+                </div>
+                <ChevronRight />
+              </button>
+
+              <button
+                className="category-card shoes-card"
+                onClick={() => openShop("Shoes")}
+              >
+                <span className="category-icon">👠</span>
+                <div>
+                  <h3>Shoes</h3>
+                  <p>Step into pretty</p>
+                </div>
+                <ChevronRight />
+              </button>
+
+              <button
+                className="category-card bags-card"
+                onClick={() => openShop("Bags")}
+              >
+                <span className="category-icon">👜</span>
+                <div>
+                  <h3>Bags</h3>
+                  <p>Carry your world</p>
+                </div>
+                <ChevronRight />
+              </button>
+
+              <button
+                className="category-card accessories-card"
+                onClick={() => openShop("Accessories")}
+              >
+                <span className="category-icon">💎</span>
+                <div>
+                  <h3>Accessories</h3>
+                  <p>The finishing touch</p>
+                </div>
+                <ChevronRight />
+              </button>
+
+              <button
+                className="category-card crochet-card"
+                onClick={() => openShop("Crochet Corner")}
+              >
+                <span className="category-icon">🧶</span>
+                <div>
+                  <h3>Crochet Corner</h3>
+                  <p>Where yarn becomes art</p>
+                </div>
+                <ChevronRight />
+              </button>
+
             </div>
           </section>
-        </main>
-      ) : (
-        <main className="shop-page">
-          <div className="shop-top">
-            <button
-              className="back-button"
-              onClick={() => setShopOpen(false)}
-            >
-              <ArrowLeft size={18} />
-              Back to LOOPA
-            </button>
 
-            <div className="shop-title">
-              <p className="eyebrow">SHOP LOOPA</p>
-              <h1>{selectedCategory}</h1>
+          {/* LITTLE LOVES WORLD */}
+          <section className="little-world">
+
+            <div className="little-cloud cloud-one">☁️</div>
+            <div className="little-cloud cloud-two">☁️</div>
+            <div className="little-star star-one">⭐</div>
+            <div className="little-star star-two">✨</div>
+
+            <div className="little-content">
+
+              <div className="little-badge">
+                🧸 LITTLE LOVES
+              </div>
+
+              <h2>
+                Tiny clothes.
+                <br />
+                <em>Big little moments.</em>
+              </h2>
+
               <p>
-                Discover pieces made to make you feel like you.
+                A dreamy little world filled with adorable
+                pieces for babies, toddlers and little girls.
               </p>
+
+              <div className="little-buttons">
+                <button
+                  className="little-primary"
+                  onClick={() => openShop("Little Loves")}
+                >
+                  Explore Little Loves
+                  <ArrowRight size={17} />
+                </button>
+              </div>
+
+              <div className="little-pills">
+                <span>🎀 Baby</span>
+                <span>🧸 Toddler</span>
+                <span>🌸 Little Girls</span>
+                <span>🎂 Birthdays</span>
+              </div>
+
             </div>
+
+            <div className="little-visual">
+              <div className="cloud-card">
+                <div className="teddy">🧸</div>
+                <div className="tiny-bows">🎀 🌸 🎀</div>
+                <p>made for little loves</p>
+              </div>
+            </div>
+
+          </section>
+
+          {/* TRENDING */}
+          <section className="section">
+            <div className="section-heading split-heading">
+              <div>
+                <p className="eyebrow">THE LOOPA EDIT</p>
+                <h2>Trending now</h2>
+              </div>
+
+              <button
+                className="text-button"
+                onClick={() => openShop("Women")}
+              >
+                Shop all <ArrowRight size={17} />
+              </button>
+            </div>
+
+            <div className="home-products">
+
+              {products.slice(0, 4).map((product) => (
+                <article className="product-card" key={product.id}>
+
+                  <div className="product-image">
+                    <span className="product-tag">
+                      {product.tag}
+                    </span>
+
+                    <button
+                      className="wishlist-button"
+                      onClick={() =>
+                        toggleWishlist(product.id)
+                      }
+                    >
+                      <Heart
+                        size={19}
+                        fill={
+                          wishlist.includes(product.id)
+                            ? "currentColor"
+                            : "none"
+                        }
+                      />
+                    </button>
+
+                    <span className="product-emoji">
+                      {product.emoji}
+                    </span>
+                  </div>
+
+                  <div className="product-info">
+                    <p className="seller">{product.seller}</p>
+                    <h3>{product.name}</h3>
+                    <p className="price">
+                      KES {product.price.toLocaleString()}
+                    </p>
+
+                    <button
+                      className="add-button"
+                      onClick={() => addToBag(product)}
+                    >
+                      Add to Bag
+                    </button>
+                  </div>
+
+                </article>
+              ))}
+
+            </div>
+          </section>
+
+          {/* CROCHET WORLD */}
+          <section className="crochet-world">
+
+            <div className="yarn-decoration yarn-one">🧶</div>
+            <div className="yarn-decoration yarn-two">🧵</div>
+
+            <div className="crochet-visual">
+              <div className="yarn-circle">
+                🧶
+              </div>
+
+              <div className="yarn-small">
+                🧶
+              </div>
+
+              <div className="crochet-flower">
+                🌼
+              </div>
+            </div>
+
+            <div className="crochet-content">
+
+              <p className="eyebrow">LOOPA ARTISAN</p>
+
+              <h2>
+                Crochet
+                <br />
+                <em>Corner</em>
+              </h2>
+
+              <p>
+                Slow-made pieces, beautiful stitches and
+                handmade creations made with love.
+              </p>
+
+              <div className="crochet-tags">
+                <span>🧶 Crochet Bags</span>
+                <span>🌼 Handmade</span>
+                <span>🪡 Custom Pieces</span>
+              </div>
+
+              <button
+                className="crochet-button"
+                onClick={() => openShop("Crochet Corner")}
+              >
+                Enter Crochet Corner
+                <ArrowRight size={17} />
+              </button>
+
+            </div>
+
+          </section>
+
+          {/* CUSTOM */}
+          <section className="custom-section">
+            <div>
+              <p className="eyebrow">MADE JUST FOR YOU</p>
+
+              <h2>
+                Dream it.
+                <br />
+                <em>Make it LOOPA.</em>
+              </h2>
+
+              <p>
+                Want something custom? Connect with a LOOPA
+                creator and bring your dream piece to life.
+              </p>
+
+              <button className="primary-button">
+                Start a Custom Request
+                <Sparkles size={17} />
+              </button>
+            </div>
+          </section>
+
+        </main>
+      )}
+
+      {/* SHOP */}
+      {page === "shop" && (
+        <main className="shop-page">
+
+          <button
+            className="back-home"
+            onClick={() => setPage("home")}
+          >
+            ← Back to LOOPA
+          </button>
+
+          <div className="shop-header">
+
+            <p className="eyebrow">SHOP LOOPA</p>
+
+            <h1>{activeCategory}</h1>
+
+            <p>
+              Discover pieces made to make you feel like you.
+            </p>
+
           </div>
 
           <div className="shop-layout">
-            <aside className="shop-sidebar">
-              <div className="filter-heading">
-                <h3>Shop by</h3>
-                <SlidersHorizontal size={18} />
-              </div>
 
-              {categories[selectedCategory].map((subcategory) => (
-                <button
-                  key={subcategory}
-                  className={
-                    selectedSubcategory === subcategory
-                      ? "subcategory active"
-                      : "subcategory"
-                  }
-                  onClick={() => setSelectedSubcategory(subcategory)}
-                >
-                  {subcategory}
-                </button>
-              ))}
+            <aside className="shop-sidebar">
+
+              <h3>Shop by</h3>
+
+              {categories[activeCategory].map(
+                (subcategory) => (
+                  <button
+                    key={subcategory}
+                    className={
+                      activeSubcategory === subcategory
+                        ? "subcategory active"
+                        : "subcategory"
+                    }
+                    onClick={() =>
+                      setActiveSubcategory(subcategory)
+                    }
+                  >
+                    {subcategory}
+                  </button>
+                )
+              )}
+
             </aside>
 
             <section className="product-area">
+
               <div className="product-toolbar">
-                <p>
-                  <strong>{filteredProducts.length}</strong> pieces to love
-                </p>
-                <button className="sort-button">Sort: Featured</button>
+                <span>
+                  {filteredProducts.length} pieces
+                </span>
+                <span>Featured ↓</span>
               </div>
 
               {filteredProducts.length > 0 ? (
                 <div className="shop-product-grid">
-                  {filteredProducts.map((product) => (
-                    <article className="product-card" key={product.id}>
-                      <div className="product-image">
-                        <span className="product-emoji">
-                          {product.emoji}
-                        </span>
 
-                        <span className="product-tag">{product.tag}</span>
+                  {filteredProducts.map((product) => (
+                    <article
+                      className="product-card"
+                      key={product.id}
+                    >
+
+                      <div className="product-image">
+
+                        <span className="product-tag">
+                          {product.tag}
+                        </span>
 
                         <button
                           className="wishlist-button"
-                          onClick={() => toggleWishlist(product.id)}
+                          onClick={() =>
+                            toggleWishlist(product.id)
+                          }
                         >
                           <Heart
                             size={19}
@@ -432,49 +677,86 @@ function App() {
                             }
                           />
                         </button>
+
+                        <span className="product-emoji">
+                          {product.emoji}
+                        </span>
+
                       </div>
 
                       <div className="product-info">
-                        <p className="seller">{product.seller}</p>
+
+                        <p className="seller">
+                          {product.seller}
+                        </p>
+
                         <h3>{product.name}</h3>
+
                         <p className="price">
                           KES {product.price.toLocaleString()}
                         </p>
 
                         <button
                           className="add-button"
-                          onClick={() => addToCart(product)}
+                          onClick={() => addToBag(product)}
                         >
                           Add to Bag
                         </button>
+
                       </div>
+
                     </article>
                   ))}
+
                 </div>
               ) : (
                 <div className="empty-shop">
                   <span>🎀</span>
-                  <h2>Nothing here yet</h2>
+                  <h2>Coming to LOOPA</h2>
                   <p>
-                    We're getting this LOOPA world ready for you.
+                    We're filling this little corner with
+                    beautiful pieces.
                   </p>
                 </div>
               )}
+
             </section>
+
           </div>
+
         </main>
       )}
 
+      {/* FOOTER */}
       <footer className="footer">
+
         <div>
           <h2>LOOPA</h2>
           <p>Your Style. Your World.</p>
         </div>
 
+        <div className="footer-links">
+          <button onClick={() => openShop("Women")}>
+            Women
+          </button>
+
+          <button onClick={() => openShop("Little Loves")}>
+            Little Loves
+          </button>
+
+          <button onClick={() => openShop("Crochet Corner")}>
+            Crochet Corner
+          </button>
+        </div>
+
         <p>© 2026 LOOPA. Made with love.</p>
+
       </footer>
+
     </div>
   );
 }
 
-createRoot(document.getElementById("root")).render(<App />);
+createRoot(document.getElementById("root")).render(
+  <App />
+);
