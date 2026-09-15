@@ -1,674 +1,540 @@
-import React from "react";
-import ReactDOM from "react-dom/client";
+import React, { useState } from "react";
+import { createRoot } from "react-dom/client";
+import {
+  Search,
+  Heart,
+  ShoppingBag,
+  User,
+  ArrowRight,
+  Sparkles,
+  ChevronRight,
+  Menu,
+  X,
+  Star,
+} from "lucide-react";
 import "./style.css";
 
 const categories = [
   {
-    icon: "👗",
     name: "Women",
-    description: "Fashion for every version of her.",
-    className: "women",
+    label: "Fashion for her",
+    className: "category-women",
+    emoji: "🎀",
   },
   {
-    icon: "🧸",
     name: "Little Loves",
-    description: "Dreamy little looks for little loves.",
-    className: "little",
+    label: "Tiny fashion dreams",
+    className: "category-kids",
+    emoji: "🧸",
   },
   {
-    icon: "👠",
     name: "Shoes",
-    description: "The perfect finishing touch.",
-    className: "shoes",
+    label: "Step into pretty",
+    className: "category-shoes",
+    emoji: "👠",
   },
   {
-    icon: "👜",
     name: "Bags",
-    description: "Carry your style everywhere.",
-    className: "bags",
+    label: "Carry your world",
+    className: "category-bags",
+    emoji: "👜",
   },
   {
-    icon: "💎",
     name: "Accessories",
-    description: "The little details that make the look.",
-    className: "accessories",
+    label: "The finishing touch",
+    className: "category-accessories",
+    emoji: "💎",
   },
   {
-    icon: "🧶",
-    name: "Artisan",
-    description: "Where fashion becomes art.",
-    className: "artisan",
+    name: "Crochet Corner",
+    label: "Where yarn becomes art",
+    className: "category-crochet",
+    emoji: "🧶",
   },
 ];
 
 const products = [
   {
-    emoji: "🌸",
     name: "Rosé Mini Dress",
-    price: "KES 4,800",
-    category: "Women's Fashion",
-    className: "rose",
-  },
-  {
-    emoji: "👜",
-    name: "Blush Bow Bag",
-    price: "KES 3,200",
-    category: "Bags",
-    className: "blush",
-  },
-  {
-    emoji: "🧶",
-    name: "Petal Crochet Bag",
     price: "KES 3,800",
-    category: "Artisan",
-    className: "crochet",
+    category: "Women",
+    emoji: "👗",
+    tag: "New",
   },
   {
-    emoji: "🎀",
+    name: "Blush Bow Bag",
+    price: "KES 2,600",
+    category: "Bags",
+    emoji: "👜",
+    tag: "Trending",
+  },
+  {
+    name: "Petal Crochet Bag",
+    price: "KES 3,200",
+    category: "Crochet",
+    emoji: "🧶",
+    tag: "Handmade",
+  },
+  {
     name: "Little Princess Set",
     price: "KES 2,900",
     category: "Little Loves",
-    className: "little-product",
+    emoji: "🎀",
+    tag: "Little Loves",
   },
 ];
 
 const looks = [
   {
-    number: "01",
     title: "Soft Girl",
-    description: "Pretty, effortless & romantic.",
-    emoji: "🎀",
+    description: "Pretty, effortless and feminine.",
+    emoji: "🌸",
+    className: "look-soft",
   },
   {
-    number: "02",
     title: "The It Girl",
-    description: "Bold pieces. Main character energy.",
+    description: "Main character energy.",
     emoji: "💋",
+    className: "look-it",
   },
   {
-    number: "03",
     title: "Little Princess",
-    description: "Sweet little moments made beautiful.",
-    emoji: "🧸",
+    description: "The sweetest little looks.",
+    emoji: "👑",
+    className: "look-princess",
   },
 ];
 
 function App() {
+  const [menuOpen, setMenuOpen] = useState(false);
+
   return (
     <div className="app">
-
-      {/* ================= HEADER ================= */}
-
-      <header className="header">
-        <nav className="nav">
+      {/* HEADER */}
+      <header className="site-header">
+        <div className="header-inner">
+          <button
+            className="mobile-menu"
+            onClick={() => setMenuOpen(!menuOpen)}
+            aria-label="Open menu"
+          >
+            {menuOpen ? <X size={22} /> : <Menu size={22} />}
+          </button>
 
           <a href="#" className="logo">
             <span className="logo-bow">🎀</span>
-            L<span className="logo-loop">OO</span>PA
+            LOOPA
           </a>
 
-          <div className="nav-links">
+          <nav className={`main-nav ${menuOpen ? "open" : ""}`}>
             <a href="#women">Women</a>
             <a href="#little-loves">Little Loves</a>
             <a href="#shop">Shop</a>
-            <a href="#artisan">Artisan</a>
+            <a href="#crochet">Crochet Corner</a>
             <a href="#custom">Custom</a>
-          </div>
+          </nav>
 
-          <div className="nav-actions">
-            <button aria-label="Search">⌕</button>
-            <button aria-label="Wishlist">♡</button>
-            <button aria-label="Shopping bag">🛍</button>
+          <div className="header-actions">
+            <button aria-label="Search">
+              <Search size={20} />
+            </button>
+            <button aria-label="Wishlist">
+              <Heart size={20} />
+            </button>
+            <button aria-label="Account">
+              <User size={20} />
+            </button>
+            <button aria-label="Shopping bag" className="bag-button">
+              <ShoppingBag size={20} />
+              <span>0</span>
+            </button>
           </div>
-
-        </nav>
+        </div>
       </header>
 
+      {/* HERO */}
+      <section className="hero">
+        <div className="hero-decoration hero-heart">♡</div>
+        <div className="hero-decoration hero-star">✦</div>
+        <div className="hero-decoration hero-flower">✿</div>
 
-      <main>
+        <div className="hero-content">
+          <p className="eyebrow">
+            <Sparkles size={15} /> WELCOME TO LOOPA
+          </p>
 
-        {/* ================= HERO ================= */}
+          <h1>
+            Your Style.
+            <br />
+            <em>Your World.</em>
+          </h1>
 
-        <section className="hero">
+          <p className="hero-text">
+            A dreamy marketplace for fashion, beautiful finds,
+            handmade treasures and little loves.
+          </p>
 
-          <div className="hero-content">
+          <div className="hero-buttons">
+            <a href="#shop" className="button button-dark">
+              Explore LOOPA <ArrowRight size={17} />
+            </a>
+            <a href="#little-loves" className="button button-light">
+              Shop Little Loves
+            </a>
+          </div>
+        </div>
 
-            <div className="tiny-hearts">♡ ✦ ♡ ✦ ♡</div>
+        <div className="hero-art">
+          <div className="hero-circle hero-circle-one"></div>
+          <div className="hero-circle hero-circle-two"></div>
 
-            <span className="eyebrow">
-              ✿ WELCOME TO LOOPA ✿
-            </span>
-
-            <h1>
-              Your style.
-              <br />
-              <span>Your world.</span>
-            </h1>
-
-            <p>
-              Discover fashion, beautiful little things and extraordinary
-              handmade art from creators you'll love.
-            </p>
-
-            <div className="hero-buttons">
-              <button className="primary-button">
-                Explore LOOPA <span>♡</span>
-              </button>
-
-              <button className="secondary-button">
-                Shop the latest
-              </button>
-            </div>
-
-            <div className="hero-note">
-              ✦ Fashion · Little Loves · Artisan · Custom
-            </div>
-
+          <div className="fashion-card card-main">
+            <div className="fashion-placeholder">👗</div>
+            <span>NEW SEASON</span>
           </div>
 
+          <div className="floating-card floating-bow">
+            🎀
+          </div>
 
-          <div className="hero-art">
+          <div className="floating-card floating-heart">
+            ♡
+          </div>
+        </div>
+      </section>
 
-            <div className="hero-frame">
-              <div className="hero-frame-inner">
+      {/* SHOP YOUR LOOPA */}
+      <section className="section category-section" id="shop">
+        <div className="section-heading centered">
+          <p className="eyebrow">FIND YOUR WORLD</p>
+          <h2>Shop your LOOPA</h2>
+          <p>
+            From everyday pretty to one-of-a-kind pieces,
+            there’s a little world waiting for you.
+          </p>
+        </div>
 
-                <div className="hero-fashion-shape">
-                  👗
-                </div>
-
-                <span className="hero-art-label">
-                  YOUR STYLE
-                </span>
-
-              </div>
-            </div>
-
-            <div className="hero-bow">🎀</div>
-
-            <div className="hero-floating hero-float-one">
-              ✦
-            </div>
-
-            <div className="hero-floating hero-float-two">
-              ♡
-            </div>
-
-            <div className="hero-floating hero-float-three">
-              ✿
-            </div>
-
-            <div className="hero-mini-card hero-mini-one">
-              <span>♡</span>
+        <div className="category-grid">
+          {categories.map((category) => (
+            <a
+              href="#"
+              className={`category-card ${category.className}`}
+              key={category.name}
+            >
+              <span className="category-emoji">{category.emoji}</span>
               <div>
-                <strong>Made for her</strong>
-                <small>Beautiful things</small>
+                <h3>{category.name}</h3>
+                <p>{category.label}</p>
               </div>
-            </div>
+              <ChevronRight className="category-arrow" size={20} />
+            </a>
+          ))}
+        </div>
+      </section>
 
-            <div className="hero-mini-card hero-mini-two">
-              <span>🧶</span>
-              <div>
-                <strong>Made by hand</strong>
-                <small>Made like art</small>
-              </div>
-            </div>
+      {/* WOMEN */}
+      <section className="women-world section" id="women">
+        <div className="world-image women-image">
+          <span>🎀</span>
+          <div className="image-caption">THE WOMEN'S EDIT</div>
+        </div>
 
+        <div className="world-copy">
+          <p className="eyebrow">FOR THE GIRL WHO LOVES FASHION</p>
+          <h2>Pretty looks.<br />Big energy.</h2>
+          <p>
+            Discover dresses, tops, skirts, sets, shoes, bags
+            and accessories from independent sellers and
+            fashion creators.
+          </p>
+
+          <div className="mini-links">
+            <a href="#">New Arrivals <ArrowRight size={16} /></a>
+            <a href="#">Going Out <ArrowRight size={16} /></a>
+            <a href="#">Soft Girl <ArrowRight size={16} /></a>
+            <a href="#">Baddie <ArrowRight size={16} /></a>
           </div>
 
-        </section>
+          <a href="#" className="text-link">
+            Shop Women's Fashion <ArrowRight size={17} />
+          </a>
+        </div>
+      </section>
 
+      {/* LITTLE LOVES */}
+      <section className="little-loves" id="little-loves">
+        <div className="cloud cloud-one">☁</div>
+        <div className="cloud cloud-two">☁</div>
+        <div className="kids-stars">✦　♡　✦</div>
 
-        {/* ================= CATEGORY STRIP ================= */}
+        <div className="kids-intro">
+          <p className="eyebrow">🎀 A TINY WORLD OF BEAUTIFUL THINGS</p>
+          <h2>
+            LOOPA
+            <br />
+            <span>Little Loves</span>
+          </h2>
+          <p>
+            The sweetest little corner of LOOPA,
+            made for tiny personalities and big little dreams.
+          </p>
+        </div>
 
-        <section className="category-section" id="shop">
-
-          <div className="section-heading">
-
-            <div>
-              <span className="eyebrow">♡ EXPLORE LOOPA ♡</span>
-              <h2>Find your world.</h2>
-            </div>
-
-            <p>
-              Fashion, little loves and beautiful things — all in one place.
-            </p>
-
+        <div className="kids-boutique">
+          <div className="kids-card teddy-card">
+            <span className="big-kids-icon">🧸</span>
+            <h3>Baby & Toddler</h3>
+            <p>0–4 years</p>
+            <a href="#">Shop now <ArrowRight size={15} /></a>
           </div>
 
-          <div className="categories">
-
-            {categories.map((category) => (
-              <a
-                href={`#${category.className}`}
-                className={`category-card ${category.className}`}
-                key={category.name}
-              >
-
-                <div className="category-icon">
-                  {category.icon}
-                </div>
-
-                <div>
-                  <h3>{category.name}</h3>
-                  <p>{category.description}</p>
-                </div>
-
-                <span className="card-arrow">↗</span>
-
-              </a>
-            ))}
-
+          <div className="kids-card princess-card">
+            <span className="big-kids-icon">👑</span>
+            <h3>Little Girls</h3>
+            <p>5–12 years</p>
+            <a href="#">Shop now <ArrowRight size={15} /></a>
           </div>
 
-        </section>
-
-
-        {/* ================= WOMEN ================= */}
-
-        <section className="fashion-feature" id="women">
-
-          <div className="fashion-feature-copy">
-
-            <span className="eyebrow">♡ LOOPA WOMAN ♡</span>
-
-            <h2>
-              Dress like
-              <br />
-              <span>yourself.</span>
-            </h2>
-
-            <p>
-              From everyday pretty to unforgettable nights, discover pieces
-              that make you feel like the best version of you.
-            </p>
-
-            <button className="outline-button">
-              Shop women's fashion →
-            </button>
-
+          <div className="kids-card bow-card">
+            <span className="big-kids-icon">🎀</span>
+            <h3>Little Celebrations</h3>
+            <p>Birthdays & special days</p>
+            <a href="#">Shop now <ArrowRight size={15} /></a>
           </div>
 
-          <div className="fashion-feature-art woman-art">
+          <div className="kids-card mommy-card">
+            <span className="big-kids-icon">💗</span>
+            <h3>Mommy & Me</h3>
+            <p>Matching moments</p>
+            <a href="#">Shop now <ArrowRight size={15} /></a>
+          </div>
+        </div>
 
-            <div className="fashion-art-circle"></div>
+        <div className="kids-bottom">
+          <span>☁ Dreamy</span>
+          <span>♡ Sweet</span>
+          <span>✦ Playful</span>
+          <span>🎀 Pretty</span>
+        </div>
+      </section>
 
-            <div className="fashion-art-piece">
-              👗
-            </div>
-
-            <div className="fashion-art-tag">
-              NEW SEASON
-            </div>
-
-            <span className="fashion-art-heart">♡</span>
-
+      {/* TRENDING PRODUCTS */}
+      <section className="section products-section">
+        <div className="section-heading">
+          <div>
+            <p className="eyebrow">SHOP WHAT'S NEW</p>
+            <h2>Trending on LOOPA</h2>
           </div>
 
-        </section>
+          <a href="#" className="text-link">
+            View all <ArrowRight size={17} />
+          </a>
+        </div>
 
-
-        {/* ================= LITTLE LOVES ================= */}
-
-        <section className="little-loves-section" id="little-loves">
-
-          <div className="little-cloud cloud-one">☁</div>
-          <div className="little-cloud cloud-two">☁</div>
-
-          <div className="little-header">
-
-            <span className="eyebrow">
-              🧸 A LITTLE WORLD OF ITS OWN 🧸
-            </span>
-
-            <h2>
-              LOOPA <span>Little Loves</span>
-            </h2>
-
-            <p>
-              Tiny outfits. Big personalities. Beautiful little moments.
-            </p>
-
-          </div>
-
-          <div className="little-content">
-
-            <div className="little-visual">
-
-              <div className="little-sun">✦</div>
-
-              <div className="little-bear">
-                🧸
+        <div className="product-grid">
+          {products.map((product) => (
+            <article className="product-card" key={product.name}>
+              <div className="product-image">
+                <span className="product-tag">{product.tag}</span>
+                <button className="product-heart">
+                  <Heart size={18} />
+                </button>
+                <div className="product-placeholder">{product.emoji}</div>
               </div>
 
-              <div className="little-bow">
-                🎀
+              <div className="product-info">
+                <p>{product.category}</p>
+                <h3>{product.name}</h3>
+                <strong>{product.price}</strong>
               </div>
+            </article>
+          ))}
+        </div>
+      </section>
 
-              <div className="little-star star-one">✦</div>
-              <div className="little-star star-two">♡</div>
+      {/* SHOP THE LOOK */}
+      <section className="section looks-section">
+        <div className="section-heading centered">
+          <p className="eyebrow">GET THE VIBE</p>
+          <h2>Shop the Look</h2>
+          <p>
+            One outfit. One mood. Everything you need.
+          </p>
+        </div>
 
-            </div>
-
-            <div className="little-copy">
-
-              <span className="little-label">
-                FOR OUR LITTLE LOVES
-              </span>
-
-              <h3>
-                Sweet little
-                <br />
-                <span>things.</span>
-              </h3>
-
-              <p>
-                Discover dreamy outfits, tiny shoes, adorable accessories,
-                birthday looks and handmade treasures for the little ones.
-              </p>
-
-              <div className="little-links">
-                <span>Newborn</span>
-                <span>Baby</span>
-                <span>Toddler</span>
-                <span>Girls</span>
-                <span>Mommy & Me</span>
+        <div className="looks-grid">
+          {looks.map((look) => (
+            <a href="#" className={`look-card ${look.className}`} key={look.title}>
+              <div className="look-icon">{look.emoji}</div>
+              <div className="look-content">
+                <p>LOOPA LOOK</p>
+                <h3>{look.title}</h3>
+                <span>{look.description}</span>
+                <strong>Shop the look <ArrowRight size={16} /></strong>
               </div>
-
-              <button className="little-button">
-                Enter Little Loves ♡
-              </button>
-
-            </div>
-
-          </div>
-
-        </section>
-
-
-        {/* ================= TRENDING ================= */}
-
-        <section className="section products-section">
-
-          <div className="section-heading">
-
-            <div>
-              <span className="eyebrow">♡ JUST LANDED ♡</span>
-              <h2>Trending on LOOPA</h2>
-            </div>
-
-            <button className="view-all">
-              View all →
-            </button>
-
-          </div>
-
-
-          <div className="products">
-
-            {products.map((product) => (
-              <article
-                className="product-card"
-                key={product.name}
-              >
-
-                <div className={`product-image ${product.className}`}>
-
-                  <button
-                    className="product-heart"
-                    aria-label={`Add ${product.name} to wishlist`}
-                  >
-                    ♡
-                  </button>
-
-                  <div className="product-emoji">
-                    {product.emoji}
-                  </div>
-
-                  {product.className === "crochet" && (
-                    <span className="art-badge">
-                      ARTISAN
-                    </span>
-                  )}
-
-                </div>
-
-                <div className="product-info">
-
-                  <div>
-                    <span className="product-category">
-                      {product.category}
-                    </span>
-
-                    <h3>{product.name}</h3>
-
-                    <p>{product.price}</p>
-                  </div>
-
-                  <button
-                    className="add-button"
-                    aria-label={`Add ${product.name} to bag`}
-                  >
-                    +
-                  </button>
-
-                </div>
-
-              </article>
-            ))}
-
-          </div>
-
-        </section>
-
-
-        {/* ================= SHOP THE LOOK ================= */}
-
-        <section className="section looks-section">
-
-          <div className="section-heading">
-
-            <div>
-              <span className="eyebrow">♡ STYLE IT ♡</span>
-              <h2>Shop the look.</h2>
-            </div>
-
-            <p>
-              Because the best outfits aren't meant to be worn alone.
-            </p>
-
-          </div>
-
-          <div className="looks">
-
-            {looks.map((look) => (
-              <article className="look-card" key={look.number}>
-
-                <div className="look-number">
-                  {look.number}
-                </div>
-
-                <div className="look-emoji">
-                  {look.emoji}
-                </div>
-
-                <div className="look-copy">
-                  <h3>{look.title}</h3>
-                  <p>{look.description}</p>
-                  <button>Shop look →</button>
-                </div>
-
-              </article>
-            ))}
-
-          </div>
-
-        </section>
-
-
-        {/* ================= ARTISAN ================= */}
-
-        <section className="artisan-section" id="artisan">
-
-          <div className="artisan-texture texture-one"></div>
-          <div className="artisan-texture texture-two"></div>
-
-          <div className="artisan-copy">
-
-            <span className="eyebrow">
-              ✦ LOOPA ARTISAN ✦
-            </span>
-
-            <h2>
-              Where fashion
-              <br />
-              becomes <span>art.</span>
-            </h2>
-
-            <p>
-              Discover crochet, embroidery, beadwork, textile art and
-              extraordinary handmade pieces created by people who turn
-              imagination into something you can wear, carry and keep.
-            </p>
-
-            <button className="artisan-button">
-              Explore Artisan →
-            </button>
-
-          </div>
-
-          <div className="artisan-art">
-
-            <div className="artisan-orbit orbit-one"></div>
-            <div className="artisan-orbit orbit-two"></div>
-
-            <div className="crochet-art">
-              🧶
-            </div>
-
-            <div className="artisan-stamp">
-              MADE<br />
-              BY HAND
-            </div>
-
-            <div className="artisan-detail">
-              <span>TEXTURE</span>
-              <strong>CRAFT</strong>
-              <span>STORY</span>
-            </div>
-
-          </div>
-
-        </section>
-
-
-        {/* ================= CUSTOM ================= */}
-
-        <section className="custom-order" id="custom">
-
-          <div className="custom-decoration">🎀</div>
-
-          <span className="eyebrow">
-            ♡ MADE YOUR WAY ♡
-          </span>
+            </a>
+          ))}
+        </div>
+      </section>
+
+      {/* CROCHET CORNER */}
+      <section className="crochet-world" id="crochet">
+        <div className="yarn-decoration yarn-left">🧶</div>
+        <div className="yarn-decoration yarn-right">🧶</div>
+
+        <div className="crochet-content">
+          <p className="eyebrow">🧶 LOOPA ARTISAN</p>
 
           <h2>
-            Dream it.
+            Welcome to the
             <br />
-            <span>We'll make it.</span>
+            <span>Crochet Corner.</span>
           </h2>
 
           <p>
-            Have something specific in mind? Upload your inspiration,
-            choose your colors and size, set your budget, and connect with
-            a LOOPA creator to bring your idea to life.
+            Where yarn becomes art. Discover beautifully handmade
+            crochet fashion, bags, accessories and tiny treasures
+            created stitch by stitch.
           </p>
 
-          <button className="custom-button">
-            Request a custom piece ♡
-          </button>
-
-        </section>
-
-
-        {/* ================= CREATOR ================= */}
-
-        <section className="creator-section" id="sellers">
-
-          <div className="creator-copy">
-
-            <span className="eyebrow">
-              ♡ FOR THE CREATORS ♡
-            </span>
-
-            <h2>
-              Your hands.
-              <br />
-              <span>Your art.</span>
-            </h2>
-
-            <p>
-              Turn your creativity into a business. Open your LOOPA shop,
-              showcase your work and reach people who appreciate beautiful,
-              thoughtfully made pieces.
-            </p>
-
-            <button className="primary-button">
-              Sell on LOOPA →
-            </button>
-
+          <div className="crochet-features">
+            <span>✦ Handmade</span>
+            <span>✦ One of a kind</span>
+            <span>✦ Made with love</span>
           </div>
 
-          <div className="creator-art">
-
-            <div className="creator-orbit"></div>
-
-            <div className="creator-yarn">
-              🧶
-            </div>
-
-            <span>
-              Made by hand ♡
-            </span>
-
-          </div>
-
-        </section>
-
-      </main>
-
-
-      {/* ================= FOOTER ================= */}
-
-      <footer className="footer">
-
-        <div className="footer-logo">
-          🎀 LOOPA
+          <a href="#" className="button button-cream">
+            Explore Crochet Corner <ArrowRight size={17} />
+          </a>
         </div>
 
-        <p>
-          Your Style. Your World. ♡
-        </p>
+        <div className="crochet-art">
+          <div className="yarn-ball">🧶</div>
+          <div className="crochet-flower">🌸</div>
+          <div className="crochet-bag">👜</div>
+          <div className="stitch-card">
+            <span>HANDMADE</span>
+            <strong>STITCH</strong>
+            <small>♡ by LOOPA artisans</small>
+          </div>
+        </div>
+      </section>
 
-        <div className="footer-links">
-          <a href="#women">Women</a>
-          <a href="#little-loves">Little Loves</a>
-          <a href="#artisan">Artisan</a>
-          <a href="#custom">Custom</a>
-          <a href="#sellers">Sell on LOOPA</a>
+      {/* CUSTOM */}
+      <section className="custom-section" id="custom">
+        <div className="custom-content">
+          <p className="eyebrow">MAKE IT YOURS</p>
+          <h2>Dream it.<br />Create it.</h2>
+          <p>
+            Have something special in mind? Connect with a LOOPA
+            creator and bring your dream piece to life.
+          </p>
+
+          <a href="#" className="button button-dark">
+            Start a Custom Request <ArrowRight size={17} />
+          </a>
+        </div>
+
+        <div className="custom-art">
+          <span>✂</span>
+          <span>🎀</span>
+          <span>🧵</span>
+          <span>♡</span>
+        </div>
+      </section>
+
+      {/* CREATOR */}
+      <section className="section creator-section">
+        <div className="creator-copy">
+          <p className="eyebrow">FOR THE CREATIVE GIRLS</p>
+          <h2>Turn your talent<br />into a brand.</h2>
+          <p>
+            Sell your fashion, handmade pieces and creative
+            work on LOOPA. Build your shop, connect with customers
+            and grow your brand.
+          </p>
+
+          <a href="#" className="text-link">
+            Sell on LOOPA <ArrowRight size={17} />
+          </a>
+        </div>
+
+        <div className="creator-card">
+          <div className="creator-avatar">✨</div>
+          <div>
+            <p>LOOPA CREATOR</p>
+            <h3>Your creativity belongs here.</h3>
+            <div className="rating">
+              <Star size={14} fill="currentColor" />
+              <Star size={14} fill="currentColor" />
+              <Star size={14} fill="currentColor" />
+              <Star size={14} fill="currentColor" />
+              <Star size={14} fill="currentColor" />
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* NEWSLETTER */}
+      <section className="newsletter">
+        <div>
+          <p className="eyebrow">STAY IN THE LOOP</p>
+          <h2>Pretty things are coming.</h2>
+          <p>Get new drops, dreamy finds and LOOPA news.</p>
+        </div>
+
+        <form onSubmit={(e) => e.preventDefault()}>
+          <input type="email" placeholder="Your email address" />
+          <button type="submit">
+            Join LOOPA <ArrowRight size={17} />
+          </button>
+        </form>
+      </section>
+
+      {/* FOOTER */}
+      <footer className="footer">
+        <div className="footer-top">
+          <div className="footer-brand">
+            <a href="#" className="logo">
+              <span className="logo-bow">🎀</span>
+              LOOPA
+            </a>
+            <p>Your Style. Your World.</p>
+          </div>
+
+          <div className="footer-column">
+            <h4>Shop</h4>
+            <a href="#">Women</a>
+            <a href="#">Little Loves</a>
+            <a href="#">Shoes</a>
+            <a href="#">Bags</a>
+            <a href="#">Accessories</a>
+          </div>
+
+          <div className="footer-column">
+            <h4>Discover</h4>
+            <a href="#">Crochet Corner</a>
+            <a href="#">Shop the Look</a>
+            <a href="#">Custom</a>
+            <a href="#">Creators</a>
+          </div>
+
+          <div className="footer-column">
+            <h4>LOOPA</h4>
+            <a href="#">About us</a>
+            <a href="#">Sell on LOOPA</a>
+            <a href="#">Help</a>
+            <a href="#">Contact</a>
+          </div>
         </div>
 
         <div className="footer-bottom">
-          © 2026 LOOPA · Your Style. Your World. ♡
+          <span>© 2026 LOOPA. All rights reserved.</span>
+          <span>Made for girls who love beautiful things ♡</span>
         </div>
-
       </footer>
-
     </div>
   );
 }
 
-ReactDOM.createRoot(document.getElementById("root")).render(
-  <React.StrictMode>
-    <App />
-  </React.StrictMode>
-);
+createRoot(document.getElementById("root")).render(<App />);
