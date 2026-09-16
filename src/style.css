@@ -2706,3 +2706,105 @@ em {
     margin-bottom: 45px;
   }
 }
+/* =========================================================
+   LOOPA — CLEAN CALIGRAPHIC CATEGORY HEROES
+   Women / Shoes / Bags / Accessories
+========================================================= */
+.standard-shop-page { background: #fffafc; }
+
+.standard-shop-page .shop-world-hero.simple-category-hero {
+  width: min(1180px, 92vw);
+  min-height: 480px;
+  margin: 25px auto 55px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  background: transparent;
+}
+
+.standard-shop-page .shop-world-copy {
+  width: 100%;
+  max-width: 1000px;
+  padding: 60px 20px;
+  display: flex;
+  align-items: center;
+  flex-direction: column;
+}
+
+.standard-shop-page .standard-eyebrow {
+  margin: 0 0 22px;
+  color: #b58a9b;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+}
+
+.standard-shop-page .shop-world-copy h1 {
+  margin: 0;
+  color: #30242b;
+  font-family: "Snell Roundhand", "Segoe Script", "Brush Script MT", "Apple Chancery", cursive;
+  font-size: clamp(92px, 14vw, 180px);
+  font-weight: 400;
+  line-height: .78;
+  letter-spacing: -5px;
+}
+
+.standard-shop-page .standard-world-description {
+  max-width: 560px;
+  margin: 32px auto 0;
+  color: #82727a;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 16px;
+  line-height: 1.75;
+}
+
+.standard-shop-page .standard-shop-tags {
+  justify-content: center;
+  margin-top: 34px;
+}
+
+.standard-shop-page .standard-shop-tags button {
+  border: 0;
+  border-bottom: 1px solid #dfcbd5;
+  border-radius: 0;
+  background: transparent;
+  padding: 7px 12px 8px;
+  color: #725e68;
+  font-size: 11px;
+}
+
+.standard-shop-page .standard-shop-tags button:hover,
+.standard-shop-page .standard-shop-tags button.active {
+  border-color: #30242b;
+  background: transparent;
+  color: #30242b;
+}
+
+.standard-shop-page .standard-world-visual,
+.standard-shop-page .category-art,
+.standard-shop-page .women-art,
+.standard-shop-page .shoes-art,
+.standard-shop-page .bags-art,
+.standard-shop-page .accessories-art {
+  display: none !important;
+}
+
+.standard-shop-page .standard-empty { text-align: center; }
+
+@media (max-width: 650px) {
+  .standard-shop-page .shop-world-hero.simple-category-hero {
+    min-height: 390px;
+    margin-bottom: 35px;
+  }
+  .standard-shop-page .shop-world-copy { padding: 45px 8px; }
+  .standard-shop-page .shop-world-copy h1 {
+    font-size: clamp(72px, 22vw, 110px);
+    letter-spacing: -3px;
+  }
+  .standard-shop-page .standard-world-description {
+    margin-top: 25px;
+    font-size: 14px;
+  }
+}
