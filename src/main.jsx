@@ -2322,7 +2322,7 @@ function App() {
             </div>
             <div className="related-products-grid">
               {relatedProducts.map((item) => (
-                {ProductCard({ product: item })}
+                ProductCard({ product: item })
               ))}
             </div>
           </section>
@@ -3960,7 +3960,7 @@ function App() {
               <div className="home-products">
                 {homeProducts.map(
                   (product) => (
-                    {ProductCard({ product })}
+                    ProductCard({ product })
                   )
                 )}
               </div>
@@ -4303,7 +4303,7 @@ function App() {
 
                   {filteredProducts.map(
                     (product) => (
-                      {ProductCard({ product })}
+                      ProductCard({ product })
                     )
                   )}
 
