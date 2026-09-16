@@ -3171,3 +3171,126 @@ em {
     margin-top: -5px;
   }
 }
+
+/* =========================================================
+   LOOPA — PRODUCT DETAIL ENHANCEMENTS
+========================================================= */
+.product-detail-buy-row {
+  display: grid;
+  grid-template-columns: auto 1fr 54px;
+  gap: 10px;
+  margin-top: 30px;
+  align-items: stretch;
+}
+
+.detail-quantity-control {
+  min-height: 52px;
+  border: 1px solid #e4d6dd;
+  border-radius: 999px;
+  background: #fff;
+  display: grid;
+  grid-template-columns: 42px 40px 42px;
+  align-items: center;
+  overflow: hidden;
+}
+
+.detail-quantity-control button {
+  height: 100%;
+  border: 0;
+  background: transparent;
+  color: #3b2c33;
+  font-size: 19px;
+}
+
+.detail-quantity-control button:hover {
+  background: #fbf1f5;
+}
+
+.detail-quantity-control span {
+  text-align: center;
+  color: #3b2c33;
+  font-size: 12px;
+  font-weight: 750;
+}
+
+.product-detail-buy-row .product-detail-add {
+  width: 100%;
+}
+
+.related-products-section {
+  margin-top: 100px;
+  padding-top: 60px;
+  border-top: 1px solid #eadde3;
+}
+
+.related-products-heading {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 30px;
+  margin-bottom: 30px;
+}
+
+.related-products-heading h2 {
+  margin: 0;
+  color: #2d2228;
+  font-family: "Bodoni Moda", Didot, "Bodoni 72", "Bodoni MT", "Times New Roman", serif;
+  font-size: clamp(32px, 4vw, 52px);
+  font-weight: 400;
+  line-height: 1;
+  letter-spacing: -.04em;
+}
+
+.related-products-heading button {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  border: 0;
+  background: transparent;
+  color: #3b2c33;
+  font-size: 11px;
+  font-weight: 750;
+}
+
+.related-products-heading button:hover {
+  color: #ed4f8c;
+}
+
+.related-products-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 18px;
+}
+
+@media (max-width: 950px) {
+  .related-products-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 650px) {
+  .product-detail-buy-row {
+    grid-template-columns: 1fr 50px;
+  }
+
+  .detail-quantity-control {
+    grid-column: 1 / -1;
+    width: fit-content;
+  }
+
+  .related-products-section {
+    margin-top: 70px;
+    padding-top: 45px;
+  }
+
+  .related-products-heading {
+    align-items: start;
+    flex-direction: column;
+    gap: 15px;
+  }
+
+  .related-products-grid {
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
+}
