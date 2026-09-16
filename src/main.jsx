@@ -3528,7 +3528,9 @@ function App() {
 
       {/* SELLER DASHBOARD */}
 
-      {page === "seller" && user && SellerDashboardPage()}
+      {page === "seller" && user && (
+        SellerDashboardPage()
+      )}
 
       {page === "messages" && user && <MessagesPage />}
 
