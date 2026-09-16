@@ -435,6 +435,9 @@ function App() {
   const [authSubmitting, setAuthSubmitting] =
     useState(false);
 
+  const [passwordResetRequested, setPasswordResetRequested] =
+    useState(false);
+
   /* ---------------------------------------
      CHECKOUT STATE
   ---------------------------------------- */
@@ -586,6 +589,18 @@ function App() {
       async (_event, session) => {
         const currentUser =
           session?.user || null;
+
+        if (_event === "PASSWORD_RECOVERY") {
+          setUser(currentUser);
+          setAuthMode("reset");
+          setAuthError("");
+          setAuthMessage("");
+          setPassword("");
+          setConfirmPassword("");
+          setPage("auth");
+          setAuthLoading(false);
+          return;
+        }
 
         setUser(currentUser);
 
@@ -1170,6 +1185,89 @@ function App() {
   };
 
   /* ---------------------------------------
+     PASSWORD RESET
+  ---------------------------------------- */
+
+  const handleForgotPassword = async (e) => {
+    e.preventDefault();
+    setAuthError("");
+    setAuthMessage("");
+
+    const trimmedEmail = email.trim();
+
+    if (!trimmedEmail) {
+      setAuthError("Please enter the email address for your LOOPA account.");
+      return;
+    }
+
+    setAuthSubmitting(true);
+
+    const redirectTo = `${window.location.origin}/`;
+
+    const { error } = await supabase.auth.resetPasswordForEmail(
+      trimmedEmail,
+      { redirectTo }
+    );
+
+    if (error) {
+      setAuthError(
+        error.message ||
+          "We couldn't send the password reset email. Please try again."
+      );
+      setAuthSubmitting(false);
+      return;
+    }
+
+    setPasswordResetRequested(true);
+    setAuthMessage(
+      "Password reset email sent. Check your inbox and open the link to create a new password. 💕"
+    );
+    setAuthSubmitting(false);
+  };
+
+  const handleUpdatePassword = async (e) => {
+    e.preventDefault();
+    setAuthError("");
+    setAuthMessage("");
+
+    if (password.length < 6) {
+      setAuthError("Your new password must be at least 6 characters.");
+      return;
+    }
+
+    if (password !== confirmPassword) {
+      setAuthError("Your passwords do not match.");
+      return;
+    }
+
+    setAuthSubmitting(true);
+
+    const { error } = await supabase.auth.updateUser({ password });
+
+    if (error) {
+      setAuthError(
+        error.message ||
+          "We couldn't update your password. Please request another reset email."
+      );
+      setAuthSubmitting(false);
+      return;
+    }
+
+    await supabase.auth.signOut();
+
+    setUser(null);
+    setProfile(null);
+    setPassword("");
+    setConfirmPassword("");
+    setAuthMode("login");
+    setPasswordResetRequested(false);
+    setAuthMessage(
+      "Your password has been updated successfully. You can now log in. 💕"
+    );
+    setAuthSubmitting(false);
+  };
+
+  /* ---------------------------------------
      LOGIN
   ---------------------------------------- */
 
@@ -1204,10 +1302,7 @@ function App() {
       await loadProfile(data.user.id);
     }
 
-    setAuthMessage(
-      "Welcome back to LOOPA 💕"
-    );
-
+    setAuthMessage("Welcome back to LOOPA 💕");
     setAuthSubmitting(false);
 
     setTimeout(() => {
@@ -2347,292 +2442,289 @@ function App() {
   ---------------------------------------- */
 
   const AuthPage = () => {
+    const isLogin = authMode === "login";
+    const isSignup = authMode === "signup";
+    const isForgot = authMode === "forgot";
+    const isReset = authMode === "reset";
+
+    const title = isLogin
+      ? "Welcome back."
+      : isSignup
+      ? "Create your account."
+      : isForgot
+      ? "Reset your password."
+      : "Create a new password.";
+
+    const eyebrow = isLogin
+      ? "WELCOME BACK"
+      : isSignup
+      ? "JOIN THE LOOPA WORLD"
+      : isForgot
+      ? "PASSWORD RESET"
+      : "NEW PASSWORD";
+
+    const intro = isLogin
+      ? "Log in to save your favorites, manage your bag and keep shopping."
+      : isSignup
+      ? "Create your free LOOPA account and make your fashion world yours."
+      : isForgot
+      ? "Enter your email and we'll send you a secure password reset link."
+      : "Choose a new password for your LOOPA account.";
+
     return (
       <main className="auth-page">
-
-        <div className="auth-decoration auth-bow">
-          🎀
-        </div>
-
-        <div className="auth-decoration auth-flower">
-          🌸
-        </div>
+        <div className="auth-decoration auth-bow">🎀</div>
+        <div className="auth-decoration auth-flower">🌸</div>
 
         <div className="auth-card">
-
           <button
+            type="button"
             className="auth-back"
-            onClick={() =>
-              setPage("home")
-            }
+            onClick={() => {
+              setAuthMode("login");
+              setAuthError("");
+              setAuthMessage("");
+              setPassword("");
+              setConfirmPassword("");
+              setPasswordResetRequested(false);
+              setPage("home");
+            }}
           >
             ← Back to LOOPA
           </button>
 
-          <div className="auth-logo">
-            LOOPA
-          </div>
+          <div className="auth-logo">LOOPA</div>
 
-          <p className="eyebrow">
-            {authMode ===
-            "login"
-              ? "WELCOME BACK"
-              : "JOIN THE LOOPA WORLD"}
-          </p>
-
-          <h1>
-            {authMode ===
-            "login"
-              ? "Welcome back."
-              : "Create your account."}
-          </h1>
-
-          <p className="auth-intro">
-            {authMode ===
-            "login"
-              ? "Log in to save your favorites, manage your bag and keep shopping."
-              : "Create your free LOOPA account and make your fashion world yours."}
-          </p>
+          <p className="eyebrow">{eyebrow}</p>
+          <h1>{title}</h1>
+          <p className="auth-intro">{intro}</p>
 
           {authError && (
-            <div className="auth-alert error">
-              {authError}
-            </div>
+            <div className="auth-alert error">{authError}</div>
           )}
 
           {authMessage && (
-            <div className="auth-alert success">
-              {authMessage}
-            </div>
+            <div className="auth-alert success">{authMessage}</div>
           )}
 
-          <form
-            className="auth-form"
-            onSubmit={
-              authMode ===
-              "login"
-                ? handleLogin
-                : handleSignup
-            }
-          >
+          {isForgot && passwordResetRequested ? (
+            <div className="auth-reset-success">
+              <div className="auth-reset-icon">♡</div>
+              <h2>Check your email.</h2>
+              <p>
+                We sent a secure password reset link to{" "}
+                <strong>{email.trim()}</strong>.
+              </p>
+              <p>
+                Open the link from the same browser to create your new password.
+              </p>
 
-            {authMode ===
-              "signup" && (
-              <div className="form-field">
-
-                <label>
-                  Full Name
-                </label>
-
-                <input
-                  type="text"
-                  placeholder="Your full name"
-                  value={fullName}
-                  onChange={(e) =>
-                    setFullName(
-                      e.target.value
-                    )
-                  }
-                  autoComplete="name"
-                />
-
-              </div>
-            )}
-
-            <div className="form-field">
-
-              <label>
-                Email Address
-              </label>
-
-              <input
-                type="email"
-                placeholder="you@example.com"
-                value={email}
-                onChange={(e) =>
-                  setEmail(
-                    e.target.value
-                  )
-                }
-                autoComplete="email"
-              />
-
-            </div>
-
-            <div className="form-field">
-
-              <label>
-                Password
-              </label>
-
-              <div className="password-input">
-
-                <input
-                  type={
-                    showPassword
-                      ? "text"
-                      : "password"
-                  }
-                  placeholder="Enter your password"
-                  value={password}
-                  onChange={(e) =>
-                    setPassword(
-                      e.target.value
-                    )
-                  }
-                  autoComplete={
-                    authMode ===
-                    "login"
-                      ? "current-password"
-                      : "new-password"
-                  }
-                />
-
-                <button
-                  type="button"
-                  onClick={() =>
-                    setShowPassword(
-                      !showPassword
-                    )
-                  }
-                >
-                  {showPassword ? (
-                    <EyeOff
-                      size={18}
-                    />
-                  ) : (
-                    <Eye size={18} />
-                  )}
-                </button>
-
-              </div>
-
-            </div>
-
-            {authMode ===
-              "signup" && (
-              <div className="form-field">
-
-                <label>
-                  Confirm Password
-                </label>
-
-                <div className="password-input">
-
-                  <input
-                    type={
-                      showConfirmPassword
-                        ? "text"
-                        : "password"
-                    }
-                    placeholder="Confirm your password"
-                    value={
-                      confirmPassword
-                    }
-                    onChange={(e) =>
-                      setConfirmPassword(
-                        e.target.value
-                      )
-                    }
-                    autoComplete="new-password"
-                  />
-
-                  <button
-                    type="button"
-                    onClick={() =>
-                      setShowConfirmPassword(
-                        !showConfirmPassword
-                      )
-                    }
-                  >
-                    {showConfirmPassword ? (
-                      <EyeOff
-                        size={18}
-                      />
-                    ) : (
-                      <Eye
-                        size={18}
-                      />
-                    )}
-                  </button>
-
-                </div>
-
-              </div>
-            )}
-
-            {authMode ===
-              "login" && (
               <button
                 type="button"
-                className="forgot-password"
+                className="auth-submit"
                 onClick={() => {
-                  setAuthMessage(
-                    "Password reset is coming next. 💕"
-                  );
+                  setPasswordResetRequested(false);
+                  setAuthMode("login");
+                  setAuthMessage("");
                   setAuthError("");
                 }}
               >
-                Forgot password?
+                Back to Log In
+                <ArrowRight size={18} />
               </button>
-            )}
-
-            <button
-              type="submit"
-              className="auth-submit"
-              disabled={
-                authSubmitting
+            </div>
+          ) : (
+            <form
+              className="auth-form"
+              onSubmit={
+                isLogin
+                  ? handleLogin
+                  : isSignup
+                  ? handleSignup
+                  : isForgot
+                  ? handleForgotPassword
+                  : handleUpdatePassword
               }
             >
-              {authSubmitting
-                ? "Please wait..."
-                : authMode ===
-                  "login"
-                ? "Log In"
-                : "Create Account"}
-
-              {!authSubmitting && (
-                <ArrowRight
-                  size={18}
-                />
+              {isSignup && (
+                <div className="form-field">
+                  <label>Full Name</label>
+                  <input
+                    type="text"
+                    placeholder="Your full name"
+                    value={fullName}
+                    onChange={(e) => setFullName(e.target.value)}
+                    autoComplete="name"
+                  />
+                </div>
               )}
-            </button>
 
-          </form>
+              {!isReset && (
+                <div className="form-field">
+                  <label>Email Address</label>
+                  <input
+                    type="email"
+                    placeholder="you@example.com"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    autoComplete="email"
+                  />
+                </div>
+              )}
 
-          <div className="auth-switch">
+              {!isForgot && (
+                <div className="form-field">
+                  <label>{isReset ? "New Password" : "Password"}</label>
 
-            <span>
-              {authMode ===
-              "login"
-                ? "Don't have a LOOPA account?"
-                : "Already have a LOOPA account?"}
-            </span>
+                  <div className="password-input">
+                    <input
+                      type={showPassword ? "text" : "password"}
+                      placeholder={
+                        isReset
+                          ? "Enter your new password"
+                          : "Enter your password"
+                      }
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      autoComplete={
+                        isReset || isSignup
+                          ? "new-password"
+                          : "current-password"
+                      }
+                    />
 
-            <button
-              onClick={() =>
-                openAuth(
-                  authMode ===
-                    "login"
-                    ? "signup"
-                    : "login"
-                )
-              }
-            >
-              {authMode ===
-              "login"
-                ? "Sign Up"
-                : "Log In"}
-            </button>
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      aria-label={
+                        showPassword ? "Hide password" : "Show password"
+                      }
+                    >
+                      {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                    </button>
+                  </div>
+                </div>
+              )}
 
-          </div>
+              {(isSignup || isReset) && (
+                <div className="form-field">
+                  <label>
+                    {isReset ? "Confirm New Password" : "Confirm Password"}
+                  </label>
 
-          <div className="auth-love">
-            🎀 Your Style. Your World. 🎀
-          </div>
+                  <div className="password-input">
+                    <input
+                      type={showConfirmPassword ? "text" : "password"}
+                      placeholder={
+                        isReset
+                          ? "Confirm your new password"
+                          : "Confirm your password"
+                      }
+                      value={confirmPassword}
+                      onChange={(e) => setConfirmPassword(e.target.value)}
+                      autoComplete="new-password"
+                    />
 
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setShowConfirmPassword(!showConfirmPassword)
+                      }
+                      aria-label={
+                        showConfirmPassword
+                          ? "Hide password"
+                          : "Show password"
+                      }
+                    >
+                      {showConfirmPassword ? (
+                        <EyeOff size={18} />
+                      ) : (
+                        <Eye size={18} />
+                      )}
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {isLogin && (
+                <button
+                  type="button"
+                  className="forgot-password"
+                  onClick={() => {
+                    setAuthMode("forgot");
+                    setAuthError("");
+                    setAuthMessage("");
+                    setPasswordResetRequested(false);
+                  }}
+                >
+                  Forgot password?
+                </button>
+              )}
+
+              <button
+                type="submit"
+                className="auth-submit"
+                disabled={authSubmitting}
+              >
+                {authSubmitting
+                  ? "Please wait..."
+                  : isLogin
+                  ? "Log In"
+                  : isSignup
+                  ? "Create Account"
+                  : isForgot
+                  ? "Send Reset Link"
+                  : "Update Password"}
+
+                {!authSubmitting && <ArrowRight size={18} />}
+              </button>
+            </form>
+          )}
+
+          {!isReset && (
+            <div className="auth-switch">
+              <span>
+                {isForgot
+                  ? "Remember your password?"
+                  : isLogin
+                  ? "Don't have a LOOPA account?"
+                  : "Already have a LOOPA account?"}
+              </span>
+
+              <button
+                type="button"
+                onClick={() => {
+                  setAuthMode(
+                    isForgot ? "login" : isLogin ? "signup" : "login"
+                  );
+                  setAuthError("");
+                  setAuthMessage("");
+                  setPasswordResetRequested(false);
+                }}
+              >
+                {isForgot ? "Log in" : isLogin ? "Create one" : "Log in"}
+              </button>
+            </div>
+          )}
+
+          {isReset && (
+            <div className="auth-switch">
+              <span>Remember your password?</span>
+              <button
+                type="button"
+                onClick={() => {
+                  setAuthMode("login");
+                  setAuthError("");
+                  setAuthMessage("");
+                  setPassword("");
+                  setConfirmPassword("");
+                }}
+              >
+                Log in
+              </button>
+            </div>
+          )}
         </div>
-
       </main>
     );
   };
