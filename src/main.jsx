@@ -1694,10 +1694,16 @@ function App() {
       logoUrl: sellerData?.logo_url || "",
     });
 
+    if (!sellerData?.id) {
+      setSellerProducts([]);
+      setSellerLoading(false);
+      return;
+    }
+
     const { data: products, error: productsError } = await supabase
       .from("products")
       .select("id, name, description, price, stock, status, seller_id, category_id, made_to_order, production_days, created_at")
-       .eq("seller_id", sellerData?.id)
+      .eq("seller_id", sellerData?.id)
       .order("created_at", { ascending: false });
 
     if (productsError) {
@@ -1736,15 +1742,22 @@ function App() {
     setSellerOrdersLoading(true);
     setSellerOrdersError("");
 
-    const { data: sellerData, error: sellerErrorData } = await supabase
+    const { data: sellerData, error: sellerProfileError } = await supabase
       .from("seller_profiles")
       .select("id")
       .eq("user_id", userId)
       .maybeSingle();
 
-    if (sellerErrorData || !sellerData?.id) {
+    if (sellerProfileError) {
+      console.error("LOOPA seller profile lookup error:", sellerProfileError);
       setSellerOrders([]);
-      setSellerOrdersError(sellerErrorData?.message || "Your seller profile could not be found.");
+      setSellerOrdersError(sellerProfileError.message || "We couldn't load your sales right now.");
+      setSellerOrdersLoading(false);
+      return;
+    }
+
+    if (!sellerData?.id) {
+      setSellerOrders([]);
       setSellerOrdersLoading(false);
       return;
     }
@@ -1876,7 +1889,24 @@ function App() {
 
     setSellerSaving(true);
 
-    if (!sellerProfile?.id) {
+    let sellerId = sellerProfile?.id;
+    if (!sellerId) {
+      const { data: sellerData, error: sellerProfileError } = await supabase
+        .from("seller_profiles")
+        .select("id")
+        .eq("user_id", user.id)
+        .maybeSingle();
+
+      if (sellerProfileError) {
+        setSellerError(sellerProfileError.message || "We couldn't find your seller profile.");
+        setSellerSaving(false);
+        return;
+      }
+
+      sellerId = sellerData?.id;
+    }
+
+    if (!sellerId) {
       setSellerError("Please save your shop profile before adding a product.");
       setSellerSaving(false);
       return;
@@ -1890,7 +1920,7 @@ function App() {
       category_id: productForm.categoryId,
       made_to_order: Boolean(productForm.madeToOrder),
       production_days: productForm.madeToOrder ? Number(productForm.productionDays || 0) : null,
-      seller_id: sellerProfile?.id,
+      seller_id: sellerId,
     };
 
     let productId = sellerEditingProduct?.id;
@@ -1902,7 +1932,7 @@ function App() {
         .from("products")
         .update(payload)
         .eq("id", productId)
-        .eq("seller_id", sellerProfile?.id)
+         .eq("seller_id", sellerId)
         .select()
         .single());
     } else {
@@ -1945,11 +1975,32 @@ function App() {
   const deleteSellerProduct = async (productId) => {
     if (!window.confirm("Remove this product from your shop?")) return;
     setSellerError("");
+
+    let sellerId = sellerProfile?.id;
+    if (!sellerId && user?.id) {
+      const { data: sellerData, error: sellerProfileError } = await supabase
+        .from("seller_profiles")
+        .select("id")
+        .eq("user_id", user.id)
+        .maybeSingle();
+
+      if (sellerProfileError) {
+        setSellerError(sellerProfileError.message || "We couldn't find your seller profile.");
+        return;
+      }
+      sellerId = sellerData?.id;
+    }
+
+    if (!sellerId) {
+      setSellerError("We couldn't find your seller profile.");
+      return;
+    }
+
     const { error } = await supabase
       .from("products")
       .delete()
       .eq("id", productId)
-      .eq("seller_id", sellerProfile?.id);
+      .eq("seller_id", sellerId);
     if (error) {
       setSellerError(error.message || "We couldn't remove this product.");
       return;
