@@ -139,64 +139,28 @@ const standardWorldContent = {
     eyebrow: "THE WOMEN'S EDIT",
     title: "Women",
     description:
-      "Curated pieces for every version of you — from everyday essentials to your going-out wardrobe.",
-    tags: [
-      "Dresses",
-      "Tops",
-      "Going Out",
-      "Soft Girl",
-      "Baddie",
-    ],
-    mark: "W",
-    visualLabel: "LOOPA / WOMEN",
+      "Curated fashion for every mood, moment and version of you.",
   },
 
   Shoes: {
     eyebrow: "THE SHOE EDIT",
     title: "Shoes",
     description:
-      "The finishing touch. Elevated heels, everyday sneakers, effortless flats and everything between.",
-    tags: [
-      "Heels",
-      "Sneakers",
-      "Flats",
-      "Sandals",
-      "Boots",
-    ],
-    mark: "S",
-    visualLabel: "LOOPA / SHOES",
+      "The finishing step to every look — from everyday staples to statement pairs.",
   },
 
   Bags: {
     eyebrow: "THE BAG EDIT",
     title: "Bags",
     description:
-      "Carry your look with intention. Discover handbags, shoulder bags, minis, totes and more.",
-    tags: [
-      "Handbags",
-      "Shoulder Bags",
-      "Crossbody",
-      "Mini Bags",
-      "Tote Bags",
-    ],
-    mark: "B",
-    visualLabel: "LOOPA / BAGS",
+      "Everyday carryalls, statement pieces and little bags made for your world.",
   },
 
   Accessories: {
     eyebrow: "THE ACCESSORY EDIT",
     title: "Accessories",
     description:
-      "The little details that make the whole look. Jewelry, hair pieces, sunglasses and more.",
-    tags: [
-      "Jewelry",
-      "Hair Accessories",
-      "Sunglasses",
-      "Belts",
-      "Hats",
-    ],
-    mark: "A",
-    visualLabel: "LOOPA / ACCESSORIES",
+      "The details that change everything — jewelry, hair pieces, shades and more.",
   },
 };
 
@@ -1465,48 +1429,41 @@ function App() {
 
     return (
       <section className="shop-world-hero">
+
         <div className="shop-world-copy">
-          <p className="standard-eyebrow">
+
+          <p className="eyebrow">
             {content.eyebrow}
           </p>
 
-          <h1>
+          <h2>
             {content.title}
-          </h1>
+          </h2>
 
-          <p className="standard-world-description">
+          <p>
             {content.description}
           </p>
 
-          <div className="standard-shop-tags">
-            {content.tags.map(
-              (tag) => (
-                <span key={tag}>
-                  {tag}
-                </span>
-              )
-            )}
-          </div>
         </div>
 
         <div
           className="standard-world-visual"
           aria-hidden="true"
         >
-          <div className="standard-visual-frame">
-            <span className="standard-visual-label">
-              {content.visualLabel}
-            </span>
-
-            <span className="standard-visual-mark">
-              {content.mark}
-            </span>
-
-            <span className="standard-visual-caption">
-              YOUR STYLE. YOUR WORLD.
-            </span>
-          </div>
+          <span className="floating-visual">
+            {activeCategory ===
+            "Women"
+              ? "👗"
+              : activeCategory ===
+                "Shoes"
+              ? "👠"
+              : activeCategory ===
+                "Bags"
+              ? "👜"
+              : "💎"}
+          </span>
         </div>
+
       </section>
     );
   };
@@ -2253,18 +2210,21 @@ function App() {
 
       {page === "shop" && (
         <main
-  className={`shop-page ${
-    activeCategory === "Little Loves"
-      ? "shop-page-little"
-      : activeCategory === "Crochet Corner"
-      ? "shop-page-crochet"
-      : ["Women", "Shoes", "Bags", "Accessories"].includes(activeCategory)
-      ? `standard-shop-page ${activeCategory
-          .toLowerCase()
-          .replace(/\s+/g, "-")}-shop-page`
-      : ""
-  }`}
->
+          className={`shop-page ${
+            activeCategory ===
+            "Little Loves"
+              ? "shop-page-little"
+              : activeCategory ===
+                "Crochet Corner"
+              ? "shop-page-crochet"
+              : `standard-shop-page ${activeCategory
+                  .toLowerCase()
+                  .replace(
+                    /\s+/g,
+                    "-"
+                  )}-shop-page`
+          }`}
+        >
 
           <button
             className="back-home"
@@ -2429,35 +2389,14 @@ function App() {
 
                 </div>
 
-              ) : standardWorldContent[
-                  activeCategory
-                ] ? (
-                <div className="standard-empty">
-                  <div className="standard-empty-mark">
-                    {standardWorldContent[
-                      activeCategory
-                    ].mark}
-                  </div>
-
-                  <p className="standard-eyebrow">
-                    COMING SOON
-                  </p>
-
-                  <h2>
-                    New pieces are on the way.
-                  </h2>
-
-                  <p>
-                    We're curating something special
-                    for this edit. Check back soon
-                    for new LOOPA pieces.
-                  </p>
-                </div>
               ) : (
+
                 <div className="special-empty-wrapper">
+
                   <SpecialShopDecor />
 
                   <div className="empty-shop special-empty">
+
                     <span className="empty-icon">
                       {worldContent[
                         activeCategory
@@ -2491,9 +2430,13 @@ function App() {
                         🧶 🪝 🧵 📿 🪡 ✂️
                       </div>
                     )}
+
                   </div>
+
                 </div>
+
               )}
+
             </section>
 
           </div>
