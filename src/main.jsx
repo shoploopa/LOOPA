@@ -511,9 +511,6 @@ function App() {
     phone: "",
     logoUrl: "",
   });
-  const [productImageFile, setProductImageFile] = useState(null);
-  const [productImagePreview, setProductImagePreview] = useState("");
-  const [productImageUploading, setProductImageUploading] = useState(false);
   const [productForm, setProductForm] = useState({
     name: "",
     description: "",
@@ -524,6 +521,9 @@ function App() {
     productionDays: "",
     imageUrl: "",
   });
+  const [productImageFile, setProductImageFile] = useState(null);
+  const [productImagePreview, setProductImagePreview] = useState("");
+
 
   /* ---------------------------------------
      ENSURE PROFILE
@@ -1874,13 +1874,16 @@ function App() {
       return;
     }
 
-    // Navigate first so the button always responds immediately.
-    // The admin page then performs the live role check and shows any error on-screen.
-    setAdminError("");
+    const liveProfile = await loadProfile(user.id);
+    if (liveProfile?.role !== "admin") {
+      setAdminError("Admin access is required to review products.");
+      return;
+    }
+
+    await loadAdminProducts();
     setPage("admin");
     setMenuOpen(false);
     window.scrollTo({ top: 0, behavior: "smooth" });
-    await loadAdminProducts();
   };
 
   const updateAdminProductStatus = async (productId, status) => {
@@ -2054,7 +2057,7 @@ function App() {
   };
 
   const handleProductImageChange = (e) => {
-    const file = e.target.files?.[0] || null;
+    const file = e.target.files?.[0];
     if (!file) return;
 
     if (!file.type.startsWith("image/")) {
@@ -2063,8 +2066,8 @@ function App() {
       return;
     }
 
-    if (file.size > 8 * 1024 * 1024) {
-      setSellerError("Please choose an image smaller than 8MB.");
+    if (file.size > 5 * 1024 * 1024) {
+      setSellerError("Please choose an image smaller than 5MB.");
       e.target.value = "";
       return;
     }
@@ -2072,34 +2075,6 @@ function App() {
     setSellerError("");
     setProductImageFile(file);
     setProductImagePreview(URL.createObjectURL(file));
-  };
-
-  const uploadProductImage = async (file, productId) => {
-    if (!file || !productId || !user?.id) return null;
-
-    setProductImageUploading(true);
-    const extension = (file.name.split(".").pop() || "jpg").toLowerCase().replace(/[^a-z0-9]/g, "");
-    const filePath = `${user.id}/${productId}-${Date.now()}.${extension}`;
-
-    const { error: uploadError } = await supabase.storage
-      .from("product-images")
-      .upload(filePath, file, {
-        cacheControl: "3600",
-        upsert: false,
-        contentType: file.type,
-      });
-
-    if (uploadError) {
-      setProductImageUploading(false);
-      throw uploadError;
-    }
-
-    const { data: publicUrlData } = supabase.storage
-      .from("product-images")
-      .getPublicUrl(filePath);
-
-    setProductImageUploading(false);
-    return publicUrlData?.publicUrl || null;
   };
 
   const saveSellerProduct = async (e) => {
@@ -2113,7 +2088,7 @@ function App() {
     }
 
     if (!sellerEditingProduct && !productImageFile) {
-      setSellerError("Please upload a product image.");
+      setSellerError("Please choose a product image before submitting.");
       return;
     }
 
@@ -2170,29 +2145,78 @@ function App() {
     }
 
     if (productImageFile && productId) {
-      try {
-        const uploadedUrl = await uploadProductImage(productImageFile, productId);
-        if (uploadedUrl) {
-          const { data: existingImage } = await supabase
-            .from("images")
-            .select("id")
-            .eq("product_id", productId)
-            .order("sort_order", { ascending: true })
-            .limit(1)
-            .maybeSingle();
+      const extension = productImageFile.name.split(".").pop()?.toLowerCase() || "jpg";
+      const safeName = productImageFile.name
+        .replace(/[^a-zA-Z0-9._-]/g, "-")
+        .replace(/-+/g, "-")
+        .slice(0, 80);
+      const filePath = `${user.id}/${productId}-${Date.now()}-${safeName || `product.${extension}`}`;
 
-          if (existingImage?.id) {
-            await supabase.from("images").update({ image_url: uploadedUrl }).eq("id", existingImage.id);
-          } else {
-            await supabase.from("images").insert({ product_id: productId, image_url: uploadedUrl, sort_order: 0 });
-          }
-        }
-      } catch (imageError) {
-        console.error("LOOPA product image upload error:", imageError);
-        setSellerError(imageError.message || "We couldn't upload the product image.");
+      const { error: uploadError } = await supabase.storage
+        .from("product-images")
+        .upload(filePath, productImageFile, {
+          upsert: false,
+          contentType: productImageFile.type,
+          cacheControl: "3600",
+        });
+
+      if (uploadError) {
+        setSellerError(uploadError.message || "We couldn't upload your product image.");
         setSellerSaving(false);
-        setProductImageUploading(false);
         return;
+      }
+
+      const { data: publicUrlData } = supabase.storage
+        .from("product-images")
+        .getPublicUrl(filePath);
+
+      const imageUrl = publicUrlData?.publicUrl;
+
+      if (!imageUrl) {
+        setSellerError("The image uploaded, but we couldn't create its public URL.");
+        setSellerSaving(false);
+        return;
+      }
+
+      const { data: existingImage, error: imageLookupError } = await supabase
+        .from("images")
+        .select("id")
+        .eq("product_id", productId)
+        .order("sort_order", { ascending: true })
+        .limit(1)
+        .maybeSingle();
+
+      if (imageLookupError) {
+        setSellerError(imageLookupError.message || "We couldn't save the product image.");
+        setSellerSaving(false);
+        return;
+      }
+
+      if (existingImage?.id) {
+        const { error: imageUpdateError } = await supabase
+          .from("images")
+          .update({ image_url: imageUrl })
+          .eq("id", existingImage.id);
+
+        if (imageUpdateError) {
+          setSellerError(imageUpdateError.message || "We couldn't save the product image.");
+          setSellerSaving(false);
+          return;
+        }
+      } else {
+        const { error: imageInsertError } = await supabase
+          .from("images")
+          .insert({
+            product_id: productId,
+            image_url: imageUrl,
+            sort_order: 0,
+          });
+
+        if (imageInsertError) {
+          setSellerError(imageInsertError.message || "We couldn't save the product image.");
+          setSellerSaving(false);
+          return;
+        }
       }
     }
 
@@ -2294,10 +2318,18 @@ function App() {
               </div>
               <label className="seller-checkbox"><input type="checkbox" checked={productForm.madeToOrder} onChange={(e) => setProductForm({ ...productForm, madeToOrder: e.target.checked })} /><span>Made to order</span></label>
               {!productForm.madeToOrder ? <label>Stock<input type="number" min="0" step="1" value={productForm.stock} onChange={(e) => setProductForm({ ...productForm, stock: e.target.value })} placeholder="10" /></label> : <label>Production days<input type="number" min="1" step="1" value={productForm.productionDays} onChange={(e) => setProductForm({ ...productForm, productionDays: e.target.value })} placeholder="7" /></label>}
-              <label>Product image <span className="optional-label">Required</span><input type="file" accept="image/*" onChange={handleProductImageChange} /></label>
-              {productImagePreview && <div className="seller-image-preview"><img src={productImagePreview} alt="Product preview" /></div>}
-              {productImageUploading && <p className="seller-note">Uploading image...</p>}
-              <div className="seller-form-actions"><button className="seller-primary-button" disabled={sellerSaving}>{productImageUploading ? "Uploading image..." : sellerSaving ? "Saving..." : sellerEditingProduct ? "Update Product" : "Submit Product"}</button>{sellerEditingProduct && <button type="button" className="seller-secondary-button" onClick={resetSellerProductForm}>Cancel</button>}</div>
+              <label className="seller-image-upload-label">
+                Product image
+                <input type="file" accept="image/*" onChange={handleProductImageChange} />
+                <span className="seller-upload-hint">Choose a clear product photo (max 5MB).</span>
+              </label>
+              {productImagePreview && (
+                <div className="seller-image-preview" style={{ marginTop: "12px", display: "flex", alignItems: "center", gap: "12px" }}>
+                  <img src={productImagePreview} alt="Product preview" style={{ width: "96px", height: "96px", objectFit: "cover", borderRadius: "10px" }} />
+                  <span>{productImageFile ? productImageFile.name : "Current product image"}</span>
+                </div>
+              )}
+              <div className="seller-form-actions"><button className="seller-primary-button" disabled={sellerSaving}>{sellerSaving ? "Saving..." : sellerEditingProduct ? "Update Product" : "Submit Product"}</button>{sellerEditingProduct && <button type="button" className="seller-secondary-button" onClick={resetSellerProductForm}>Cancel</button>}</div>
               {!sellerEditingProduct && <p className="seller-note">New products start as pending so they can be reviewed before appearing in the public shop.</p>}
             </form>
           </section>
@@ -3749,7 +3781,7 @@ function App() {
 
             </div>
 
-            {user && (
+            {user && profile?.role === "admin" && (
               <button
                 className="admin-header-button"
                 onClick={openAdminApproval}
