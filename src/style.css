@@ -3668,3 +3668,430 @@ em {
 @media(max-width:1050px){.seller-stats-grid{grid-template-columns:repeat(3,1fr)}}
 @media(max-width:650px){.seller-stats-grid{grid-template-columns:1fr 1fr}.seller-order-row{align-items:flex-start;flex-direction:column;gap:12px}.seller-order-meta{align-items:flex-start;flex-direction:row}.seller-refresh-button{padding:8px 10px}}
 @media(max-width:420px){.seller-stats-grid{grid-template-columns:1fr}.seller-card-heading{align-items:flex-start}.seller-card-heading h2{font-size:28px}}
+
+/* =========================================================
+   LOOPA — REVIEWS / MESSAGES / CUSTOM / PAYMENT POLISH
+========================================================= */
+
+.product-community-section {
+  width: min(1180px, calc(100% - 48px));
+  margin: 70px auto 0;
+}
+
+.product-community-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.45fr) minmax(300px, .75fr);
+  gap: 24px;
+}
+
+.product-community-card,
+.messages-card,
+.custom-request-form,
+.custom-request-aside {
+  background: #fff;
+  border: 1px solid #eadde3;
+  border-radius: 24px;
+  padding: 32px;
+}
+
+.review-heading-row,
+.conversation-header {
+  display: flex;
+  justify-content: space-between;
+  gap: 20px;
+  align-items: flex-start;
+}
+
+.review-heading-row h2,
+.product-message-card h2,
+.conversation-header h2,
+.custom-request-aside h2 {
+  margin: 0;
+  color: #2d2228;
+  font-family: "Bodoni Moda", Didot, "Bodoni 72", "Bodoni MT", "Times New Roman", serif;
+  font-size: 32px;
+  font-weight: 400;
+}
+
+.review-heading-row p,
+.product-message-card > p:not(.standard-eyebrow),
+.community-muted,
+.messages-header > p:last-child,
+.custom-request-header > p:last-child {
+  color: #75646d;
+  line-height: 1.7;
+}
+
+.review-average {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: #b08a3d;
+  font-size: 20px;
+}
+
+.review-list {
+  margin-top: 26px;
+  display: grid;
+  gap: 14px;
+}
+
+.review-item {
+  border-top: 1px solid #f0e6eb;
+  padding-top: 18px;
+}
+
+.review-stars {
+  display: flex;
+  gap: 2px;
+  color: #b08a3d;
+  margin-bottom: 7px;
+}
+
+.review-item p {
+  margin: 0 0 7px;
+  color: #4f4148;
+  line-height: 1.65;
+}
+
+.review-item small {
+  color: #9a7c88;
+}
+
+.review-form {
+  margin-top: 30px;
+  padding-top: 24px;
+  border-top: 1px solid #f0e6eb;
+}
+
+.review-form-top {
+  display: grid;
+  gap: 14px;
+}
+
+.review-form label,
+.checkout-payment-phone {
+  display: grid;
+  gap: 8px;
+  color: #4f4148;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.review-form select,
+.review-form textarea,
+.checkout-payment-phone input {
+  width: 100%;
+  border: 1px solid #e4d7de;
+  border-radius: 12px;
+  background: #fff;
+  padding: 12px 13px;
+  color: #2d2228;
+  font: inherit;
+  outline: none;
+}
+
+.review-form textarea:focus,
+.review-form select:focus,
+.checkout-payment-phone input:focus {
+  border-color: #9a7c88;
+}
+
+.review-form .product-detail-add {
+  margin-top: 14px;
+}
+
+.community-error,
+.community-success,
+.checkout-success-note {
+  margin-top: 14px;
+  border-radius: 12px;
+  padding: 12px 14px;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.community-error {
+  background: #fff2f3;
+  color: #9b3e4c;
+  border: 1px solid #f2cdd2;
+}
+
+.community-success,
+.checkout-success-note {
+  background: #f5faf5;
+  color: #4c704f;
+  border: 1px solid #d6e8d7;
+}
+
+.product-message-card {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.product-message-card .checkout-primary-button {
+  margin-top: 20px;
+}
+
+.messages-page,
+.custom-request-page {
+  width: min(1180px, calc(100% - 48px));
+  margin: 0 auto;
+  padding: 70px 0 100px;
+}
+
+.messages-header,
+.custom-request-header {
+  text-align: center;
+  max-width: 760px;
+  margin: 0 auto 36px;
+}
+
+.messages-header .bag-back,
+.custom-request-header .bag-back {
+  display: block;
+  margin: 0 auto 34px;
+}
+
+.messages-header h1,
+.custom-request-header h1 {
+  margin: 0;
+  color: #2d2228;
+  font-family: "Bodoni Moda", Didot, "Bodoni 72", "Bodoni MT", "Times New Roman", serif;
+  font-size: clamp(48px, 7vw, 88px);
+  font-weight: 400;
+  line-height: .95;
+}
+
+.messages-card {
+  max-width: 850px;
+  margin: 0 auto;
+}
+
+.conversation-header {
+  padding-bottom: 22px;
+  border-bottom: 1px solid #eee4e9;
+}
+
+.conversation-header > span {
+  border: 1px solid #eadde3;
+  border-radius: 999px;
+  padding: 7px 11px;
+  color: #75646d;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.message-thread {
+  min-height: 340px;
+  max-height: 520px;
+  overflow-y: auto;
+  padding: 26px 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.message-bubble {
+  max-width: 78%;
+  padding: 12px 15px;
+  border-radius: 16px;
+  background: #f7f1f4;
+  color: #4f4148;
+}
+
+.message-bubble.mine {
+  margin-left: auto;
+  background: #2d2228;
+  color: #fff;
+}
+
+.message-bubble p {
+  margin: 0;
+  line-height: 1.55;
+}
+
+.message-bubble small {
+  display: block;
+  margin-top: 7px;
+  opacity: .65;
+  font-size: 10px;
+}
+
+.message-compose {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 12px;
+  border-top: 1px solid #eee4e9;
+  padding-top: 20px;
+}
+
+.message-compose textarea {
+  resize: vertical;
+  border: 1px solid #e4d7de;
+  border-radius: 14px;
+  padding: 13px;
+  font: inherit;
+  color: #2d2228;
+  outline: none;
+}
+
+.message-compose textarea:focus {
+  border-color: #9a7c88;
+}
+
+.messages-empty {
+  min-height: 360px;
+  display: grid;
+  place-items: center;
+  align-content: center;
+  text-align: center;
+  color: #9a7c88;
+}
+
+.messages-empty h2 {
+  margin: 14px 0 6px;
+  color: #2d2228;
+  font-family: "Bodoni Moda", Didot, serif;
+  font-weight: 400;
+}
+
+.custom-request-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1.25fr) minmax(300px, .75fr);
+  gap: 24px;
+  align-items: start;
+}
+
+.custom-request-form {
+  display: grid;
+  gap: 17px;
+}
+
+.custom-request-form label {
+  display: grid;
+  gap: 8px;
+  color: #4f4148;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.custom-request-form input,
+.custom-request-form textarea {
+  width: 100%;
+  border: 1px solid #e4d7de;
+  border-radius: 12px;
+  padding: 13px;
+  font: inherit;
+  color: #2d2228;
+  outline: none;
+  background: #fff;
+}
+
+.custom-request-form input:focus,
+.custom-request-form textarea:focus {
+  border-color: #9a7c88;
+}
+
+.custom-request-aside {
+  position: sticky;
+  top: 100px;
+}
+
+.custom-request-list {
+  margin-top: 24px;
+  display: grid;
+  gap: 12px;
+}
+
+.custom-request-list article {
+  border-top: 1px solid #eee4e9;
+  padding-top: 15px;
+}
+
+.custom-request-list article strong {
+  display: block;
+  color: #2d2228;
+}
+
+.custom-request-list article span {
+  display: inline-block;
+  margin-top: 6px;
+  color: #9a7c88;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.custom-request-list article p {
+  margin: 8px 0 0;
+  color: #75646d;
+  font-size: 13px;
+  line-height: 1.55;
+}
+
+.seller-order-meta select {
+  margin-top: 8px;
+  border: 1px solid #eadde3;
+  border-radius: 8px;
+  background: #fff;
+  padding: 6px 8px;
+  color: #4f4148;
+  font-size: 11px;
+}
+
+.seller-order-main small {
+  display: block;
+  margin-top: 5px;
+  color: #9a7c88;
+  font-size: 11px;
+}
+
+@media (max-width: 800px) {
+  .product-community-section,
+  .messages-page,
+  .custom-request-page {
+    width: min(100% - 30px, 1180px);
+  }
+
+  .product-community-grid,
+  .custom-request-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .custom-request-aside {
+    position: static;
+  }
+
+  .message-compose {
+    grid-template-columns: 1fr;
+  }
+
+  .message-bubble {
+    max-width: 90%;
+  }
+}
+
+@media (max-width: 560px) {
+  .product-community-card,
+  .messages-card,
+  .custom-request-form,
+  .custom-request-aside {
+    padding: 22px;
+    border-radius: 18px;
+  }
+
+  .review-heading-row h2,
+  .product-message-card h2,
+  .conversation-header h2,
+  .custom-request-aside h2 {
+    font-size: 27px;
+  }
+
+  .messages-header h1,
+  .custom-request-header h1 {
+    font-size: 48px;
+  }
+}
