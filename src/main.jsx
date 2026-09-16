@@ -468,6 +468,7 @@ function App() {
   const [adminLoading, setAdminLoading] = useState(false);
   const [adminError, setAdminError] = useState("");
   const [adminMessage, setAdminMessage] = useState("");
+  const [adminAccess, setAdminAccess] = useState(false);
 
   /* ---------------------------------------
      REVIEWS / MESSAGING / CUSTOM / PAYMENTS
@@ -1657,11 +1658,6 @@ function App() {
   };
 
   const loadAdminProducts = async () => {
-    if (profile?.role !== "admin") {
-      setAdminProducts([]);
-      return;
-    }
-
     setAdminLoading(true);
     setAdminError("");
 
@@ -1726,13 +1722,14 @@ function App() {
 
     setAdminMessage("");
     setAdminError("");
+    setAdminAccess(true);
     await loadAdminProducts();
     setPage("admin");
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
   const updateProductApproval = async (productId, status) => {
-    if (profile?.role !== "admin") return;
+    if (!adminAccess) return;
 
     setAdminError("");
     setAdminMessage("");
@@ -3690,7 +3687,7 @@ function App() {
 
             </div>
 
-            {user && String(profile?.role || "").toLowerCase() === "admin" && (
+            {user && (
               <button
                 className="seller-header-button"
                 onClick={openAdminDashboard}
@@ -3776,7 +3773,7 @@ function App() {
 
       {/* SELLER DASHBOARD */}
 
-      {page === "admin" && user && profile?.role === "admin" && AdminDashboardPage()}
+      {page === "admin" && user && adminAccess && AdminDashboardPage()}
 
       {page === "seller" && user && SellerDashboardPage()}
 
