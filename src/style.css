@@ -2230,357 +2230,67 @@ em {
   }
 
 }
+
 /* =========================================================
-   STANDARD LOOPA SHOP WORLDS
+   LOOPA STANDARD SHOP EDITORIAL
    Women / Shoes / Bags / Accessories
    ========================================================= */
 
-.standard-shop-page {
-  max-width: none;
-  padding-left: max(34px, calc((100% - 1400px) / 2));
-  padding-right: max(34px, calc((100% - 1400px) / 2));
-  background: #fbfaf9;
+.standard-shop-page{max-width:none;padding-left:max(34px,calc((100% - 1400px)/2));padding-right:max(34px,calc((100% - 1400px)/2));background:#fbfaf9}
+.standard-shop-page .empty-decor{display:none}
+.standard-shop-page .product-emoji{font-size:0}
+
+.shop-world-hero{min-height:500px;display:grid;grid-template-columns:1fr .9fr;gap:70px;align-items:center;padding:55px 0 70px;border-bottom:1px solid #e8e1df}
+.shop-world-copy{max-width:650px}
+.standard-eyebrow{margin:0 0 18px;font-size:10px;letter-spacing:2.8px;font-weight:700;color:#81736f}
+.shop-world-copy h1{margin:0;font-family:Georgia,"Times New Roman",serif;font-size:clamp(68px,9vw,132px);line-height:.86;letter-spacing:-7px;font-weight:400;color:#292424}
+.standard-world-description{max-width:510px;margin:30px 0 25px;font-size:15px;line-height:1.8;color:#706664}
+.standard-shop-tags{display:flex;flex-wrap:wrap;gap:8px}
+.standard-shop-tags span{border:1px solid #ded5d1;padding:8px 13px;font-size:11px;letter-spacing:.4px;color:#625956;background:rgba(255,255,255,.55)}
+
+.standard-world-visual{min-height:430px;display:flex;align-items:stretch;justify-content:center}
+.standard-visual-frame{position:relative;width:100%;min-height:430px;overflow:hidden;border:1px solid #ddd4d0;background:linear-gradient(135deg,rgba(255,255,255,.9),rgba(240,232,228,.65));display:flex;align-items:center;justify-content:center}
+.standard-visual-frame:before{content:"";position:absolute;width:270px;height:360px;border:1px solid rgba(120,105,98,.16);transform:rotate(8deg)}
+.standard-visual-frame:after{content:"";position:absolute;width:210px;height:300px;border:1px solid rgba(120,105,98,.12);transform:rotate(-7deg)}
+.standard-visual-label{position:absolute;top:22px;left:24px;font-size:9px;letter-spacing:2px;font-weight:700;color:#786c68}
+.standard-visual-mark{position:relative;z-index:2;font-family:Georgia,"Times New Roman",serif;font-size:clamp(170px,20vw,300px);line-height:1;font-weight:400;letter-spacing:-18px;color:rgba(55,46,43,.9)}
+.standard-visual-caption{position:absolute;bottom:22px;right:24px;font-size:8px;letter-spacing:2px;color:#897b76}
+
+.women-shop-page{background:#fcf8f7}
+.women-shop-page .standard-visual-frame{background:linear-gradient(145deg,#fffaf9 0%,#f2e5e2 100%)}
+.shoes-shop-page{background:#faf9f8}
+.shoes-shop-page .standard-visual-frame{background:linear-gradient(145deg,#fffdfb 0%,#e9e0e5 100%)}
+.shoes-shop-page .standard-visual-mark{font-style:italic}
+.bags-shop-page{background:#faf8f5}
+.bags-shop-page .standard-visual-frame{background:linear-gradient(145deg,#fcfaf7 0%,#ded1c3 100%)}
+.accessories-shop-page{background:#fcfaf8}
+.accessories-shop-page .standard-visual-frame{background:linear-gradient(145deg,#fffdf9 0%,#eee5df 100%)}
+.accessories-shop-page .standard-visual-mark{font-size:clamp(150px,18vw,260px)}
+
+.standard-empty{min-height:400px;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;border-top:1px solid #e7dfdc;border-bottom:1px solid #e7dfdc;padding:70px 25px}
+.standard-empty-mark{font-family:Georgia,"Times New Roman",serif;font-size:90px;line-height:1;font-weight:400;color:#302927;margin-bottom:25px}
+.standard-empty .standard-eyebrow{margin-bottom:10px}
+.standard-empty h2{margin:0 0 12px;font-family:Georgia,"Times New Roman",serif;font-size:32px;font-weight:400;color:#302927}
+.standard-empty p:last-child{max-width:450px;margin:0 auto;font-size:13px;line-height:1.7;color:#80736f}
+
+.standard-shop-page .shop-layout{gap:50px}
+.standard-shop-page .shop-sidebar{border-right:1px solid #e5ddda}
+.standard-shop-page .subcategory{color:#786d69}
+.standard-shop-page .subcategory:hover,.standard-shop-page .subcategory.active{color:#302927}
+.standard-shop-page .product-toolbar{border-bottom:1px solid #e8e0dd;padding-bottom:14px}
+.standard-shop-page .product-card{border-radius:0;box-shadow:none;border:1px solid #e6dedb}
+
+@media (max-width:900px){
+  .shop-world-hero{grid-template-columns:1fr;gap:40px;padding-top:35px}
+  .shop-world-copy h1{font-size:clamp(64px,17vw,100px);letter-spacing:-5px}
+  .standard-world-visual,.standard-visual-frame{min-height:330px}
+  .standard-visual-mark{font-size:190px}
 }
-
-.standard-shop-page .empty-decor {
-  display: none;
-}
-
-.standard-shop-page .product-emoji {
-  font-size: 0;
-}
-
-/* Editorial hero */
-
-.shop-world-hero {
-  min-height: 500px;
-  display: grid;
-  grid-template-columns: 1fr 0.9fr;
-  gap: 70px;
-  align-items: center;
-  padding: 55px 0 70px;
-  border-bottom: 1px solid #e8e1df;
-}
-
-.shop-world-copy {
-  max-width: 650px;
-}
-
-.standard-eyebrow {
-  margin: 0 0 18px;
-  font-size: 10px;
-  letter-spacing: 2.8px;
-  font-weight: 700;
-  color: #81736f;
-}
-
-.shop-world-copy h1 {
-  margin: 0;
-  font-family: Georgia, "Times New Roman", serif;
-  font-size: clamp(68px, 9vw, 132px);
-  line-height: 0.86;
-  letter-spacing: -7px;
-  font-weight: 400;
-  color: #292424;
-}
-
-.standard-world-description {
-  max-width: 510px;
-  margin: 30px 0 25px;
-  font-size: 15px;
-  line-height: 1.8;
-  color: #706664;
-}
-
-.standard-shop-tags {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-}
-
-.standard-shop-tags span {
-  border: 1px solid #ded5d1;
-  padding: 8px 13px;
-  font-size: 11px;
-  letter-spacing: 0.4px;
-  color: #625956;
-  background: rgba(255, 255, 255, 0.55);
-}
-
-/* Visual panel */
-
-.standard-world-visual {
-  min-height: 430px;
-  display: flex;
-  align-items: stretch;
-  justify-content: center;
-}
-
-.standard-visual-frame {
-  position: relative;
-  width: 100%;
-  min-height: 430px;
-  overflow: hidden;
-  border: 1px solid #ddd4d0;
-  background:
-    linear-gradient(
-      135deg,
-      rgba(255,255,255,0.9),
-      rgba(240,232,228,0.65)
-    );
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.standard-visual-frame::before {
-  content: "";
-  position: absolute;
-  width: 270px;
-  height: 360px;
-  border: 1px solid rgba(120,105,98,0.16);
-  transform: rotate(8deg);
-}
-
-.standard-visual-frame::after {
-  content: "";
-  position: absolute;
-  width: 210px;
-  height: 300px;
-  border: 1px solid rgba(120,105,98,0.12);
-  transform: rotate(-7deg);
-}
-
-.standard-visual-label {
-  position: absolute;
-  top: 22px;
-  left: 24px;
-  font-size: 9px;
-  letter-spacing: 2px;
-  font-weight: 700;
-  color: #786c68;
-}
-
-.standard-visual-mark {
-  position: relative;
-  z-index: 2;
-  font-family: Georgia, "Times New Roman", serif;
-  font-size: clamp(170px, 20vw, 300px);
-  line-height: 1;
-  font-weight: 400;
-  letter-spacing: -18px;
-  color: rgba(55, 46, 43, 0.9);
-}
-
-.standard-visual-caption {
-  position: absolute;
-  bottom: 22px;
-  right: 24px;
-  font-size: 8px;
-  letter-spacing: 2px;
-  color: #897b76;
-}
-
-/* Women */
-
-.women-shop-page {
-  background: #fcf8f7;
-}
-
-.women-shop-page .standard-visual-frame {
-  background:
-    linear-gradient(
-      145deg,
-      #fffaf9 0%,
-      #f2e5e2 100%
-    );
-}
-
-/* Shoes */
-
-.shoes-shop-page {
-  background: #faf9f8;
-}
-
-.shoes-shop-page .standard-visual-frame {
-  background:
-    linear-gradient(
-      145deg,
-      #fffdfb 0%,
-      #e9e0e5 100%
-    );
-}
-
-.shoes-shop-page .standard-visual-mark {
-  font-style: italic;
-}
-
-/* Bags */
-
-.bags-shop-page {
-  background: #faf8f5;
-}
-
-.bags-shop-page .standard-visual-frame {
-  background:
-    linear-gradient(
-      145deg,
-      #fcfaf7 0%,
-      #ded1c3 100%
-    );
-}
-
-/* Accessories */
-
-.accessories-shop-page {
-  background: #fcfaf8;
-}
-
-.accessories-shop-page .standard-visual-frame {
-  background:
-    linear-gradient(
-      145deg,
-      #fffdf9 0%,
-      #eee5df 100%
-    );
-}
-
-.accessories-shop-page .standard-visual-mark {
-  font-size: clamp(150px, 18vw, 260px);
-}
-
-/* Standard empty product state */
-
-.standard-shop-page .empty-state {
-  border: 1px solid #e5ddda;
-  background: rgba(255,255,255,0.45);
-}
-
-.standard-empty {
-  min-height: 400px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  text-align: center;
-  border-top: 1px solid #e7dfdc;
-  border-bottom: 1px solid #e7dfdc;
-  padding: 70px 25px;
-}
-
-.standard-empty-mark {
-  font-family: Georgia, "Times New Roman", serif;
-  font-size: 90px;
-  line-height: 1;
-  font-weight: 400;
-  color: #302927;
-  margin-bottom: 25px;
-}
-
-.standard-empty .standard-eyebrow {
-  margin-bottom: 10px;
-}
-
-.standard-empty h2 {
-  margin: 0 0 12px;
-  font-family: Georgia, "Times New Roman", serif;
-  font-size: 32px;
-  font-weight: 400;
-  color: #302927;
-}
-
-.standard-empty p:last-child {
-  max-width: 450px;
-  margin: 0 auto;
-  font-size: 13px;
-  line-height: 1.7;
-  color: #80736f;
-}
-
-/* Keep the product area editorial */
-
-.standard-shop-page .shop-layout {
-  gap: 50px;
-}
-
-.standard-shop-page .shop-sidebar {
-  border-right: 1px solid #e5ddda;
-}
-
-.standard-shop-page .subcategory {
-  color: #786d69;
-}
-
-.standard-shop-page .subcategory:hover,
-.standard-shop-page .subcategory.active {
-  color: #302927;
-}
-
-.standard-shop-page .product-toolbar {
-  border-bottom: 1px solid #e8e0dd;
-  padding-bottom: 14px;
-}
-
-.standard-shop-page .product-card {
-  border-radius: 0;
-  box-shadow: none;
-  border: 1px solid #e6dedb;
-}
-
-/* Mobile */
-
-@media (max-width: 900px) {
-  .shop-world-hero {
-    grid-template-columns: 1fr;
-    gap: 40px;
-    padding-top: 35px;
-  }
-
-  .shop-world-copy h1 {
-    font-size: clamp(64px, 17vw, 100px);
-    letter-spacing: -5px;
-  }
-
-  .standard-world-visual {
-    min-height: 330px;
-  }
-
-  .standard-visual-frame {
-    min-height: 330px;
-  }
-
-  .standard-visual-mark {
-    font-size: 190px;
-  }
-}
-
-@media (max-width: 600px) {
-  .standard-shop-page {
-    padding-left: 20px;
-    padding-right: 20px;
-  }
-
-  .shop-world-hero {
-    padding-bottom: 45px;
-  }
-
-  .shop-world-copy h1 {
-    font-size: 70px;
-  }
-
-  .standard-world-description {
-    font-size: 14px;
-  }
-
-  .standard-world-visual {
-    min-height: 280px;
-  }
-
-  .standard-visual-frame {
-    min-height: 280px;
-  }
-
-  .standard-visual-mark {
-    font-size: 150px;
-  }
+@media (max-width:600px){
+  .standard-shop-page{padding-left:20px;padding-right:20px}
+  .shop-world-hero{padding-bottom:45px}
+  .shop-world-copy h1{font-size:70px}
+  .standard-world-description{font-size:14px}
+  .standard-world-visual,.standard-visual-frame{min-height:280px}
+  .standard-visual-mark{font-size:150px}
 }
