@@ -940,9 +940,17 @@ function App() {
             />
           </button>
 
-          <span className="product-emoji">
-            🛍️
-          </span>
+          {product.image_url ? (
+  <img
+    src={product.image_url}
+    alt={product.name}
+    className="product-photo"
+  />
+) : (
+  <span className="product-emoji">
+    🛍️
+  </span>
+)}
 
         </div>
 
