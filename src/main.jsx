@@ -661,52 +661,18 @@ function App() {
 
     setOrdersLoading(true);
 
-    const { data: orderData, error: orderError } = await supabase
+    const { data, error } = await supabase
       .from("orders")
-      .select("id, customer_id, order_number, status, subtotal, delivery_fee, total_amount, delivery_address, delivery_phone, notes, created_at, updated_at")
-      .eq("customer_id", userId)
+      .select("id, buyer_id, total_amount, status, shipping_address, payment_method, payment_status, created_at")
+      .eq("buyer_id", userId)
       .order("created_at", { ascending: false });
 
-    if (orderError) {
-      console.error("LOOPA orders loading error:", orderError);
+    if (error) {
+      console.error("LOOPA orders loading error:", error);
       setOrders([]);
-      setOrdersLoading(false);
-      return;
+    } else {
+      setOrders(data || []);
     }
-
-    const loadedOrders = orderData || [];
-
-    if (loadedOrders.length === 0) {
-      setOrders([]);
-      setOrdersLoading(false);
-      return;
-    }
-
-    const orderIds = loadedOrders.map((order) => order.id);
-    const { data: paymentData, error: paymentError } = await supabase
-      .from("payments")
-      .select("order_id, method, status, created_at")
-      .in("order_id", orderIds)
-      .order("created_at", { ascending: false });
-
-    if (paymentError) {
-      console.warn("LOOPA payment history loading error:", paymentError);
-    }
-
-    const latestPaymentByOrder = {};
-    (paymentData || []).forEach((payment) => {
-      if (payment.order_id && !latestPaymentByOrder[payment.order_id]) {
-        latestPaymentByOrder[payment.order_id] = payment;
-      }
-    });
-
-    setOrders(
-      loadedOrders.map((order) => ({
-        ...order,
-        payment_method: latestPaymentByOrder[order.id]?.method || null,
-        payment_status: latestPaymentByOrder[order.id]?.status || "pending",
-      }))
-    );
 
     setOrdersLoading(false);
   };
@@ -1151,15 +1117,14 @@ function App() {
     ].filter(Boolean).join(", ");
 
     const orderPayload = {
-      customer_id: user.id,
-      order_number: `LOOPA-${Date.now()}`,
-      subtotal: cartSubtotal,
-      delivery_fee: 0,
+      buyer_id: user.id,
       total_amount: cartSubtotal,
       status: "pending",
-      delivery_address: shippingAddress,
-      delivery_phone: checkoutPhone.trim(),
+      shipping_address: shippingAddress,
+      shipping_phone: checkoutPhone.trim(),
       notes: checkoutNotes.trim() || null,
+      payment_method: paymentMethod,
+      payment_status: paymentMethod === "Cash on Delivery" ? "pending" : "pending",
     };
 
     const { data, error } = await supabase
@@ -1783,15 +1748,12 @@ function App() {
         created_at,
         orders:order_id (
           id,
-          customer_id,
-          order_number,
-          status,
-          subtotal,
-          delivery_fee,
+          buyer_id,
           total_amount,
-          delivery_address,
-          delivery_phone,
-          notes,
+          status,
+          shipping_address,
+          payment_method,
+          payment_status,
           created_at
         ),
         products:product_id (
@@ -1806,7 +1768,7 @@ function App() {
       console.error("LOOPA seller orders loading error:", error);
       setSellerOrders([]);
       setSellerOrdersError(
-        error.message || "We couldn't load your sales right now."
+        "Seller sales tracking needs the order_items table and its RLS policy. Once those are enabled in Supabase, your sales will appear here."
       );
     } else {
       setSellerOrders(data || []);
@@ -2073,7 +2035,7 @@ function App() {
                     <span className="seller-order-number">#{String(item.order_id).slice(0, 8).toUpperCase()}</span>
                     <h3>{item.products?.name || "LOOPA piece"}</h3>
                     <p>{formatOrderDate(item.created_at)} · Qty {item.quantity}</p>
-                    {item.orders?.delivery_address && <small>{item.orders.shipping_address}</small>}
+                    {item.orders?.shipping_address && <small>{item.orders.shipping_address}</small>}
                   </div>
                   <div className="seller-order-meta">
                     <strong>KES {(Number(item.unit_price || 0) * Number(item.quantity || 0)).toLocaleString()}</strong>
@@ -2963,7 +2925,7 @@ function App() {
           <section className="order-detail-card">
             <p className="standard-eyebrow">DELIVERY</p>
             <h2>Where it's going</h2>
-            <p className="order-address">{order.delivery_address || "Delivery details will be confirmed."}</p>
+            <p className="order-address">{order.shipping_address || "Delivery details will be confirmed."}</p>
           </section>
 
           <section className="order-detail-card">
@@ -3566,9 +3528,7 @@ function App() {
 
       {/* SELLER DASHBOARD */}
 
-      {page === "seller" && user && (
-        <SellerDashboardPage />
-      )}
+      {page === "seller" && user && SellerDashboardPage()}
 
       {page === "messages" && user && <MessagesPage />}
 
