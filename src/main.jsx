@@ -1698,10 +1698,19 @@ function App() {
       logoUrl: sellerData?.logo_url || "",
     });
 
+    const sellerId = sellerData?.id;
+
+    if (!sellerId) {
+      setSellerError("Your seller profile could not be found.");
+      setSellerProducts([]);
+      setSellerLoading(false);
+      return;
+    }
+
     const { data: products, error: productsError } = await supabase
       .from("products")
       .select("id, name, description, price, stock, status, seller_id, category_id, made_to_order, production_days, created_at")
-      .eq("seller_id", userId)
+      .eq("seller_id", sellerId)
       .order("created_at", { ascending: false });
 
     if (productsError) {
@@ -1740,6 +1749,21 @@ function App() {
     setSellerOrdersLoading(true);
     setSellerOrdersError("");
 
+    const { data: sellerData, error: sellerProfileError } = await supabase
+      .from("seller_profiles")
+      .select("id")
+      .eq("user_id", userId)
+      .maybeSingle();
+
+    if (sellerProfileError || !sellerData?.id) {
+      setSellerOrders([]);
+      setSellerOrdersError(
+        sellerProfileError?.message || "Your seller profile could not be found."
+      );
+      setSellerOrdersLoading(false);
+      return;
+    }
+
     const { data, error } = await supabase
       .from("order_items")
       .select(`
@@ -1752,12 +1776,15 @@ function App() {
         created_at,
         orders:order_id (
           id,
-          buyer_id,
-          total_amount,
+          customer_id,
+          order_number,
           status,
-          shipping_address,
-          payment_method,
-          payment_status,
+          subtotal,
+          delivery_fee,
+          total_amount,
+          delivery_address,
+          delivery_phone,
+          notes,
           created_at
         ),
         products:product_id (
@@ -1765,15 +1792,13 @@ function App() {
           name
         )
       `)
-      .eq("seller_id", userId)
+      .eq("seller_id", sellerData.id)
       .order("created_at", { ascending: false });
 
     if (error) {
       console.error("LOOPA seller orders loading error:", error);
       setSellerOrders([]);
-      setSellerOrdersError(
-        "Seller sales tracking needs the order_items table and its RLS policy. Once those are enabled in Supabase, your sales will appear here."
-      );
+      setSellerOrdersError(error.message || "We couldn't load your sales right now.");
     } else {
       setSellerOrders(data || []);
     }
@@ -2035,15 +2060,28 @@ function App() {
     }
 
     setSellerSaving(true);
+
+    const sellerId = sellerProfile?.id || (await supabase
+      .from("seller_profiles")
+      .select("id")
+      .eq("user_id", user.id)
+      .maybeSingle()).data?.id;
+
+    if (!sellerId) {
+      setSellerError("Your seller profile could not be found.");
+      setSellerSaving(false);
+      return;
+    }
+
     const payload = {
       name: productForm.name.trim(),
       description: productForm.description.trim() || null,
       price: Number(productForm.price),
-      stock: productForm.madeToOrder ? null : Number(productForm.stock || 0),
+      stock: Number(productForm.stock || 0),
       category_id: productForm.categoryId,
       made_to_order: Boolean(productForm.madeToOrder),
       production_days: productForm.madeToOrder ? Number(productForm.productionDays || 0) : null,
-      seller_id: user.id,
+      seller_id: sellerId,
     };
 
     let productId = sellerEditingProduct?.id;
@@ -2055,7 +2093,7 @@ function App() {
         .from("products")
         .update(payload)
         .eq("id", productId)
-        .eq("seller_id", user.id)
+        .eq("seller_id", sellerId)
         .select()
         .single());
     } else {
@@ -2098,11 +2136,22 @@ function App() {
   const deleteSellerProduct = async (productId) => {
     if (!window.confirm("Remove this product from your shop?")) return;
     setSellerError("");
+    const sellerId = sellerProfile?.id || (await supabase
+      .from("seller_profiles")
+      .select("id")
+      .eq("user_id", user.id)
+      .maybeSingle()).data?.id;
+
+    if (!sellerId) {
+      setSellerError("Your seller profile could not be found.");
+      return;
+    }
+
     const { error } = await supabase
       .from("products")
       .delete()
       .eq("id", productId)
-      .eq("seller_id", user.id);
+      .eq("seller_id", sellerId);
     if (error) {
       setSellerError(error.message || "We couldn't remove this product.");
       return;
