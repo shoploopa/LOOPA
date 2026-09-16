@@ -1697,7 +1697,7 @@ function App() {
     const { data: products, error: productsError } = await supabase
       .from("products")
       .select("id, name, description, price, stock, status, seller_id, category_id, made_to_order, production_days, created_at")
-      .eq("seller_id", userId)
+       .eq("seller_id", sellerData?.id)
       .order("created_at", { ascending: false });
 
     if (productsError) {
@@ -1736,6 +1736,19 @@ function App() {
     setSellerOrdersLoading(true);
     setSellerOrdersError("");
 
+    const { data: sellerData, error: sellerErrorData } = await supabase
+      .from("seller_profiles")
+      .select("id")
+      .eq("user_id", userId)
+      .maybeSingle();
+
+    if (sellerErrorData || !sellerData?.id) {
+      setSellerOrders([]);
+      setSellerOrdersError(sellerErrorData?.message || "Your seller profile could not be found.");
+      setSellerOrdersLoading(false);
+      return;
+    }
+
     const { data, error } = await supabase
       .from("order_items")
       .select(`
@@ -1748,12 +1761,15 @@ function App() {
         created_at,
         orders:order_id (
           id,
-          buyer_id,
-          total_amount,
+          customer_id,
+          order_number,
           status,
-          shipping_address,
-          payment_method,
-          payment_status,
+          subtotal,
+          delivery_fee,
+          total_amount,
+          delivery_address,
+          delivery_phone,
+          notes,
           created_at
         ),
         products:product_id (
@@ -1761,15 +1777,13 @@ function App() {
           name
         )
       `)
-      .eq("seller_id", userId)
+      .eq("seller_id", sellerData.id)
       .order("created_at", { ascending: false });
 
     if (error) {
       console.error("LOOPA seller orders loading error:", error);
       setSellerOrders([]);
-      setSellerOrdersError(
-        "Seller sales tracking needs the order_items table and its RLS policy. Once those are enabled in Supabase, your sales will appear here."
-      );
+      setSellerOrdersError(error.message || "We couldn't load your sales right now.");
     } else {
       setSellerOrders(data || []);
     }
@@ -1860,27 +1874,23 @@ function App() {
       return;
     }
 
-    if (!productForm.madeToOrder && productForm.stock === "") {
-      setSellerError("Please enter the available stock.");
-      return;
-    }
-
-    if (productForm.madeToOrder && !productForm.productionDays) {
-      setSellerError("Please enter the production time for made-to-order pieces.");
-      return;
-    }
-
     setSellerSaving(true);
 
+    if (!sellerProfile?.id) {
+      setSellerError("Please save your shop profile before adding a product.");
+      setSellerSaving(false);
+      return;
+    }
+
     const payload = {
-      seller_id: user.id,
-      category_id: productForm.categoryId,
       name: productForm.name.trim(),
       description: productForm.description.trim() || null,
       price: Number(productForm.price),
-      stock: productForm.madeToOrder ? 0 : Number(productForm.stock || 0),
+      stock: Number(productForm.stock || 0),
+      category_id: productForm.categoryId,
       made_to_order: Boolean(productForm.madeToOrder),
       production_days: productForm.madeToOrder ? Number(productForm.productionDays || 0) : null,
+      seller_id: sellerProfile?.id,
     };
 
     let productId = sellerEditingProduct?.id;
@@ -1890,9 +1900,9 @@ function App() {
     if (productId) {
       ({ data: productData, error } = await supabase
         .from("products")
-        .update({ ...payload, status: "pending" })
+        .update(payload)
         .eq("id", productId)
-        .eq("seller_id", user.id)
+        .eq("seller_id", sellerProfile?.id)
         .select()
         .single());
     } else {
@@ -1905,14 +1915,13 @@ function App() {
     }
 
     if (error) {
-      console.error("LOOPA product save error:", error);
       setSellerError(error.message || "We couldn't save this product.");
       setSellerSaving(false);
       return;
     }
 
-    if (productId && productForm.imageUrl.trim()) {
-      const { data: existingImage, error: existingImageError } = await supabase
+    if (productForm.imageUrl.trim() && productId) {
+      const { data: existingImage } = await supabase
         .from("images")
         .select("id")
         .eq("product_id", productId)
@@ -1920,52 +1929,16 @@ function App() {
         .limit(1)
         .maybeSingle();
 
-      if (existingImageError) {
-        console.warn("LOOPA product image lookup error:", existingImageError);
-      }
-
-      const imagePayload = {
-        product_id: productId,
-        image_url: productForm.imageUrl.trim(),
-        sort_order: 0,
-      };
-
       if (existingImage?.id) {
-        const { error: imageUpdateError } = await supabase
-          .from("images")
-          .update(imagePayload)
-          .eq("id", existingImage.id);
-        if (imageUpdateError) {
-          console.warn("LOOPA product image update error:", imageUpdateError);
-        }
+        await supabase.from("images").update({ image_url: productForm.imageUrl.trim() }).eq("id", existingImage.id);
       } else {
-        const { error: imageInsertError } = await supabase
-          .from("images")
-          .insert(imagePayload);
-        if (imageInsertError) {
-          console.warn("LOOPA product image insert error:", imageInsertError);
-        }
+        await supabase.from("images").insert({ product_id: productId, image_url: productForm.imageUrl.trim(), sort_order: 0 });
       }
     }
 
-    setSellerEditingProduct(null);
-    setProductForm({
-      name: "",
-      description: "",
-      price: "",
-      stock: "",
-      categoryId: "",
-      madeToOrder: false,
-      productionDays: "",
-      imageUrl: "",
-    });
-
     await loadSellerDashboard(user.id);
-    setSellerMessage(
-      sellerEditingProduct
-        ? "Your product was updated and sent back for review. ♡"
-        : "Your product has been submitted for review. ♡"
-    );
+    resetSellerProductForm();
+    setSellerMessage(sellerEditingProduct ? "Product updated successfully. ♡" : "Product submitted for approval. ♡");
     setSellerSaving(false);
   };
 
@@ -1976,7 +1949,7 @@ function App() {
       .from("products")
       .delete()
       .eq("id", productId)
-      .eq("seller_id", user.id);
+      .eq("seller_id", sellerProfile?.id);
     if (error) {
       setSellerError(error.message || "We couldn't remove this product.");
       return;
