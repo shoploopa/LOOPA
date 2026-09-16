@@ -516,6 +516,47 @@ function App() {
   });
 
   /* ---------------------------------------
+     ENSURE PROFILE
+  ---------------------------------------- */
+
+  const ensureProfile = async (authUser) => {
+    if (!authUser?.id) return null;
+
+    const { data: existing, error: readError } = await supabase
+      .from("profiles")
+      .select("id, full_name, email, phone, avatar_url, role")
+      .eq("id", authUser.id)
+      .maybeSingle();
+
+    if (readError) {
+      console.error("LOOPA profile lookup error:", readError);
+      return null;
+    }
+
+    if (existing) return existing;
+
+    const { data: created, error: createError } = await supabase
+      .from("profiles")
+      .insert({
+        id: authUser.id,
+        email: authUser.email || "",
+        full_name:
+          authUser.user_metadata?.full_name ||
+          authUser.user_metadata?.name ||
+          "",
+      })
+      .select("id, full_name, email, phone, avatar_url, role")
+      .single();
+
+    if (createError) {
+      console.error("LOOPA profile creation error:", createError);
+      return null;
+    }
+
+    return created;
+  };
+
+  /* ---------------------------------------
      CHECK CURRENT USER
   ---------------------------------------- */
 
@@ -529,6 +570,7 @@ function App() {
 
       if (user) {
         setUser(user);
+        await ensureProfile(user);
         await loadProfile(user.id);
         await loadOrders(user.id);
       }
@@ -548,9 +590,8 @@ function App() {
         setUser(currentUser);
 
         if (currentUser) {
-          await loadProfile(
-            currentUser.id
-          );
+          await ensureProfile(currentUser);
+          await loadProfile(currentUser.id);
           await loadOrders(currentUser.id);
         } else {
           setProfile(null);
@@ -568,6 +609,11 @@ function App() {
   ---------------------------------------- */
 
   const loadProfile = async (userId) => {
+    if (!userId) {
+      setProfile(null);
+      return null;
+    }
+
     const { data, error } = await supabase
       .from("profiles")
       .select(
@@ -585,6 +631,7 @@ function App() {
     }
 
     setProfile(data);
+    return data;
   };
 
   /* ---------------------------------------
@@ -1150,9 +1197,12 @@ function App() {
 
     setUser(data.user);
 
-    await loadProfile(
-      data.user.id
-    );
+    const ensuredProfile = await ensureProfile(data.user);
+    if (ensuredProfile) {
+      setProfile(ensuredProfile);
+    } else {
+      await loadProfile(data.user.id);
+    }
 
     setAuthMessage(
       "Welcome back to LOOPA 💕"
@@ -1230,16 +1280,20 @@ function App() {
       data.user &&
       data.session
     ) {
-      await supabase
+      const { error: profileError } = await supabase
         .from("profiles")
-        .update({
-          full_name:
-            fullName.trim(),
-        })
-        .eq(
-          "id",
-          data.user.id
+        .upsert(
+          {
+            id: data.user.id,
+            email: data.user.email || email.trim(),
+            full_name: fullName.trim(),
+          },
+          { onConflict: "id" }
         );
+
+      if (profileError) {
+        console.error("LOOPA profile save error:", profileError);
+      }
 
       setUser(data.user);
 
