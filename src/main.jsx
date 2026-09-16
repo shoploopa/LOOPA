@@ -386,7 +386,7 @@ function App() {
 
   const [wishlist, setWishlist] = useState([]);
   const [cart, setCart] = useState([]);
-
+const [selectedProduct, setSelectedProduct] = useState(null);
   /* ---------------------------------------
      AUTH STATE
   ---------------------------------------- */
