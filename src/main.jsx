@@ -584,6 +584,7 @@ function App() {
         await ensureProfile(user);
         await loadProfile(user.id);
         await loadOrders(user.id);
+        await loadWishlist(user.id);
       }
 
       setAuthLoading(false);
@@ -616,8 +617,10 @@ function App() {
           await ensureProfile(currentUser);
           await loadProfile(currentUser.id);
           await loadOrders(currentUser.id);
+          await loadWishlist(currentUser.id);
         } else {
           setProfile(null);
+          setWishlist([]);
         }
       }
     );
@@ -949,14 +952,71 @@ function App() {
      WISHLIST
   ---------------------------------------- */
 
-  const toggleWishlist = (id) => {
-    setWishlist((old) =>
-      old.includes(id)
-        ? old.filter(
-            (item) => item !== id
-          )
-        : [...old, id]
-    );
+  const loadWishlist = async (userId) => {
+    if (!userId) {
+      setWishlist([]);
+      return;
+    }
+
+    const { data, error } = await supabase
+      .from("wishlists")
+      .select("product_id")
+      .eq("user_id", userId);
+
+    if (error) {
+      console.warn("LOOPA wishlist could not be loaded:", error);
+      const local = JSON.parse(localStorage.getItem(`loopa-wishlist-${userId}`) || "[]");
+      setWishlist(Array.isArray(local) ? local : []);
+      return;
+    }
+
+    const ids = (data || []).map((row) => row.product_id).filter(Boolean);
+    setWishlist(ids);
+    localStorage.setItem(`loopa-wishlist-${userId}`, JSON.stringify(ids));
+  };
+
+  const toggleWishlist = async (id) => {
+    if (!user) {
+      openAuth("login");
+      return;
+    }
+
+    const isSaved = wishlist.includes(id);
+    const next = isSaved
+      ? wishlist.filter((item) => item !== id)
+      : [...wishlist, id];
+
+    setWishlist(next);
+    localStorage.setItem(`loopa-wishlist-${user.id}`, JSON.stringify(next));
+
+    if (isSaved) {
+      const { error } = await supabase
+        .from("wishlists")
+        .delete()
+        .eq("user_id", user.id)
+        .eq("product_id", id);
+      if (error) console.warn("LOOPA wishlist remove failed:", error);
+    } else {
+      const { error } = await supabase
+        .from("wishlists")
+        .insert({ user_id: user.id, product_id: id });
+      if (error) {
+        console.warn("LOOPA wishlist save failed:", error);
+        setWishlist(wishlist);
+        localStorage.setItem(`loopa-wishlist-${user.id}`, JSON.stringify(wishlist));
+      }
+    }
+  };
+
+  const openWishlist = async () => {
+    if (!user) {
+      openAuth("login");
+      return;
+    }
+    await loadWishlist(user.id);
+    setPage("wishlist");
+    setMenuOpen(false);
+    window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
   /* ---------------------------------------
@@ -3076,7 +3136,7 @@ function App() {
               <ChevronRight size={17} />
             </button>
 
-            <button type="button" onClick={() => setPage("home")}>
+            <button type="button" onClick={openWishlist}>
               <Heart size={19} />
               My Wishlist
               <ChevronRight size={17} />
@@ -3095,6 +3155,38 @@ function App() {
             Log Out
           </button>
         </div>
+      </main>
+    );
+  };
+
+  /* ---------------------------------------
+     WISHLIST PAGE
+  ---------------------------------------- */
+
+  const WishlistPage = () => {
+    const savedProducts = dbProducts.filter((product) => wishlist.includes(product.id));
+
+    return (
+      <main className="shop-page">
+        <div className="shop-header">
+          <button className="bag-back" onClick={() => setPage("account")}>← Back to Account</button>
+          <p className="standard-eyebrow">MY LOOPA</p>
+          <h1>My Wishlist</h1>
+          <p>Your saved LOOPA favorites, all in one place.</p>
+        </div>
+
+        {savedProducts.length === 0 ? (
+          <section className="orders-empty-card">
+            <Heart size={42} strokeWidth={1.5} />
+            <h2>Your wishlist is empty</h2>
+            <p>Tap the heart on any product you love and it will appear here.</p>
+            <button className="primary-button" onClick={() => { setPage("home"); setActiveCategory("Little Loves"); }}>Shop LOOPA</button>
+          </section>
+        ) : (
+          <section className="product-grid">
+            {savedProducts.map((product) => ProductCard({ product }))}
+          </section>
+        )}
       </main>
     );
   };
@@ -3779,11 +3871,7 @@ function App() {
 
             <button
               className="icon-button"
-              onClick={() => {
-                if (!user) {
-                  openAuth("login");
-                }
-              }}
+              onClick={openWishlist}
               aria-label="Wishlist"
             >
               <Heart size={20} />
@@ -3845,6 +3933,7 @@ function App() {
 
       {/* ORDERS */}
 
+      {page === "wishlist" && user && WishlistPage()}
       {page === "orders" && user && OrdersPage()}
 
       {/* ORDER DETAIL */}
