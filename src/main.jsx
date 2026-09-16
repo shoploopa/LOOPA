@@ -1425,12 +1425,10 @@ function App() {
   const StandardShopHero = () => {
     const content = standardWorldContent[activeCategory];
 
-    if (!content) {
-      return null;
-    }
+    if (!content) return null;
 
     return (
-      <section className={`shop-world-hero ${content.visual}-editorial`}>
+      <section className="shop-world-hero simple-category-hero">
         <div className="shop-world-copy">
           <p className="standard-eyebrow">{content.eyebrow}</p>
           <h1>{content.title}</h1>
@@ -1442,66 +1440,12 @@ function App() {
                 key={tag}
                 type="button"
                 onClick={() => setActiveSubcategory(tag)}
-                className={
-                  activeSubcategory === tag ? "active" : ""
-                }
+                className={activeSubcategory === tag ? "active" : ""}
               >
                 {tag}
               </button>
             ))}
           </div>
-        </div>
-
-        <div className="category-art" aria-hidden="true">
-          {content.visual === "women" && (
-            <div className="women-art">
-              <span className="lip-print lip-one" />
-              <span className="lip-print lip-two" />
-              <span className="nail nail-one" />
-              <span className="nail nail-two" />
-              <span className="nail nail-three" />
-              <span className="nail nail-four" />
-              <span className="tiny-bow">⌁</span>
-              <span className="art-label">LOOPA / WOMEN</span>
-            </div>
-          )}
-
-          {content.visual === "shoes" && (
-            <div className="shoes-art">
-              <span className="footstep step-one">♡</span>
-              <span className="footstep step-two">♡</span>
-              <span className="shoe-sparkle">✦</span>
-              <span className="art-label">LOOPA / SHOES</span>
-            </div>
-          )}
-
-          {content.visual === "bags" && (
-            <div className="bags-art">
-              <div className="bag-shape">
-                <span className="bag-handle" />
-                <span className="bag-bow">⌁</span>
-              </div>
-              <span className="bag-star star-one">✦</span>
-              <span className="bag-star star-two">·</span>
-              <span className="art-label">LOOPA / BAGS</span>
-            </div>
-          )}
-
-          {content.visual === "accessories" && (
-            <div className="accessories-art">
-              <div className="chain-frame">
-                {Array.from({ length: 26 }).map((_, index) => (
-                  <span key={index} />
-                ))}
-              </div>
-              <div className="jewel-stack">
-                <span className="jewel jewel-one">○</span>
-                <span className="jewel jewel-two">◇</span>
-                <span className="jewel jewel-three">○</span>
-              </div>
-              <span className="art-label">LOOPA / ACCESSORIES</span>
-            </div>
-          )}
         </div>
       </section>
     );
