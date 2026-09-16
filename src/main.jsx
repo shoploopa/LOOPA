@@ -2322,7 +2322,7 @@ function App() {
             </div>
             <div className="related-products-grid">
               {relatedProducts.map((item) => (
-                <ProductCard key={item.id} product={item} />
+                {ProductCard({ product: item })}
               ))}
             </div>
           </section>
@@ -3528,56 +3528,39 @@ function App() {
 
       {/* SELLER DASHBOARD */}
 
-      {page === "seller" && user && (
-        SellerDashboardPage()
-      )}
+      {page === "seller" && user && SellerDashboardPage()}
 
-      {page === "messages" && user && <MessagesPage />}
+      {page === "messages" && user && MessagesPage()}
 
-      {page === "custom" && <CustomRequestPage />}
+      {page === "custom" && CustomRequestPage()}
 
       {/* AUTH */}
 
-      {page === "auth" && (
-        <AuthPage />
-      )}
+      {page === "auth" && AuthPage()}
 
       {/* ACCOUNT */}
 
-      {page === "account" &&
-        user && (
-          <AccountPage />
-        )}
+      {page === "account" && user && AccountPage()}
 
       {/* ORDERS */}
 
-      {page === "orders" && user && (
-        <OrdersPage />
-      )}
+      {page === "orders" && user && OrdersPage()}
 
       {/* ORDER DETAIL */}
 
-      {page === "order-detail" && user && (
-        <OrderDetailPage />
-      )}
+      {page === "order-detail" && user && OrderDetailPage()}
 
       {/* CHECKOUT */}
 
-      {page === "checkout" && (
-        <CheckoutPage />
-      )}
+      {page === "checkout" && CheckoutPage()}
 
       {/* ORDER SUCCESS */}
 
-      {page === "order-success" && (
-        <OrderSuccessPage />
-      )}
+      {page === "order-success" && OrderSuccessPage()}
 
       {/* BAG */}
 
-      {page === "bag" && (
-        <BagPage />
-      )}
+      {page === "bag" && BagPage()}
 
       {/* =====================================
           HOME
@@ -3977,12 +3960,7 @@ function App() {
               <div className="home-products">
                 {homeProducts.map(
                   (product) => (
-                    <ProductCard
-                      key={product.id}
-                      product={
-                        product
-                      }
-                    />
+                    {ProductCard({ product })}
                   )
                 )}
               </div>
@@ -4154,7 +4132,7 @@ function App() {
           PRODUCT DETAIL
       ====================================== */}
 
-      {page === "product" && <ProductDetailPage />}
+      {page === "product" && ProductDetailPage()}
 
       {/* =====================================
           SHOP
@@ -4189,7 +4167,7 @@ function App() {
           {standardWorldContent[
             activeCategory
           ] && (
-            <StandardShopHero />
+            {StandardShopHero()}
           )}
 
           {/* LITTLE / CROCHET HEADER */}
@@ -4325,14 +4303,7 @@ function App() {
 
                   {filteredProducts.map(
                     (product) => (
-                      <ProductCard
-                        key={
-                          product.id
-                        }
-                        product={
-                          product
-                        }
-                      />
+                      {ProductCard({ product })}
                     )
                   )}
 
@@ -4360,7 +4331,7 @@ function App() {
                 </div>
               ) : (
                 <div className="special-empty-wrapper">
-                  <SpecialShopDecor />
+                  {SpecialShopDecor()}
 
                   <div className="empty-shop special-empty">
                     <span className="empty-icon">
