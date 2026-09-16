@@ -467,8 +467,7 @@ function App() {
   const [adminProducts, setAdminProducts] = useState([]);
   const [adminLoading, setAdminLoading] = useState(false);
   const [adminError, setAdminError] = useState("");
-  const [adminMessage, setAdminMessage] = useState("");
-  const [adminAccess, setAdminAccess] = useState(false);
+  const [adminActionId, setAdminActionId] = useState(null);
 
   /* ---------------------------------------
      REVIEWS / MESSAGING / CUSTOM / PAYMENTS
@@ -1657,161 +1656,6 @@ function App() {
     await loadSellerOrders(user.id);
   };
 
-  const loadAdminProducts = async () => {
-    setAdminLoading(true);
-    setAdminError("");
-
-    const { data, error } = await supabase
-      .from("products")
-      .select("id, seller_id, name, description, price, stock, status, category_id, made_to_order, production_days, created_at")
-      .order("created_at", { ascending: false });
-
-    if (error) {
-      console.error("LOOPA admin products loading error:", error);
-      setAdminProducts([]);
-      setAdminError(error.message || "We couldn't load products for review.");
-      setAdminLoading(false);
-      return;
-    }
-
-    const productList = data || [];
-    if (productList.length) {
-      const ids = productList.map((item) => item.id);
-      const { data: images } = await supabase
-        .from("images")
-        .select("id, product_id, image_url, sort_order")
-        .in("product_id", ids)
-        .order("sort_order", { ascending: true });
-
-      const firstImage = {};
-      (images || []).forEach((image) => {
-        if (image.product_id && image.image_url && !firstImage[image.product_id]) {
-          firstImage[image.product_id] = image.image_url;
-        }
-      });
-
-      setAdminProducts(productList.map((item) => ({ ...item, image_url: firstImage[item.id] || null })));
-    } else {
-      setAdminProducts([]);
-    }
-
-    setAdminLoading(false);
-  };
-
-  const openAdminDashboard = async () => {
-    if (!user) return;
-
-    const { data: freshProfile, error: profileError } = await supabase
-      .from("profiles")
-      .select("id, full_name, email, phone, avatar_url, role")
-      .eq("id", user.id)
-      .maybeSingle();
-
-    if (profileError) {
-      console.error("LOOPA admin profile lookup error:", profileError);
-      setAdminError(profileError.message || "We couldn't verify admin access.");
-      return;
-    }
-
-    setProfile(freshProfile);
-
-    if (String(freshProfile?.role || "").toLowerCase() !== "admin") {
-      setAdminError("Admin access is not enabled for this account.");
-      return;
-    }
-
-    setAdminMessage("");
-    setAdminError("");
-    setAdminAccess(true);
-    await loadAdminProducts();
-    setPage("admin");
-    window.scrollTo({ top: 0, behavior: "smooth" });
-  };
-
-  const updateProductApproval = async (productId, status) => {
-    if (!adminAccess) return;
-
-    setAdminError("");
-    setAdminMessage("");
-
-    const { error } = await supabase
-      .from("products")
-      .update({ status })
-      .eq("id", productId);
-
-    if (error) {
-      console.error("LOOPA product approval error:", error);
-      setAdminError(error.message || "We couldn't update this product.");
-      return;
-    }
-
-    await loadAdminProducts();
-    setAdminMessage(status === "approved" ? "Product approved. ♡" : "Product moved back to pending.");
-  };
-
-  const AdminDashboardPage = () => {
-    const pending = adminProducts.filter((item) => item.status === "pending");
-    const approved = adminProducts.filter((item) => item.status === "approved");
-
-    return (
-      <main className="seller-dashboard-page">
-        <section className="seller-dashboard-hero">
-          <div>
-            <p className="standard-eyebrow">LOOPA ADMIN</p>
-            <h1>Product approval</h1>
-            <p>Review creator submissions before they appear in the public LOOPA shop.</p>
-          </div>
-          <div className="seller-hero-icon"><Check size={34} /></div>
-        </section>
-
-        <section className="seller-stats-grid">
-          <div className="seller-stat"><ClipboardList size={20} /><span>Pending review</span><strong>{pending.length}</strong></div>
-          <div className="seller-stat"><Sparkles size={20} /><span>Approved</span><strong>{approved.length}</strong></div>
-          <div className="seller-stat"><Package size={20} /><span>Total products</span><strong>{adminProducts.length}</strong></div>
-        </section>
-
-        {adminMessage && <div className="seller-success">{adminMessage}</div>}
-        {adminError && <div className="seller-error">{adminError}</div>}
-
-        <section className="seller-card seller-products-card">
-          <div className="seller-card-heading">
-            <div><p className="standard-eyebrow">CREATOR SUBMISSIONS</p><h2>Review products</h2></div>
-            <button type="button" className="seller-refresh-button" onClick={loadAdminProducts} disabled={adminLoading}>
-              <RefreshCw size={16} className={adminLoading ? "seller-spin" : ""} /> Refresh
-            </button>
-          </div>
-
-          {adminLoading ? (
-            <div className="seller-empty">Loading products for review...</div>
-          ) : adminProducts.length === 0 ? (
-            <div className="seller-empty"><h3>No products yet.</h3><p>Creator submissions will appear here when they are sent for approval.</p></div>
-          ) : (
-            <div className="seller-product-list">
-              {adminProducts.map((product) => (
-                <article className="seller-product-row" key={product.id}>
-                  <div className="seller-product-thumb">{product.image_url ? <img src={product.image_url} alt={product.name} /> : <span>LOOPA</span>}</div>
-                  <div className="seller-product-main">
-                    <h3>{product.name}</h3>
-                    <p>KES {Number(product.price || 0).toLocaleString()} · {product.stock == null ? "Made to Order" : `${product.stock} in stock`}</p>
-                    {product.description && <small>{product.description}</small>}
-                  </div>
-                  <span className={`seller-status seller-status-${product.status || "pending"}`}>{product.status === "approved" ? "Approved" : "Pending"}</span>
-                  <div className="seller-product-actions">
-                    {product.status === "pending" ? (
-                      <button type="button" onClick={() => updateProductApproval(product.id, "approved")} aria-label={`Approve ${product.name}`} title="Approve"><Check size={17} /></button>
-                    ) : (
-                      <button type="button" onClick={() => updateProductApproval(product.id, "pending")} aria-label={`Move ${product.name} back to pending`} title="Move to pending"><RefreshCw size={17} /></button>
-                    )}
-                  </div>
-                </article>
-              ))}
-            </div>
-          )}
-        </section>
-      </main>
-    );
-  };
-
   /* ---------------------------------------
      SELLER DASHBOARD
   ---------------------------------------- */
@@ -1854,16 +1698,10 @@ function App() {
       logoUrl: sellerData?.logo_url || "",
     });
 
-    if (!sellerData?.id) {
-      setSellerProducts([]);
-      setSellerLoading(false);
-      return;
-    }
-
     const { data: products, error: productsError } = await supabase
       .from("products")
       .select("id, name, description, price, stock, status, seller_id, category_id, made_to_order, production_days, created_at")
-      .eq("seller_id", sellerData?.id)
+      .eq("seller_id", userId)
       .order("created_at", { ascending: false });
 
     if (productsError) {
@@ -1902,26 +1740,6 @@ function App() {
     setSellerOrdersLoading(true);
     setSellerOrdersError("");
 
-    const { data: sellerData, error: sellerProfileError } = await supabase
-      .from("seller_profiles")
-      .select("id")
-      .eq("user_id", userId)
-      .maybeSingle();
-
-    if (sellerProfileError) {
-      console.error("LOOPA seller profile lookup error:", sellerProfileError);
-      setSellerOrders([]);
-      setSellerOrdersError(sellerProfileError.message || "We couldn't load your sales right now.");
-      setSellerOrdersLoading(false);
-      return;
-    }
-
-    if (!sellerData?.id) {
-      setSellerOrders([]);
-      setSellerOrdersLoading(false);
-      return;
-    }
-
     const { data, error } = await supabase
       .from("order_items")
       .select(`
@@ -1934,15 +1752,12 @@ function App() {
         created_at,
         orders:order_id (
           id,
-          customer_id,
-          order_number,
-          status,
-          subtotal,
-          delivery_fee,
+          buyer_id,
           total_amount,
-          delivery_address,
-          delivery_phone,
-          notes,
+          status,
+          shipping_address,
+          payment_method,
+          payment_status,
           created_at
         ),
         products:product_id (
@@ -1950,18 +1765,190 @@ function App() {
           name
         )
       `)
-      .eq("seller_id", sellerData.id)
+      .eq("seller_id", userId)
       .order("created_at", { ascending: false });
 
     if (error) {
       console.error("LOOPA seller orders loading error:", error);
       setSellerOrders([]);
-      setSellerOrdersError(error.message || "We couldn't load your sales right now.");
+      setSellerOrdersError(
+        "Seller sales tracking needs the order_items table and its RLS policy. Once those are enabled in Supabase, your sales will appear here."
+      );
     } else {
       setSellerOrders(data || []);
     }
 
     setSellerOrdersLoading(false);
+  };
+
+  const loadAdminProducts = async () => {
+    setAdminLoading(true);
+    setAdminError("");
+
+    const { data: currentProfile, error: profileError } = await supabase
+      .from("profiles")
+      .select("id, role")
+      .eq("id", user?.id || "")
+      .maybeSingle();
+
+    if (profileError) {
+      setAdminError(profileError.message || "We couldn't verify your admin access.");
+      setAdminLoading(false);
+      return;
+    }
+
+    if (currentProfile?.role !== "admin") {
+      setAdminError("Admin access is required to review products.");
+      setAdminLoading(false);
+      return;
+    }
+
+    const { data, error } = await supabase
+      .from("products")
+      .select(`
+        id, seller_id, name, description, price, stock, status, made_to_order, production_days, created_at,
+        categories:category_id (id, name),
+        images:product_id (id, image_url, sort_order)
+      `)
+      .order("created_at", { ascending: false });
+
+    if (error) {
+      // Fall back to a simpler query if the nested images relationship isn't available.
+      const fallback = await supabase
+        .from("products")
+        .select("id, seller_id, name, description, price, stock, status, made_to_order, production_days, created_at, category_id")
+        .order("created_at", { ascending: false });
+
+      if (fallback.error) {
+        setAdminError(fallback.error.message || "We couldn't load products for approval.");
+        setAdminProducts([]);
+      } else {
+        setAdminProducts(fallback.data || []);
+      }
+    } else {
+      const normalized = (data || []).map((item) => ({
+        ...item,
+        image_url: Array.isArray(item.images)
+          ? item.images.sort((a, b) => Number(a.sort_order || 0) - Number(b.sort_order || 0))[0]?.image_url || null
+          : null,
+      }));
+      setAdminProducts(normalized);
+    }
+
+    setAdminLoading(false);
+  };
+
+  const openAdminApproval = async () => {
+    if (!user) {
+      openAuth("login");
+      return;
+    }
+
+    const liveProfile = await loadProfile(user.id);
+    if (liveProfile?.role !== "admin") {
+      setAdminError("Admin access is required to review products.");
+      return;
+    }
+
+    await loadAdminProducts();
+    setPage("admin");
+    setMenuOpen(false);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
+  const updateAdminProductStatus = async (productId, status) => {
+    setAdminActionId(productId);
+    setAdminError("");
+
+    const { data: liveProfile } = await supabase
+      .from("profiles")
+      .select("role")
+      .eq("id", user?.id || "")
+      .maybeSingle();
+
+    if (liveProfile?.role !== "admin") {
+      setAdminError("Admin access is required to review products.");
+      setAdminActionId(null);
+      return;
+    }
+
+    const { error } = await supabase
+      .from("products")
+      .update({ status })
+      .eq("id", productId);
+
+    if (error) {
+      setAdminError(error.message || "We couldn't update this product.");
+      setAdminActionId(null);
+      return;
+    }
+
+    await loadAdminProducts();
+    setAdminActionId(null);
+  };
+
+  const AdminApprovalPage = () => {
+    const pending = adminProducts.filter((item) => item.status === "pending");
+
+    return (
+      <main className="admin-approval-page">
+        <section className="seller-dashboard-hero">
+          <div>
+            <p className="standard-eyebrow">LOOPA ADMIN</p>
+            <h1>Product Approval</h1>
+            <p>Review creator submissions before they appear in the public LOOPA shop.</p>
+          </div>
+          <div className="seller-hero-icon">✓</div>
+        </section>
+
+        <section className="admin-approval-section">
+          <div className="section-heading">
+            <div>
+              <p className="standard-eyebrow">SUBMISSIONS</p>
+              <h2>Pending products</h2>
+            </div>
+            <button className="secondary-button" type="button" onClick={loadAdminProducts}>Refresh</button>
+          </div>
+
+          {adminError && <p className="seller-error">{adminError}</p>}
+          {adminLoading ? (
+            <div className="empty-shop"><h2>Loading submissions...</h2></div>
+          ) : pending.length === 0 ? (
+            <div className="empty-shop"><h2>No pending products.</h2><p>New creator submissions will appear here.</p></div>
+          ) : (
+            <div className="admin-product-list">
+              {pending.map((product) => (
+                <article className="admin-product-card" key={product.id}>
+                  <div className="admin-product-image">
+                    {product.image_url ? <img src={product.image_url} alt={product.name} /> : <span>LOOPA</span>}
+                  </div>
+                  <div className="admin-product-info">
+                    <p className="standard-eyebrow">PENDING REVIEW</p>
+                    <h2>{product.name}</h2>
+                    <p>{product.description || "No description provided."}</p>
+                    <strong>KES {Number(product.price || 0).toLocaleString()}</strong>
+                    <p>{product.made_to_order ? `Made to order${product.production_days ? ` • ${product.production_days} days` : ""}` : `${Number(product.stock || 0).toLocaleString()} in stock`}</p>
+                    <div className="admin-product-actions">
+                      <button className="primary-button" type="button" disabled={adminActionId === product.id} onClick={() => updateAdminProductStatus(product.id, "approved")}>
+                        {adminActionId === product.id ? "Updating..." : "Approve"}
+                      </button>
+                      <button className="secondary-button" type="button" disabled={adminActionId === product.id} onClick={() => updateAdminProductStatus(product.id, "rejected")}>Reject</button>
+                    </div>
+                  </div>
+                </article>
+              ))}
+            </div>
+          )}
+
+          {adminProducts.filter((item) => item.status === "approved").length > 0 && (
+            <div className="admin-approved-list">
+              <p className="standard-eyebrow">APPROVED</p>
+              <h2>{adminProducts.filter((item) => item.status === "approved").length} approved product(s)</h2>
+            </div>
+          )}
+        </section>
+      </main>
+    );
   };
 
   const refreshSellerStudio = async () => {
@@ -2048,39 +2035,15 @@ function App() {
     }
 
     setSellerSaving(true);
-
-    let sellerId = sellerProfile?.id;
-    if (!sellerId) {
-      const { data: sellerData, error: sellerProfileError } = await supabase
-        .from("seller_profiles")
-        .select("id")
-        .eq("user_id", user.id)
-        .maybeSingle();
-
-      if (sellerProfileError) {
-        setSellerError(sellerProfileError.message || "We couldn't find your seller profile.");
-        setSellerSaving(false);
-        return;
-      }
-
-      sellerId = sellerData?.id;
-    }
-
-    if (!sellerId) {
-      setSellerError("Please save your shop profile before adding a product.");
-      setSellerSaving(false);
-      return;
-    }
-
     const payload = {
       name: productForm.name.trim(),
       description: productForm.description.trim() || null,
       price: Number(productForm.price),
-      stock: Number(productForm.stock || 0),
+      stock: productForm.madeToOrder ? null : Number(productForm.stock || 0),
       category_id: productForm.categoryId,
       made_to_order: Boolean(productForm.madeToOrder),
       production_days: productForm.madeToOrder ? Number(productForm.productionDays || 0) : null,
-      seller_id: sellerId,
+      seller_id: user.id,
     };
 
     let productId = sellerEditingProduct?.id;
@@ -2092,7 +2055,7 @@ function App() {
         .from("products")
         .update(payload)
         .eq("id", productId)
-         .eq("seller_id", sellerId)
+        .eq("seller_id", user.id)
         .select()
         .single());
     } else {
@@ -2135,32 +2098,11 @@ function App() {
   const deleteSellerProduct = async (productId) => {
     if (!window.confirm("Remove this product from your shop?")) return;
     setSellerError("");
-
-    let sellerId = sellerProfile?.id;
-    if (!sellerId && user?.id) {
-      const { data: sellerData, error: sellerProfileError } = await supabase
-        .from("seller_profiles")
-        .select("id")
-        .eq("user_id", user.id)
-        .maybeSingle();
-
-      if (sellerProfileError) {
-        setSellerError(sellerProfileError.message || "We couldn't find your seller profile.");
-        return;
-      }
-      sellerId = sellerData?.id;
-    }
-
-    if (!sellerId) {
-      setSellerError("We couldn't find your seller profile.");
-      return;
-    }
-
     const { error } = await supabase
       .from("products")
       .delete()
       .eq("id", productId)
-      .eq("seller_id", sellerId);
+      .eq("seller_id", user.id);
     if (error) {
       setSellerError(error.message || "We couldn't remove this product.");
       return;
@@ -3687,16 +3629,15 @@ function App() {
 
             </div>
 
-            {user && (
+            {user && profile?.role === "admin" && (
               <button
-                className="seller-header-button"
-                onClick={openAdminDashboard}
-                aria-label="Admin approval"
-                title="Admin approval"
+                className="admin-header-button"
+                onClick={openAdminApproval}
                 type="button"
+                aria-label="Admin Approval"
+                title="Admin Approval"
               >
-                <Check size={18} />
-                <span>Admin Approval</span>
+                Admin Approval
               </button>
             )}
 
@@ -3771,9 +3712,11 @@ function App() {
 
       </header>
 
-      {/* SELLER DASHBOARD */}
+      {/* ADMIN APPROVAL */}
 
-      {page === "admin" && user && adminAccess && AdminDashboardPage()}
+      {page === "admin" && user && AdminApprovalPage()}
+
+      {/* SELLER DASHBOARD */}
 
       {page === "seller" && user && SellerDashboardPage()}
 
