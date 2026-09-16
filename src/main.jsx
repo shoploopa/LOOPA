@@ -511,6 +511,9 @@ function App() {
     phone: "",
     logoUrl: "",
   });
+  const [productImageFile, setProductImageFile] = useState(null);
+  const [productImagePreview, setProductImagePreview] = useState("");
+  const [productImageUploading, setProductImageUploading] = useState(false);
   const [productForm, setProductForm] = useState({
     name: "",
     description: "",
@@ -1672,6 +1675,8 @@ function App() {
       productionDays: "",
       imageUrl: "",
     });
+    setProductImageFile(null);
+    setProductImagePreview("");
   };
 
   const loadSellerDashboard = async (userId) => {
@@ -2043,7 +2048,58 @@ function App() {
       productionDays: product.production_days ?? "",
       imageUrl: product.image_url || "",
     });
+    setProductImageFile(null);
+    setProductImagePreview(product.image_url || "");
     window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
+  const handleProductImageChange = (e) => {
+    const file = e.target.files?.[0] || null;
+    if (!file) return;
+
+    if (!file.type.startsWith("image/")) {
+      setSellerError("Please choose an image file.");
+      e.target.value = "";
+      return;
+    }
+
+    if (file.size > 8 * 1024 * 1024) {
+      setSellerError("Please choose an image smaller than 8MB.");
+      e.target.value = "";
+      return;
+    }
+
+    setSellerError("");
+    setProductImageFile(file);
+    setProductImagePreview(URL.createObjectURL(file));
+  };
+
+  const uploadProductImage = async (file, productId) => {
+    if (!file || !productId || !user?.id) return null;
+
+    setProductImageUploading(true);
+    const extension = (file.name.split(".").pop() || "jpg").toLowerCase().replace(/[^a-z0-9]/g, "");
+    const filePath = `${user.id}/${productId}-${Date.now()}.${extension}`;
+
+    const { error: uploadError } = await supabase.storage
+      .from("product-images")
+      .upload(filePath, file, {
+        cacheControl: "3600",
+        upsert: false,
+        contentType: file.type,
+      });
+
+    if (uploadError) {
+      setProductImageUploading(false);
+      throw uploadError;
+    }
+
+    const { data: publicUrlData } = supabase.storage
+      .from("product-images")
+      .getPublicUrl(filePath);
+
+    setProductImageUploading(false);
+    return publicUrlData?.publicUrl || null;
   };
 
   const saveSellerProduct = async (e) => {
@@ -2053,6 +2109,11 @@ function App() {
 
     if (!productForm.name.trim() || !productForm.price || !productForm.categoryId) {
       setSellerError("Please add a product name, price, and category.");
+      return;
+    }
+
+    if (!sellerEditingProduct && !productImageFile) {
+      setSellerError("Please upload a product image.");
       return;
     }
 
@@ -2108,19 +2169,30 @@ function App() {
       return;
     }
 
-    if (productForm.imageUrl.trim() && productId) {
-      const { data: existingImage } = await supabase
-        .from("images")
-        .select("id")
-        .eq("product_id", productId)
-        .order("sort_order", { ascending: true })
-        .limit(1)
-        .maybeSingle();
+    if (productImageFile && productId) {
+      try {
+        const uploadedUrl = await uploadProductImage(productImageFile, productId);
+        if (uploadedUrl) {
+          const { data: existingImage } = await supabase
+            .from("images")
+            .select("id")
+            .eq("product_id", productId)
+            .order("sort_order", { ascending: true })
+            .limit(1)
+            .maybeSingle();
 
-      if (existingImage?.id) {
-        await supabase.from("images").update({ image_url: productForm.imageUrl.trim() }).eq("id", existingImage.id);
-      } else {
-        await supabase.from("images").insert({ product_id: productId, image_url: productForm.imageUrl.trim(), sort_order: 0 });
+          if (existingImage?.id) {
+            await supabase.from("images").update({ image_url: uploadedUrl }).eq("id", existingImage.id);
+          } else {
+            await supabase.from("images").insert({ product_id: productId, image_url: uploadedUrl, sort_order: 0 });
+          }
+        }
+      } catch (imageError) {
+        console.error("LOOPA product image upload error:", imageError);
+        setSellerError(imageError.message || "We couldn't upload the product image.");
+        setSellerSaving(false);
+        setProductImageUploading(false);
+        return;
       }
     }
 
@@ -2222,8 +2294,10 @@ function App() {
               </div>
               <label className="seller-checkbox"><input type="checkbox" checked={productForm.madeToOrder} onChange={(e) => setProductForm({ ...productForm, madeToOrder: e.target.checked })} /><span>Made to order</span></label>
               {!productForm.madeToOrder ? <label>Stock<input type="number" min="0" step="1" value={productForm.stock} onChange={(e) => setProductForm({ ...productForm, stock: e.target.value })} placeholder="10" /></label> : <label>Production days<input type="number" min="1" step="1" value={productForm.productionDays} onChange={(e) => setProductForm({ ...productForm, productionDays: e.target.value })} placeholder="7" /></label>}
-              <label>Product image URL <span className="optional-label">Optional</span><input value={productForm.imageUrl} onChange={(e) => setProductForm({ ...productForm, imageUrl: e.target.value })} placeholder="https://..." /></label>
-              <div className="seller-form-actions"><button className="seller-primary-button" disabled={sellerSaving}>{sellerSaving ? "Saving..." : sellerEditingProduct ? "Update Product" : "Submit Product"}</button>{sellerEditingProduct && <button type="button" className="seller-secondary-button" onClick={resetSellerProductForm}>Cancel</button>}</div>
+              <label>Product image <span className="optional-label">Required</span><input type="file" accept="image/*" onChange={handleProductImageChange} /></label>
+              {productImagePreview && <div className="seller-image-preview"><img src={productImagePreview} alt="Product preview" /></div>}
+              {productImageUploading && <p className="seller-note">Uploading image...</p>}
+              <div className="seller-form-actions"><button className="seller-primary-button" disabled={sellerSaving}>{productImageUploading ? "Uploading image..." : sellerSaving ? "Saving..." : sellerEditingProduct ? "Update Product" : "Submit Product"}</button>{sellerEditingProduct && <button type="button" className="seller-secondary-button" onClick={resetSellerProductForm}>Cancel</button>}</div>
               {!sellerEditingProduct && <p className="seller-note">New products start as pending so they can be reviewed before appearing in the public shop.</p>}
             </form>
           </section>
