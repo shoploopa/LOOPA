@@ -2261,7 +2261,99 @@ const [selectedProduct, setSelectedProduct] = useState(null);
 
         </main>
       )}
+{/* =====================================
+    PRODUCT DETAILS
+====================================== */}
 
+{page === "product" && selectedProduct && (
+  <main className="product-detail-page">
+
+    <button
+      className="back-home"
+      onClick={() => {
+        setSelectedProduct(null);
+        setPage("shop");
+      }}
+    >
+      ← Back to Shop
+    </button>
+
+    <div className="product-detail">
+
+      <div className="product-detail-image">
+        {selectedProduct.image_url ? (
+          <img
+            src={selectedProduct.image_url}
+            alt={selectedProduct.name}
+          />
+        ) : (
+          <span className="product-emoji">
+            🛍️
+          </span>
+        )}
+      </div>
+
+      <div className="product-detail-info">
+
+        <p className="eyebrow">
+          LOOPA CREATOR
+        </p>
+
+        <h1>
+          {selectedProduct.name}
+        </h1>
+
+        <p className="product-detail-price">
+          KES{" "}
+          {Number(
+            selectedProduct.price
+          ).toLocaleString()}
+        </p>
+
+        <p className="product-detail-description">
+          {selectedProduct.description ||
+            "A beautiful LOOPA piece, made to be loved."}
+        </p>
+
+        {selectedProduct.made_to_order && (
+          <p className="product-detail-note">
+            ✨ Made to Order
+            {selectedProduct.production_days
+              ? ` • ${selectedProduct.production_days} days`
+              : ""}
+          </p>
+        )}
+
+        {selectedProduct.stock !== null && (
+          <p className="product-detail-stock">
+            {selectedProduct.stock > 0
+              ? `${selectedProduct.stock} available`
+              : "Out of stock"}
+          </p>
+        )}
+
+        <button
+          className="add-button"
+          onClick={() =>
+            addToBag(selectedProduct)
+          }
+          disabled={
+            selectedProduct.stock !== null &&
+            selectedProduct.stock <= 0
+          }
+        >
+          {selectedProduct.stock !== null &&
+          selectedProduct.stock <= 0
+            ? "Out of Stock"
+            : "Add to Bag"}
+        </button>
+
+      </div>
+
+    </div>
+
+  </main>
+)}
       {/* =====================================
           SHOP
       ====================================== */}
