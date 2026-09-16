@@ -420,6 +420,20 @@ function App() {
     useState(false);
 
   /* ---------------------------------------
+     CHECKOUT STATE
+  ---------------------------------------- */
+
+  const [checkoutName, setCheckoutName] = useState("");
+  const [checkoutPhone, setCheckoutPhone] = useState("");
+  const [checkoutAddress, setCheckoutAddress] = useState("");
+  const [checkoutCity, setCheckoutCity] = useState("Nairobi");
+  const [checkoutNotes, setCheckoutNotes] = useState("");
+  const [paymentMethod, setPaymentMethod] = useState("M-Pesa");
+  const [checkoutError, setCheckoutError] = useState("");
+  const [checkoutSubmitting, setCheckoutSubmitting] = useState(false);
+  const [placedOrder, setPlacedOrder] = useState(null);
+
+  /* ---------------------------------------
      CHECK CURRENT USER
   ---------------------------------------- */
 
@@ -840,6 +854,92 @@ function App() {
         (item.quantity || 1),
     0
   );
+
+  /* ---------------------------------------
+     CHECKOUT
+  ---------------------------------------- */
+
+  const openCheckout = () => {
+    setCheckoutError("");
+
+    if (!user) {
+      setAuthMessage("Please log in to continue to checkout.");
+      openAuth("login");
+      return;
+    }
+
+    if (cart.length === 0) {
+      setPage("bag");
+      return;
+    }
+
+    setCheckoutName(
+      profile?.full_name ||
+        profile?.name ||
+        ""
+    );
+    setPage("checkout");
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
+  const handlePlaceOrder = async (e) => {
+    e.preventDefault();
+    setCheckoutError("");
+
+    if (!user) {
+      setAuthMessage("Please log in to place your order.");
+      openAuth("login");
+      return;
+    }
+
+    if (cart.length === 0) {
+      setCheckoutError("Your bag is empty. Add something before checking out.");
+      return;
+    }
+
+    if (!checkoutName.trim() || !checkoutPhone.trim() || !checkoutAddress.trim() || !checkoutCity.trim()) {
+      setCheckoutError("Please complete your name, phone number, delivery address, and city.");
+      return;
+    }
+
+    setCheckoutSubmitting(true);
+
+    const shippingAddress = [
+      checkoutAddress.trim(),
+      checkoutCity.trim(),
+    ].filter(Boolean).join(", ");
+
+    const orderPayload = {
+      buyer_id: user.id,
+      total_amount: cartSubtotal,
+      status: "pending",
+      shipping_address: shippingAddress,
+      payment_method: paymentMethod,
+      payment_status: paymentMethod === "Cash on Delivery" ? "pending" : "pending",
+    };
+
+    const { data, error } = await supabase
+      .from("orders")
+      .insert(orderPayload)
+      .select()
+      .single();
+
+    if (error) {
+      console.error("LOOPA order error:", error);
+      setCheckoutError(
+        error.message ||
+          "We couldn't place your order right now. Please try again."
+      );
+      setCheckoutSubmitting(false);
+      return;
+    }
+
+    setPlacedOrder(data);
+    setCart([]);
+    setCheckoutSubmitting(false);
+    setPage("order-success");
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
 
   /* ---------------------------------------
      LOGIN
@@ -1608,6 +1708,172 @@ function App() {
   };
 
   /* ---------------------------------------
+     CHECKOUT PAGE
+  ---------------------------------------- */
+
+  const CheckoutPage = () => {
+    if (!user) {
+      return (
+        <main className="checkout-page">
+          <section className="checkout-login-state">
+            <p className="standard-eyebrow">CHECKOUT</p>
+            <h1>Log in to continue.</h1>
+            <p>Your LOOPA account keeps your order details secure and makes checkout easier.</p>
+            <button className="checkout-primary-button" onClick={() => openAuth("login")}>
+              Log In
+            </button>
+          </section>
+        </main>
+      );
+    }
+
+    return (
+      <main className="checkout-page">
+        <div className="checkout-header">
+          <button className="bag-back" onClick={() => setPage("bag")}>
+            ← Back to Bag
+          </button>
+          <p className="standard-eyebrow">LOOPA CHECKOUT</p>
+          <h1>Almost yours.</h1>
+          <p>Complete your details and place your order.</p>
+        </div>
+
+        <div className="checkout-layout">
+          <form className="checkout-form" onSubmit={handlePlaceOrder}>
+            <section className="checkout-card">
+              <div className="checkout-section-heading">
+                <span>01</span>
+                <div>
+                  <p className="standard-eyebrow">DELIVERY DETAILS</p>
+                  <h2>Where should we deliver?</h2>
+                </div>
+              </div>
+
+              <label>Full name
+                <input value={checkoutName} onChange={(e) => setCheckoutName(e.target.value)} placeholder="Your full name" />
+              </label>
+
+              <label>Phone number
+                <input value={checkoutPhone} onChange={(e) => setCheckoutPhone(e.target.value)} placeholder="07XX XXX XXX" inputMode="tel" />
+              </label>
+
+              <label>Delivery address
+                <textarea value={checkoutAddress} onChange={(e) => setCheckoutAddress(e.target.value)} placeholder="Apartment, building, street, estate or landmark" rows="3" />
+              </label>
+
+              <label>City
+                <input value={checkoutCity} onChange={(e) => setCheckoutCity(e.target.value)} placeholder="Nairobi" />
+              </label>
+
+              <label>Order notes <span className="optional-label">Optional</span>
+                <textarea value={checkoutNotes} onChange={(e) => setCheckoutNotes(e.target.value)} placeholder="Anything your LOOPA creator should know?" rows="3" />
+              </label>
+            </section>
+
+            <section className="checkout-card">
+              <div className="checkout-section-heading">
+                <span>02</span>
+                <div>
+                  <p className="standard-eyebrow">PAYMENT</p>
+                  <h2>How would you like to pay?</h2>
+                </div>
+              </div>
+
+              <div className="payment-options">
+                <label className={`payment-option ${paymentMethod === "M-Pesa" ? "selected" : ""}`}>
+                  <input type="radio" name="payment" value="M-Pesa" checked={paymentMethod === "M-Pesa"} onChange={(e) => setPaymentMethod(e.target.value)} />
+                  <span><strong>M-Pesa</strong><small>Pay securely using M-Pesa.</small></span>
+                </label>
+
+                <label className={`payment-option ${paymentMethod === "Cash on Delivery" ? "selected" : ""}`}>
+                  <input type="radio" name="payment" value="Cash on Delivery" checked={paymentMethod === "Cash on Delivery"} onChange={(e) => setPaymentMethod(e.target.value)} />
+                  <span><strong>Cash on Delivery</strong><small>Pay when your LOOPA order arrives.</small></span>
+                </label>
+              </div>
+
+              <p className="checkout-payment-note">Payment processing can be connected to your chosen provider after the checkout flow is live.</p>
+            </section>
+
+            {checkoutError && (
+              <div className="checkout-error">{checkoutError}</div>
+            )}
+
+            <button className="checkout-primary-button place-order-button" type="submit" disabled={checkoutSubmitting}>
+              {checkoutSubmitting ? "Placing Order..." : "Place Order"}
+              {!checkoutSubmitting && <ArrowRight size={18} />}
+            </button>
+          </form>
+
+          <aside className="checkout-summary">
+            <p className="standard-eyebrow">YOUR ORDER</p>
+            <h2>Order Summary</h2>
+
+            <div className="checkout-items">
+              {cart.map((item) => (
+                <div className="checkout-item" key={item.id}>
+                  <div className="checkout-item-image">LOOPA</div>
+                  <div>
+                    <strong>{item.name}</strong>
+                    <span>Qty {item.quantity || 1}</span>
+                  </div>
+                  <strong>KES {(Number(item.price || 0) * (item.quantity || 1)).toLocaleString()}</strong>
+                </div>
+              ))}
+            </div>
+
+            <div className="checkout-summary-line">
+              <span>Subtotal</span>
+              <strong>KES {cartSubtotal.toLocaleString()}</strong>
+            </div>
+            <div className="checkout-summary-line">
+              <span>Delivery</span>
+              <span>Calculated separately</span>
+            </div>
+            <div className="checkout-summary-divider" />
+            <div className="checkout-summary-total">
+              <span>Total</span>
+              <strong>KES {cartSubtotal.toLocaleString()}</strong>
+            </div>
+          </aside>
+        </div>
+      </main>
+    );
+  };
+
+  /* ---------------------------------------
+     ORDER SUCCESS PAGE
+  ---------------------------------------- */
+
+  const OrderSuccessPage = () => {
+    return (
+      <main className="order-success-page">
+        <section className="order-success-card">
+          <div className="order-success-mark">✓</div>
+          <p className="standard-eyebrow">ORDER PLACED</p>
+          <h1>It’s yours. ♡</h1>
+          <p>Thank you for shopping with LOOPA. Your order has been received and we’ll keep you updated as it moves forward.</p>
+
+          {placedOrder?.id && (
+            <div className="order-number">
+              <span>Order number</span>
+              <strong>#{String(placedOrder.id).slice(0, 8).toUpperCase()}</strong>
+            </div>
+          )}
+
+          <div className="order-success-actions">
+            <button className="checkout-primary-button" onClick={() => { setPage("home"); window.scrollTo({ top: 0, behavior: "smooth" }); }}>
+              Continue Shopping
+            </button>
+            <button className="success-secondary-button" onClick={() => setPage("account")}>
+              View My Account
+            </button>
+          </div>
+        </section>
+      </main>
+    );
+  };
+
+  /* ---------------------------------------
      BAG PAGE
   ---------------------------------------- */
 
@@ -1754,12 +2020,7 @@ function App() {
 
               <button
                 className="bag-checkout-button"
-                onClick={() => {
-                  setAuthMessage("Checkout is the next LOOPA step. 💕");
-                  if (!user) {
-                    openAuth("login");
-                  }
-                }}
+                onClick={openCheckout}
               >
                 Proceed to Checkout
               </button>
@@ -2020,6 +2281,18 @@ function App() {
         user && (
           <AccountPage />
         )}
+
+      {/* CHECKOUT */}
+
+      {page === "checkout" && (
+        <CheckoutPage />
+      )}
+
+      {/* ORDER SUCCESS */}
+
+      {page === "order-success" && (
+        <OrderSuccessPage />
+      )}
 
       {/* BAG */}
 
