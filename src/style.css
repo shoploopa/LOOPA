@@ -2723,3 +2723,451 @@ em {
   .bag-item-total { grid-column: 2; margin-top: -8px; }
   .bag-item-details h2 { font-size: 21px; }
 }
+
+/* =========================================================
+   LOOPA — CHECKOUT
+========================================================= */
+
+.checkout-page {
+  max-width: 1180px;
+  margin: 0 auto;
+  padding: 58px 34px 100px;
+}
+
+.checkout-header {
+  text-align: center;
+  padding: 0 0 55px;
+}
+
+.checkout-header .bag-back {
+  display: inline-flex;
+  margin-bottom: 38px;
+}
+
+.checkout-header h1 {
+  margin: 0;
+  color: #2d2228;
+  font-family: "Bodoni Moda", Didot, "Bodoni 72", "Bodoni MT", "Times New Roman", serif;
+  font-size: clamp(52px, 7vw, 88px);
+  font-weight: 400;
+  line-height: .95;
+  letter-spacing: -0.045em;
+}
+
+.checkout-header > p:last-child {
+  margin: 22px auto 0;
+  max-width: 520px;
+  color: #75646d;
+  font-size: 14px;
+  line-height: 1.7;
+}
+
+.checkout-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1.35fr) minmax(320px, .75fr);
+  gap: 32px;
+  align-items: start;
+}
+
+.checkout-form {
+  display: grid;
+  gap: 20px;
+}
+
+.checkout-card,
+.checkout-summary,
+.checkout-login-state,
+.order-success-card {
+  border: 1px solid #eadde3;
+  background: #fff;
+}
+
+.checkout-card {
+  padding: 30px;
+}
+
+.checkout-section-heading {
+  display: flex;
+  gap: 18px;
+  align-items: flex-start;
+  margin-bottom: 28px;
+}
+
+.checkout-section-heading > span {
+  color: #ed4f8c;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 1px;
+  padding-top: 4px;
+}
+
+.checkout-section-heading .standard-eyebrow {
+  margin-bottom: 7px;
+}
+
+.checkout-section-heading h2 {
+  margin: 0;
+  color: #2d2228;
+  font-family: "Bodoni Moda", Didot, "Bodoni 72", "Bodoni MT", "Times New Roman", serif;
+  font-size: 28px;
+  font-weight: 400;
+}
+
+.checkout-card label {
+  display: block;
+  margin-top: 18px;
+  color: #4f4047;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.checkout-card input:not([type="radio"]),
+.checkout-card textarea {
+  width: 100%;
+  margin-top: 8px;
+  box-sizing: border-box;
+  border: 1px solid #e4d8de;
+  border-radius: 0;
+  background: #fff;
+  color: #2d2228;
+  padding: 13px 14px;
+  font: inherit;
+  font-size: 13px;
+  outline: none;
+  transition: border-color .2s ease, box-shadow .2s ease;
+}
+
+.checkout-card input:not([type="radio"]):focus,
+.checkout-card textarea:focus {
+  border-color: #ed4f8c;
+  box-shadow: 0 0 0 3px rgba(237, 79, 140, .08);
+}
+
+.checkout-card textarea {
+  resize: vertical;
+  min-height: 90px;
+}
+
+.optional-label {
+  color: #a7959d;
+  font-weight: 400;
+  margin-left: 4px;
+}
+
+.payment-options {
+  display: grid;
+  gap: 12px;
+}
+
+.payment-option {
+  display: flex !important;
+  align-items: flex-start;
+  gap: 13px;
+  margin: 0 !important;
+  padding: 17px;
+  border: 1px solid #eadde3;
+  cursor: pointer;
+  transition: .2s ease;
+}
+
+.payment-option.selected {
+  border-color: #ed4f8c;
+  background: #fff8fb;
+}
+
+.payment-option input[type="radio"] {
+  margin-top: 3px;
+  accent-color: #ed4f8c;
+}
+
+.payment-option span {
+  display: grid;
+  gap: 5px;
+}
+
+.payment-option strong {
+  color: #2d2228;
+  font-size: 13px;
+}
+
+.payment-option small {
+  color: #85747d;
+  font-size: 11px;
+  line-height: 1.5;
+}
+
+.checkout-payment-note {
+  margin: 16px 0 0;
+  color: #927f88;
+  font-size: 11px;
+  line-height: 1.6;
+}
+
+.checkout-summary {
+  position: sticky;
+  top: 25px;
+  padding: 30px;
+}
+
+.checkout-summary h2 {
+  margin: 0 0 25px;
+  color: #2d2228;
+  font-family: "Bodoni Moda", Didot, "Bodoni 72", "Bodoni MT", "Times New Roman", serif;
+  font-size: 31px;
+  font-weight: 400;
+}
+
+.checkout-items {
+  display: grid;
+  gap: 17px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid #eadde3;
+}
+
+.checkout-item {
+  display: grid;
+  grid-template-columns: 58px minmax(0, 1fr) auto;
+  gap: 12px;
+  align-items: center;
+}
+
+.checkout-item-image {
+  width: 58px;
+  height: 68px;
+  display: grid;
+  place-items: center;
+  background: #f8f0f4;
+  color: #b39ba6;
+  font-family: "Bodoni Moda", Didot, serif;
+  font-size: 10px;
+  letter-spacing: 1px;
+}
+
+.checkout-item > div:nth-child(2) {
+  min-width: 0;
+  display: grid;
+  gap: 5px;
+}
+
+.checkout-item strong {
+  color: #3b2d34;
+  font-size: 12px;
+}
+
+.checkout-item > div:nth-child(2) strong {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.checkout-item span {
+  color: #95828b;
+  font-size: 10px;
+}
+
+.checkout-summary-line,
+.checkout-summary-total {
+  display: flex;
+  justify-content: space-between;
+  gap: 20px;
+  font-size: 12px;
+}
+
+.checkout-summary-line {
+  margin-top: 18px;
+}
+
+.checkout-summary-line span:last-child {
+  color: #8d7a83;
+  text-align: right;
+}
+
+.checkout-summary-divider {
+  height: 1px;
+  background: #eadde3;
+  margin: 25px 0;
+}
+
+.checkout-summary-total {
+  color: #2d2228;
+  font-size: 16px;
+}
+
+.checkout-primary-button {
+  border: 0;
+  border-radius: 0;
+  background: #2d2228;
+  color: #fff;
+  min-height: 50px;
+  padding: 0 22px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: .5px;
+  cursor: pointer;
+  transition: .2s ease;
+}
+
+.checkout-primary-button:hover {
+  background: #ed4f8c;
+}
+
+.checkout-primary-button:disabled {
+  opacity: .55;
+  cursor: wait;
+}
+
+.place-order-button {
+  width: 100%;
+}
+
+.checkout-error {
+  border: 1px solid #f1c5d4;
+  background: #fff5f8;
+  color: #a83b61;
+  padding: 14px 16px;
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.checkout-login-state,
+.order-success-card {
+  max-width: 680px;
+  margin: 50px auto 30px;
+  padding: 65px 40px;
+  text-align: center;
+}
+
+.checkout-login-state h1,
+.order-success-card h1 {
+  margin: 0;
+  color: #2d2228;
+  font-family: "Bodoni Moda", Didot, "Bodoni 72", "Bodoni MT", "Times New Roman", serif;
+  font-size: clamp(48px, 7vw, 76px);
+  font-weight: 400;
+  line-height: .95;
+}
+
+.checkout-login-state > p:not(.standard-eyebrow),
+.order-success-card > p:not(.standard-eyebrow) {
+  max-width: 470px;
+  margin: 24px auto 30px;
+  color: #75646d;
+  font-size: 14px;
+  line-height: 1.75;
+}
+
+.order-success-page {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 65px 24px 110px;
+}
+
+.order-success-mark {
+  width: 64px;
+  height: 64px;
+  margin: 0 auto 25px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: #fff0f6;
+  color: #ed4f8c;
+  font-size: 27px;
+  font-weight: 800;
+}
+
+.order-number {
+  max-width: 360px;
+  margin: 25px auto 30px;
+  padding: 16px;
+  border-top: 1px solid #eadde3;
+  border-bottom: 1px solid #eadde3;
+  display: flex;
+  justify-content: space-between;
+  gap: 20px;
+  font-size: 11px;
+}
+
+.order-number span {
+  color: #8d7a83;
+}
+
+.order-number strong {
+  color: #2d2228;
+  letter-spacing: 1px;
+}
+
+.order-success-actions {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.success-secondary-button {
+  min-height: 50px;
+  padding: 0 22px;
+  border: 1px solid #2d2228;
+  background: #fff;
+  color: #2d2228;
+  font-size: 12px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.success-secondary-button:hover {
+  background: #2d2228;
+  color: #fff;
+}
+
+@media (max-width: 820px) {
+  .checkout-page {
+    padding: 42px 18px 80px;
+  }
+
+  .checkout-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .checkout-summary {
+    position: static;
+    order: -1;
+  }
+
+  .checkout-card,
+  .checkout-summary {
+    padding: 24px;
+  }
+
+  .checkout-header {
+    padding-bottom: 38px;
+  }
+
+  .checkout-header h1 {
+    font-size: clamp(48px, 15vw, 70px);
+  }
+}
+
+@media (max-width: 520px) {
+  .checkout-login-state,
+  .order-success-card {
+    margin-top: 25px;
+    padding: 48px 22px;
+  }
+
+  .checkout-section-heading h2 {
+    font-size: 24px;
+  }
+
+  .checkout-item {
+    grid-template-columns: 52px minmax(0, 1fr);
+  }
+
+  .checkout-item > strong {
+    grid-column: 2;
+    margin-top: -5px;
+  }
+}
