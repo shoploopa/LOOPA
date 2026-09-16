@@ -2250,21 +2250,18 @@ function App() {
 
       {page === "shop" && (
         <main
-          className={`shop-page ${
-            activeCategory ===
-            "Little Loves"
-              ? "shop-page-little"
-              : activeCategory ===
-                "Crochet Corner"
-              ? "shop-page-crochet"
-              : `standard-shop-page ${activeCategory
-                  .toLowerCase()
-                  .replace(
-                    /\s+/g,
-                    "-"
-                  )}-shop-page`
-          }`}
-        >
+  className={`shop-page ${
+    activeCategory === "Little Loves"
+      ? "shop-page-little"
+      : activeCategory === "Crochet Corner"
+      ? "shop-page-crochet"
+      : ["Women", "Shoes", "Bags", "Accessories"].includes(activeCategory)
+      ? `standard-shop-page ${activeCategory
+          .toLowerCase()
+          .replace(/\s+/g, "-")}-shop-page`
+      : ""
+  }`}
+>
 
           <button
             className="back-home"
