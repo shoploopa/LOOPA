@@ -1869,16 +1869,13 @@ function App() {
       return;
     }
 
-    const liveProfile = await loadProfile(user.id);
-    if (liveProfile?.role !== "admin") {
-      setAdminError("Admin access is required to review products.");
-      return;
-    }
-
-    await loadAdminProducts();
+    // Navigate first so the button always responds immediately.
+    // The admin page then performs the live role check and shows any error on-screen.
+    setAdminError("");
     setPage("admin");
     setMenuOpen(false);
     window.scrollTo({ top: 0, behavior: "smooth" });
+    await loadAdminProducts();
   };
 
   const updateAdminProductStatus = async (productId, status) => {
