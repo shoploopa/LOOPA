@@ -910,8 +910,10 @@ const [selectedProduct, setSelectedProduct] = useState(null);
     product,
   }) => {
     return (
-      <article className="product-card">
-
+<article
+  className="product-card"
+  onClick={() => setSelectedProduct(product)}
+>
         <div className="product-image">
 
           <span className="product-tag">
