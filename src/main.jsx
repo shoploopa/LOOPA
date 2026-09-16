@@ -14,6 +14,8 @@ import {
   EyeOff,
   LogOut,
   UserCircle,
+  Image as ImageIcon,
+  Plus,
 } from "lucide-react";
 import "./style.css";
 import { supabase } from "./supabase";
