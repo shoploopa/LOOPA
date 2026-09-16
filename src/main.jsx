@@ -386,6 +386,7 @@ function App() {
 
   const [wishlist, setWishlist] = useState([]);
   const [cart, setCart] = useState([]);
+  const [selectedProduct, setSelectedProduct] = useState(null);
 
   /* ---------------------------------------
      AUTH STATE
@@ -624,6 +625,7 @@ function App() {
     );
 
     setPage("shop");
+    setSelectedProduct(null);
     setMenuOpen(false);
 
     window.scrollTo({
@@ -766,11 +768,78 @@ function App() {
   ---------------------------------------- */
 
   const addToBag = (product) => {
-    setCart((old) => [
-      ...old,
-      product,
-    ]);
+    setCart((old) => {
+      const existingItem = old.find(
+        (item) => item.id === product.id
+      );
+
+      if (existingItem) {
+        return old.map((item) =>
+          item.id === product.id
+            ? {
+                ...item,
+                quantity: (item.quantity || 1) + 1,
+              }
+            : item
+        );
+      }
+
+      return [
+        ...old,
+        {
+          ...product,
+          quantity: 1,
+        },
+      ];
+    });
   };
+
+  const increaseQuantity = (productId) => {
+    setCart((old) =>
+      old.map((item) =>
+        item.id === productId
+          ? {
+              ...item,
+              quantity: (item.quantity || 1) + 1,
+            }
+          : item
+      )
+    );
+  };
+
+  const decreaseQuantity = (productId) => {
+    setCart((old) =>
+      old
+        .map((item) =>
+          item.id === productId
+            ? {
+                ...item,
+                quantity: (item.quantity || 1) - 1,
+              }
+            : item
+        )
+        .filter((item) => (item.quantity || 0) > 0)
+    );
+  };
+
+  const removeFromBag = (productId) => {
+    setCart((old) =>
+      old.filter((item) => item.id !== productId)
+    );
+  };
+
+  const cartCount = cart.reduce(
+    (total, item) => total + (item.quantity || 1),
+    0
+  );
+
+  const cartSubtotal = cart.reduce(
+    (total, item) =>
+      total +
+      Number(item.price || 0) *
+        (item.quantity || 1),
+    0
+  );
 
   /* ---------------------------------------
      LOGIN
@@ -936,6 +1005,133 @@ function App() {
   };
 
   /* ---------------------------------------
+     PRODUCT DETAIL
+  ---------------------------------------- */
+
+  const openProduct = (product) => {
+    setSelectedProduct(product);
+    setPage("product");
+    setMenuOpen(false);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
+  const ProductDetailPage = () => {
+    if (!selectedProduct) return null;
+
+    const product = selectedProduct;
+    const hasImage = Boolean(product.image_url);
+    const isOutOfStock =
+      product.stock !== null && product.stock <= 0;
+
+    return (
+      <main className="product-detail-page">
+        <button
+          type="button"
+          className="back-home product-detail-back"
+          onClick={() => setPage("shop")}
+        >
+          ← Back to {activeCategory || "LOOPA"}
+        </button>
+
+        <section className="product-detail-layout">
+          <div className="product-detail-media">
+            {hasImage ? (
+              <img
+                src={product.image_url}
+                alt={product.name}
+                className="product-detail-photo"
+              />
+            ) : (
+              <div className="product-detail-placeholder">
+                <span>LOOPA</span>
+                <small>IMAGE COMING SOON</small>
+              </div>
+            )}
+          </div>
+
+          <div className="product-detail-copy">
+            <p className="product-detail-eyebrow">
+              {product.made_to_order ? "MADE TO ORDER" : "LOOPA EDIT"}
+            </p>
+
+            <h1>{product.name}</h1>
+
+            <p className="product-detail-price">
+              KES {Number(product.price).toLocaleString()}
+            </p>
+
+            {product.description && (
+              <p className="product-detail-description">
+                {product.description}
+              </p>
+            )}
+
+            <div className="product-detail-divider" />
+
+            <div className="product-detail-meta">
+              <div>
+                <span>Availability</span>
+                <strong>
+                  {isOutOfStock
+                    ? "Out of stock"
+                    : product.made_to_order
+                    ? "Made to order"
+                    : product.stock !== null
+                    ? `${product.stock} available`
+                    : "Available"}
+                </strong>
+              </div>
+
+              {product.made_to_order && product.production_days && (
+                <div>
+                  <span>Production time</span>
+                  <strong>{product.production_days} days</strong>
+                </div>
+              )}
+            </div>
+
+            <div className="product-detail-actions">
+              <button
+                type="button"
+                className="product-detail-add"
+                onClick={() => addToBag(product)}
+                disabled={isOutOfStock}
+              >
+                {isOutOfStock ? "Out of Stock" : "Add to Bag"}
+              </button>
+
+              <button
+                type="button"
+                className={`product-detail-wishlist${
+                  wishlist.includes(product.id) ? " active" : ""
+                }`}
+                onClick={() => toggleWishlist(product.id)}
+                aria-label={
+                  wishlist.includes(product.id)
+                    ? "Remove from wishlist"
+                    : "Add to wishlist"
+                }
+              >
+                <Heart
+                  size={20}
+                  fill={wishlist.includes(product.id) ? "currentColor" : "none"}
+                />
+              </button>
+            </div>
+
+            <div className="product-detail-note">
+              <span>LOOPA</span>
+              <p>
+                Your Style. Your World.
+              </p>
+            </div>
+          </div>
+        </section>
+      </main>
+    );
+  };
+
+  /* ---------------------------------------
      PRODUCT CARD
   ---------------------------------------- */
 
@@ -945,7 +1141,18 @@ function App() {
       product.stock !== null && product.stock <= 0;
 
     return (
-      <article className="product-card">
+      <article
+        className="product-card"
+        role="button"
+        tabIndex={0}
+        onClick={() => openProduct(product)}
+        onKeyDown={(event) => {
+          if (event.key === "Enter" || event.key === " ") {
+            event.preventDefault();
+            openProduct(product);
+          }
+        }}
+      >
         <div className={`product-image${hasImage ? " has-image" : ""}`}>
           <span className="product-tag">
             {product.made_to_order ? "Made to Order" : "Available"}
@@ -959,7 +1166,10 @@ function App() {
                 ? `Remove ${product.name} from wishlist`
                 : `Add ${product.name} to wishlist`
             }
-            onClick={() => toggleWishlist(product.id)}
+            onClick={(event) => {
+              event.stopPropagation();
+              toggleWishlist(product.id);
+            }}
           >
             <Heart
               size={18}
@@ -986,7 +1196,10 @@ function App() {
             <button
               type="button"
               className="quick-add-button"
-              onClick={() => addToBag(product)}
+              onClick={(event) => {
+                event.stopPropagation();
+                addToBag(product);
+              }}
             >
               Quick Add
             </button>
@@ -1011,7 +1224,10 @@ function App() {
           <button
             type="button"
             className="add-button"
-            onClick={() => addToBag(product)}
+            onClick={(event) => {
+              event.stopPropagation();
+              addToBag(product);
+            }}
             disabled={isOutOfStock}
           >
             {isOutOfStock ? "Out of Stock" : "Add to Bag"}
@@ -1392,6 +1608,169 @@ function App() {
   };
 
   /* ---------------------------------------
+     BAG PAGE
+  ---------------------------------------- */
+
+  const BagPage = () => {
+    return (
+      <main className="bag-page">
+        <div className="bag-header">
+          <button
+            className="bag-back"
+            onClick={() => setPage("home")}
+          >
+            ← Continue Shopping
+          </button>
+
+          <p className="standard-eyebrow">
+            YOUR LOOPA BAG
+          </p>
+
+          <h1>Your Bag</h1>
+
+          <p>
+            {cartCount === 0
+              ? "Your bag is waiting for something beautiful."
+              : `${cartCount} ${cartCount === 1 ? "item" : "items"} in your bag`}
+          </p>
+        </div>
+
+        {cart.length === 0 ? (
+          <section className="bag-empty">
+            <div className="bag-empty-mark">♡</div>
+
+            <p className="standard-eyebrow">
+              NOTHING HERE YET
+            </p>
+
+            <h2>Your bag is empty.</h2>
+
+            <p>
+              Find something you love and add it to your LOOPA bag.
+            </p>
+
+            <button
+              className="bag-shop-button"
+              onClick={() => {
+                setActiveCategory("Women");
+                setActiveSubcategory("All Women");
+                setPage("shop");
+                window.scrollTo({ top: 0, behavior: "smooth" });
+              }}
+            >
+              Shop LOOPA
+            </button>
+          </section>
+        ) : (
+          <section className="bag-layout">
+            <div className="bag-items">
+              {cart.map((item) => (
+                <article className="bag-item" key={item.id}>
+                  <div className="bag-item-image">
+                    <span>LOOPA</span>
+                  </div>
+
+                  <div className="bag-item-details">
+                    <p className="bag-item-label">
+                      LOOPA CREATOR
+                    </p>
+
+                    <h2>{item.name}</h2>
+
+                    <p className="bag-item-price">
+                      KES {Number(item.price || 0).toLocaleString()}
+                    </p>
+
+                    {item.made_to_order && (
+                      <p className="bag-made-order">
+                        Made to Order
+                        {item.production_days
+                          ? ` • ${item.production_days} days`
+                          : ""}
+                      </p>
+                    )}
+
+                    <div className="bag-controls">
+                      <div className="quantity-control">
+                        <button
+                          type="button"
+                          onClick={() => decreaseQuantity(item.id)}
+                          aria-label={`Decrease ${item.name} quantity`}
+                        >
+                          −
+                        </button>
+
+                        <span>{item.quantity || 1}</span>
+
+                        <button
+                          type="button"
+                          onClick={() => increaseQuantity(item.id)}
+                          aria-label={`Increase ${item.name} quantity`}
+                        >
+                          +
+                        </button>
+                      </div>
+
+                      <button
+                        type="button"
+                        className="remove-item"
+                        onClick={() => removeFromBag(item.id)}
+                      >
+                        Remove
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="bag-item-total">
+                    KES {(Number(item.price || 0) * (item.quantity || 1)).toLocaleString()}
+                  </div>
+                </article>
+              ))}
+            </div>
+
+            <aside className="bag-summary">
+              <p className="standard-eyebrow">
+                ORDER SUMMARY
+              </p>
+
+              <h2>Your total</h2>
+
+              <div className="bag-summary-row">
+                <span>Subtotal</span>
+                <strong>KES {cartSubtotal.toLocaleString()}</strong>
+              </div>
+
+              <div className="bag-summary-row">
+                <span>Delivery</span>
+                <span>Calculated at checkout</span>
+              </div>
+
+              <div className="bag-summary-divider" />
+
+              <div className="bag-summary-total">
+                <span>Total</span>
+                <strong>KES {cartSubtotal.toLocaleString()}</strong>
+              </div>
+
+              <button
+                className="bag-checkout-button"
+                onClick={() => {
+                  setAuthMessage("Checkout is the next LOOPA step. 💕");
+                  if (!user) {
+                    openAuth("login");
+                  }
+                }}
+              >
+                Proceed to Checkout
+              </button>
+            </aside>
+          </section>
+        )}
+      </main>
+    );
+  };
+
+  /* ---------------------------------------
      SPECIAL SHOP EMPTY STATE
   ---------------------------------------- */
 
@@ -1605,9 +1984,9 @@ function App() {
             <button
               className="icon-button"
               onClick={() => {
-                if (!user) {
-                  openAuth("login");
-                }
+                setPage("bag");
+                setMenuOpen(false);
+                window.scrollTo({ top: 0, behavior: "smooth" });
               }}
               aria-label="Shopping bag"
             >
@@ -1615,9 +1994,9 @@ function App() {
                 size={20}
               />
 
-              {cart.length > 0 && (
+              {cartCount > 0 && (
                 <span className="count">
-                  {cart.length}
+                  {cartCount}
                 </span>
               )}
 
@@ -1641,6 +2020,12 @@ function App() {
         user && (
           <AccountPage />
         )}
+
+      {/* BAG */}
+
+      {page === "bag" && (
+        <BagPage />
+      )}
 
       {/* =====================================
           HOME
@@ -2211,6 +2596,12 @@ function App() {
 
         </main>
       )}
+
+      {/* =====================================
+          PRODUCT DETAIL
+      ====================================== */}
+
+      {page === "product" && <ProductDetailPage />}
 
       {/* =====================================
           SHOP
