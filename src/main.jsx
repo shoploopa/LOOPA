@@ -663,8 +663,8 @@ function App() {
 
     const { data, error } = await supabase
       .from("orders")
-      .select("id, buyer_id, total_amount, status, shipping_address, payment_method, payment_status, created_at")
-      .eq("buyer_id", userId)
+      .select("id, customer_id, order_number, status, subtotal, delivery_fee, total_amount, delivery_address, delivery_phone, notes, created_at, updated_at")
+      .eq("customer_id", userId)
       .order("created_at", { ascending: false });
 
     if (error) {
@@ -1116,15 +1116,17 @@ function App() {
       checkoutCity.trim(),
     ].filter(Boolean).join(", ");
 
+    const deliveryFee = 0;
     const orderPayload = {
-      buyer_id: user.id,
-      total_amount: cartSubtotal,
+      customer_id: user.id,
+      order_number: `LOOPA-${Date.now()}`,
+      subtotal: cartSubtotal,
+      delivery_fee: deliveryFee,
+      total_amount: cartSubtotal + deliveryFee,
       status: "pending",
-      shipping_address: shippingAddress,
-      shipping_phone: checkoutPhone.trim(),
+      delivery_address: shippingAddress,
+      delivery_phone: checkoutPhone.trim(),
       notes: checkoutNotes.trim() || null,
-      payment_method: paymentMethod,
-      payment_status: paymentMethod === "Cash on Delivery" ? "pending" : "pending",
     };
 
     const { data, error } = await supabase
@@ -1631,6 +1633,7 @@ function App() {
         amount: Number(order.total_amount || cartSubtotal),
         method: paymentMethod,
         phone: paymentMethod === "M-Pesa" ? paymentPhone.trim() : null,
+        provider: "LOOPA",
         status: "pending",
       })
       .select()
@@ -1748,12 +1751,15 @@ function App() {
         created_at,
         orders:order_id (
           id,
-          buyer_id,
-          total_amount,
+          customer_id,
+          order_number,
           status,
-          shipping_address,
-          payment_method,
-          payment_status,
+          subtotal,
+          delivery_fee,
+          total_amount,
+          delivery_address,
+          delivery_phone,
+          notes,
           created_at
         ),
         products:product_id (
@@ -1768,7 +1774,7 @@ function App() {
       console.error("LOOPA seller orders loading error:", error);
       setSellerOrders([]);
       setSellerOrdersError(
-        "Seller sales tracking needs the order_items table and its RLS policy. Once those are enabled in Supabase, your sales will appear here."
+        error.message || "We couldn't load your sales right now."
       );
     } else {
       setSellerOrders(data || []);
