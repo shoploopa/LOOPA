@@ -663,8 +663,8 @@ function App() {
 
     const { data, error } = await supabase
       .from("orders")
-      .select("id, customer_id, order_number, status, subtotal, delivery_fee, total_amount, delivery_address, delivery_phone, notes, created_at, updated_at")
-      .eq("customer_id", userId)
+      .select("id, buyer_id, total_amount, status, shipping_address, payment_method, payment_status, created_at")
+      .eq("buyer_id", userId)
       .order("created_at", { ascending: false });
 
     if (error) {
@@ -1116,17 +1116,15 @@ function App() {
       checkoutCity.trim(),
     ].filter(Boolean).join(", ");
 
-    const deliveryFee = 0;
     const orderPayload = {
-      customer_id: user.id,
-      order_number: `LOOPA-${Date.now()}`,
-      subtotal: cartSubtotal,
-      delivery_fee: deliveryFee,
-      total_amount: cartSubtotal + deliveryFee,
+      buyer_id: user.id,
+      total_amount: cartSubtotal,
       status: "pending",
-      delivery_address: shippingAddress,
-      delivery_phone: checkoutPhone.trim(),
+      shipping_address: shippingAddress,
+      shipping_phone: checkoutPhone.trim(),
       notes: checkoutNotes.trim() || null,
+      payment_method: paymentMethod,
+      payment_status: paymentMethod === "Cash on Delivery" ? "pending" : "pending",
     };
 
     const { data, error } = await supabase
@@ -1633,7 +1631,6 @@ function App() {
         amount: Number(order.total_amount || cartSubtotal),
         method: paymentMethod,
         phone: paymentMethod === "M-Pesa" ? paymentPhone.trim() : null,
-        provider: "LOOPA",
         status: "pending",
       })
       .select()
@@ -1751,15 +1748,12 @@ function App() {
         created_at,
         orders:order_id (
           id,
-          customer_id,
-          order_number,
-          status,
-          subtotal,
-          delivery_fee,
+          buyer_id,
           total_amount,
-          delivery_address,
-          delivery_phone,
-          notes,
+          status,
+          shipping_address,
+          payment_method,
+          payment_status,
           created_at
         ),
         products:product_id (
@@ -1774,7 +1768,7 @@ function App() {
       console.error("LOOPA seller orders loading error:", error);
       setSellerOrders([]);
       setSellerOrdersError(
-        error.message || "We couldn't load your sales right now."
+        "Seller sales tracking needs the order_items table and its RLS policy. Once those are enabled in Supabase, your sales will appear here."
       );
     } else {
       setSellerOrders(data || []);
@@ -1866,16 +1860,27 @@ function App() {
       return;
     }
 
+    if (!productForm.madeToOrder && productForm.stock === "") {
+      setSellerError("Please enter the available stock.");
+      return;
+    }
+
+    if (productForm.madeToOrder && !productForm.productionDays) {
+      setSellerError("Please enter the production time for made-to-order pieces.");
+      return;
+    }
+
     setSellerSaving(true);
+
     const payload = {
+      seller_id: user.id,
+      category_id: productForm.categoryId,
       name: productForm.name.trim(),
       description: productForm.description.trim() || null,
       price: Number(productForm.price),
-      stock: productForm.madeToOrder ? null : Number(productForm.stock || 0),
-      category_id: productForm.categoryId,
+      stock: productForm.madeToOrder ? 0 : Number(productForm.stock || 0),
       made_to_order: Boolean(productForm.madeToOrder),
       production_days: productForm.madeToOrder ? Number(productForm.productionDays || 0) : null,
-      seller_id: user.id,
     };
 
     let productId = sellerEditingProduct?.id;
@@ -1885,7 +1890,7 @@ function App() {
     if (productId) {
       ({ data: productData, error } = await supabase
         .from("products")
-        .update(payload)
+        .update({ ...payload, status: "pending" })
         .eq("id", productId)
         .eq("seller_id", user.id)
         .select()
@@ -1900,13 +1905,14 @@ function App() {
     }
 
     if (error) {
+      console.error("LOOPA product save error:", error);
       setSellerError(error.message || "We couldn't save this product.");
       setSellerSaving(false);
       return;
     }
 
-    if (productForm.imageUrl.trim() && productId) {
-      const { data: existingImage } = await supabase
+    if (productId && productForm.imageUrl.trim()) {
+      const { data: existingImage, error: existingImageError } = await supabase
         .from("images")
         .select("id")
         .eq("product_id", productId)
@@ -1914,16 +1920,52 @@ function App() {
         .limit(1)
         .maybeSingle();
 
+      if (existingImageError) {
+        console.warn("LOOPA product image lookup error:", existingImageError);
+      }
+
+      const imagePayload = {
+        product_id: productId,
+        image_url: productForm.imageUrl.trim(),
+        sort_order: 0,
+      };
+
       if (existingImage?.id) {
-        await supabase.from("images").update({ image_url: productForm.imageUrl.trim() }).eq("id", existingImage.id);
+        const { error: imageUpdateError } = await supabase
+          .from("images")
+          .update(imagePayload)
+          .eq("id", existingImage.id);
+        if (imageUpdateError) {
+          console.warn("LOOPA product image update error:", imageUpdateError);
+        }
       } else {
-        await supabase.from("images").insert({ product_id: productId, image_url: productForm.imageUrl.trim(), sort_order: 0 });
+        const { error: imageInsertError } = await supabase
+          .from("images")
+          .insert(imagePayload);
+        if (imageInsertError) {
+          console.warn("LOOPA product image insert error:", imageInsertError);
+        }
       }
     }
 
+    setSellerEditingProduct(null);
+    setProductForm({
+      name: "",
+      description: "",
+      price: "",
+      stock: "",
+      categoryId: "",
+      madeToOrder: false,
+      productionDays: "",
+      imageUrl: "",
+    });
+
     await loadSellerDashboard(user.id);
-    resetSellerProductForm();
-    setSellerMessage(sellerEditingProduct ? "Product updated successfully. ♡" : "Product submitted for approval. ♡");
+    setSellerMessage(
+      sellerEditingProduct
+        ? "Your product was updated and sent back for review. ♡"
+        : "Your product has been submitted for review. ♡"
+    );
     setSellerSaving(false);
   };
 
