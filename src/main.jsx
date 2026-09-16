@@ -1430,7 +1430,7 @@ function App() {
     }
 
     return (
-      <section className={`shop-world-hero ${content.visual}-editorial`}>
+      <section className={`shop-world-hero simple-category-hero ${content.visual}-editorial`}>
         <div className="shop-world-copy">
           <p className="standard-eyebrow">{content.eyebrow}</p>
           <h1>{content.title}</h1>
