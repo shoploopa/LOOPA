@@ -20,6 +20,9 @@ import {
   Store,
   Package,
   BarChart3,
+  DollarSign,
+  ClipboardList,
+  RefreshCw,
 } from "lucide-react";
 import "./style.css";
 import { supabase } from "./supabase";
@@ -449,6 +452,9 @@ function App() {
   const [sellerMessage, setSellerMessage] = useState("");
   const [sellerError, setSellerError] = useState("");
   const [sellerEditingProduct, setSellerEditingProduct] = useState(null);
+  const [sellerOrders, setSellerOrders] = useState([]);
+  const [sellerOrdersLoading, setSellerOrdersLoading] = useState(false);
+  const [sellerOrdersError, setSellerOrdersError] = useState("");
   const [sellerForm, setSellerForm] = useState({
     shopName: "",
     bio: "",
@@ -1025,6 +1031,31 @@ function App() {
       return;
     }
 
+    // Save each purchased item so creators can see their sales.
+    const orderItems = cart.map((item) => ({
+      order_id: data.id,
+      product_id: item.id,
+      seller_id: item.seller_id || null,
+      quantity: item.quantity || 1,
+      unit_price: Number(item.price || 0),
+    }));
+
+    const { error: orderItemsError } = await supabase
+      .from("order_items")
+      .insert(orderItems);
+
+    if (orderItemsError) {
+      console.error("LOOPA order items error:", orderItemsError);
+      // Keep the order itself intact, but tell the shopper that order tracking
+      // may be incomplete until the order_items table/RLS is configured.
+      setCheckoutError(
+        "Your order was created, but we couldn't save its item details. Please contact LOOPA support before placing another order."
+      );
+      setPlacedOrder(data);
+      setCheckoutSubmitting(false);
+      return;
+    }
+
     setPlacedOrder(data);
     setCart([]);
     setCheckoutSubmitting(false);
@@ -1270,6 +1301,66 @@ function App() {
     setSellerLoading(false);
   };
 
+  const loadSellerOrders = async (userId) => {
+    if (!userId) {
+      setSellerOrders([]);
+      return;
+    }
+
+    setSellerOrdersLoading(true);
+    setSellerOrdersError("");
+
+    const { data, error } = await supabase
+      .from("order_items")
+      .select(`
+        id,
+        order_id,
+        product_id,
+        seller_id,
+        quantity,
+        unit_price,
+        created_at,
+        orders:order_id (
+          id,
+          buyer_id,
+          total_amount,
+          status,
+          shipping_address,
+          payment_method,
+          payment_status,
+          created_at
+        ),
+        products:product_id (
+          id,
+          name
+        )
+      `)
+      .eq("seller_id", userId)
+      .order("created_at", { ascending: false });
+
+    if (error) {
+      console.error("LOOPA seller orders loading error:", error);
+      setSellerOrders([]);
+      setSellerOrdersError(
+        "Seller sales tracking needs the order_items table and its RLS policy. Once those are enabled in Supabase, your sales will appear here."
+      );
+    } else {
+      setSellerOrders(data || []);
+    }
+
+    setSellerOrdersLoading(false);
+  };
+
+  const refreshSellerStudio = async () => {
+    if (!user) return;
+    setSellerMessage("");
+    await Promise.all([
+      loadSellerDashboard(user.id),
+      loadSellerOrders(user.id),
+    ]);
+    setSellerMessage("Your Creator Studio is up to date. ♡");
+  };
+
   const openSellerDashboard = async () => {
     if (!user) {
       openAuth("login");
@@ -1277,7 +1368,10 @@ function App() {
     }
     setSellerMessage("");
     setSellerError("");
-    await loadSellerDashboard(user.id);
+    await Promise.all([
+      loadSellerDashboard(user.id),
+      loadSellerOrders(user.id),
+    ]);
     setPage("seller");
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
@@ -1421,6 +1515,14 @@ function App() {
     const totalProducts = sellerProducts.length;
     const approvedProducts = sellerProducts.filter((item) => item.status === "approved").length;
     const pendingProducts = sellerProducts.filter((item) => item.status === "pending").length;
+    const soldUnits = sellerOrders.reduce((total, item) => total + Number(item.quantity || 0), 0);
+    const grossSales = sellerOrders.reduce(
+      (total, item) => total + Number(item.unit_price || 0) * Number(item.quantity || 0),
+      0
+    );
+    const activeOrders = sellerOrders.filter(
+      (item) => !["delivered", "cancelled", "canceled"].includes(String(item.orders?.status || "").toLowerCase())
+    ).length;
 
     return (
       <main className="seller-dashboard-page">
@@ -1437,6 +1539,9 @@ function App() {
           <div className="seller-stat"><Package size={20} /><span>Products</span><strong>{totalProducts}</strong></div>
           <div className="seller-stat"><Sparkles size={20} /><span>Approved</span><strong>{approvedProducts}</strong></div>
           <div className="seller-stat"><BarChart3 size={20} /><span>Pending</span><strong>{pendingProducts}</strong></div>
+          <div className="seller-stat"><ClipboardList size={20} /><span>Active Orders</span><strong>{activeOrders}</strong></div>
+          <div className="seller-stat"><Package size={20} /><span>Units Sold</span><strong>{soldUnits}</strong></div>
+          <div className="seller-stat"><DollarSign size={20} /><span>Gross Sales</span><strong>KES {grossSales.toLocaleString()}</strong></div>
         </section>
 
         {sellerMessage && <div className="seller-success">{sellerMessage}</div>}
@@ -1477,6 +1582,43 @@ function App() {
             </form>
           </section>
         </div>
+
+        <section className="seller-card seller-sales-card">
+          <div className="seller-card-heading">
+            <div><p className="standard-eyebrow">SALES & ORDERS</p><h2>Your sales</h2></div>
+            <button type="button" className="seller-refresh-button" onClick={refreshSellerStudio} disabled={sellerOrdersLoading}>
+              <RefreshCw size={16} className={sellerOrdersLoading ? "seller-spin" : ""} /> Refresh
+            </button>
+          </div>
+
+          {sellerOrdersError && <div className="seller-error seller-order-setup-note">{sellerOrdersError}</div>}
+
+          {sellerOrdersLoading ? (
+            <div className="seller-empty">Loading your sales...</div>
+          ) : sellerOrders.length === 0 ? (
+            <div className="seller-empty seller-sales-empty">
+              <div className="seller-sales-empty-icon"><DollarSign size={22} /></div>
+              <h3>No sales yet.</h3>
+              <p>When customers purchase your approved pieces, their orders and sales will appear here.</p>
+            </div>
+          ) : (
+            <div className="seller-order-list">
+              {sellerOrders.map((item) => (
+                <article className="seller-order-row" key={item.id}>
+                  <div className="seller-order-main">
+                    <span className="seller-order-number">#{String(item.order_id).slice(0, 8).toUpperCase()}</span>
+                    <h3>{item.products?.name || "LOOPA piece"}</h3>
+                    <p>{formatOrderDate(item.created_at)} · Qty {item.quantity}</p>
+                  </div>
+                  <div className="seller-order-meta">
+                    <strong>KES {(Number(item.unit_price || 0) * Number(item.quantity || 0)).toLocaleString()}</strong>
+                    <span className={`seller-status seller-status-${String(item.orders?.status || "pending").toLowerCase().replace(/[^a-z0-9]+/g, "-")}`}>{prettyOrderStatus(item.orders?.status || "pending")}</span>
+                  </div>
+                </article>
+              ))}
+            </div>
+          )}
+        </section>
 
         <section className="seller-card seller-products-card">
           <div className="seller-card-heading"><div><p className="standard-eyebrow">YOUR COLLECTION</p><h2>Products</h2></div><span>{totalProducts} total</span></div>
