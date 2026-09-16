@@ -661,18 +661,52 @@ function App() {
 
     setOrdersLoading(true);
 
-    const { data, error } = await supabase
+    const { data: orderData, error: orderError } = await supabase
       .from("orders")
-      .select("id, customer_id, total_amount, status, delivery_address, delivery_phone, notes, created_at")
+      .select("id, customer_id, order_number, status, subtotal, delivery_fee, total_amount, delivery_address, delivery_phone, notes, created_at, updated_at")
       .eq("customer_id", userId)
       .order("created_at", { ascending: false });
 
-    if (error) {
-      console.error("LOOPA orders loading error:", error);
+    if (orderError) {
+      console.error("LOOPA orders loading error:", orderError);
       setOrders([]);
-    } else {
-      setOrders(data || []);
+      setOrdersLoading(false);
+      return;
     }
+
+    const loadedOrders = orderData || [];
+
+    if (loadedOrders.length === 0) {
+      setOrders([]);
+      setOrdersLoading(false);
+      return;
+    }
+
+    const orderIds = loadedOrders.map((order) => order.id);
+    const { data: paymentData, error: paymentError } = await supabase
+      .from("payments")
+      .select("order_id, method, status, created_at")
+      .in("order_id", orderIds)
+      .order("created_at", { ascending: false });
+
+    if (paymentError) {
+      console.warn("LOOPA payment history loading error:", paymentError);
+    }
+
+    const latestPaymentByOrder = {};
+    (paymentData || []).forEach((payment) => {
+      if (payment.order_id && !latestPaymentByOrder[payment.order_id]) {
+        latestPaymentByOrder[payment.order_id] = payment;
+      }
+    });
+
+    setOrders(
+      loadedOrders.map((order) => ({
+        ...order,
+        payment_method: latestPaymentByOrder[order.id]?.method || null,
+        payment_status: latestPaymentByOrder[order.id]?.status || "pending",
+      }))
+    );
 
     setOrdersLoading(false);
   };
@@ -1118,6 +1152,9 @@ function App() {
 
     const orderPayload = {
       customer_id: user.id,
+      order_number: `LOOPA-${Date.now()}`,
+      subtotal: cartSubtotal,
+      delivery_fee: 0,
       total_amount: cartSubtotal,
       status: "pending",
       delivery_address: shippingAddress,
@@ -1725,58 +1762,11 @@ function App() {
     setSellerLoading(false);
   };
 
- const loadSellerOrders = async (userId) => {
-  if (!userId) {
-    setSellerOrders([]);
-    return;
-  }
-
-  setSellerOrdersLoading(true);
-  setSellerOrdersError("");
-
-  const { data, error } = await supabase
-    .from("order_items")
-    .select(`
-      id,
-      order_id,
-      product_id,
-      seller_id,
-      quantity,
-      unit_price,
-      created_at,
-      orders:order_id (
-        id,
-        customer_id,
-        order_number,
-        status,
-        subtotal,
-        delivery_fee,
-        total_amount,
-        delivery_address,
-        delivery_phone,
-        notes,
-        created_at
-      ),
-      products:product_id (
-        id,
-        name
-      )
-    `)
-    .eq("seller_id", userId)
-    .order("created_at", { ascending: false });
-
-  if (error) {
-    console.error("LOOPA seller orders loading error:", error);
-    setSellerOrders([]);
-    setSellerOrdersError(
-      error.message || "We couldn't load your sales right now."
-    );
-  } else {
-    setSellerOrders(data || []);
-  }
-
-  setSellerOrdersLoading(false);
-};
+  const loadSellerOrders = async (userId) => {
+    if (!userId) {
+      setSellerOrders([]);
+      return;
+    }
 
     setSellerOrdersLoading(true);
     setSellerOrdersError("");
@@ -1794,8 +1784,11 @@ function App() {
         orders:order_id (
           id,
           customer_id,
-          total_amount,
+          order_number,
           status,
+          subtotal,
+          delivery_fee,
+          total_amount,
           delivery_address,
           delivery_phone,
           notes,
@@ -1813,7 +1806,7 @@ function App() {
       console.error("LOOPA seller orders loading error:", error);
       setSellerOrders([]);
       setSellerOrdersError(
-        "Seller sales tracking needs the order_items table and its RLS policy. Once those are enabled in Supabase, your sales will appear here."
+        error.message || "We couldn't load your sales right now."
       );
     } else {
       setSellerOrders(data || []);
@@ -2080,7 +2073,7 @@ function App() {
                     <span className="seller-order-number">#{String(item.order_id).slice(0, 8).toUpperCase()}</span>
                     <h3>{item.products?.name || "LOOPA piece"}</h3>
                     <p>{formatOrderDate(item.created_at)} · Qty {item.quantity}</p>
-                    {item.orders?.delivery_address && <small>{item.orders.delivery_address}</small>}
+                    {item.orders?.delivery_address && <small>{item.orders.shipping_address}</small>}
                   </div>
                   <div className="seller-order-meta">
                     <strong>KES {(Number(item.unit_price || 0) * Number(item.quantity || 0)).toLocaleString()}</strong>
@@ -2975,8 +2968,8 @@ function App() {
 
           <section className="order-detail-card">
             <p className="standard-eyebrow">PAYMENT</p>
-            <h2>Payment</h2>
-            <p className="order-muted">Your payment record is managed separately from the order.</p>
+            <h2>{order.payment_method || "Payment"}</h2>
+            <p className="order-muted">Payment status: {prettyOrderStatus(order.payment_status || "pending")}</p>
           </section>
 
           <section className="order-detail-card order-total-card">
