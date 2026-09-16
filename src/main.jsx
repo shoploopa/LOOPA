@@ -1725,11 +1725,58 @@ function App() {
     setSellerLoading(false);
   };
 
-  const loadSellerOrders = async (userId) => {
-    if (!userId) {
-      setSellerOrders([]);
-      return;
-    }
+ const loadSellerOrders = async (userId) => {
+  if (!userId) {
+    setSellerOrders([]);
+    return;
+  }
+
+  setSellerOrdersLoading(true);
+  setSellerOrdersError("");
+
+  const { data, error } = await supabase
+    .from("order_items")
+    .select(`
+      id,
+      order_id,
+      product_id,
+      seller_id,
+      quantity,
+      unit_price,
+      created_at,
+      orders:order_id (
+        id,
+        customer_id,
+        order_number,
+        status,
+        subtotal,
+        delivery_fee,
+        total_amount,
+        delivery_address,
+        delivery_phone,
+        notes,
+        created_at
+      ),
+      products:product_id (
+        id,
+        name
+      )
+    `)
+    .eq("seller_id", userId)
+    .order("created_at", { ascending: false });
+
+  if (error) {
+    console.error("LOOPA seller orders loading error:", error);
+    setSellerOrders([]);
+    setSellerOrdersError(
+      error.message || "We couldn't load your sales right now."
+    );
+  } else {
+    setSellerOrders(data || []);
+  }
+
+  setSellerOrdersLoading(false);
+};
 
     setSellerOrdersLoading(true);
     setSellerOrdersError("");
