@@ -139,28 +139,64 @@ const standardWorldContent = {
     eyebrow: "THE WOMEN'S EDIT",
     title: "Women",
     description:
-      "Curated fashion for every mood, moment and version of you.",
+      "Curated pieces for every version of you — from everyday essentials to your going-out wardrobe.",
+    tags: [
+      "Dresses",
+      "Tops",
+      "Going Out",
+      "Soft Girl",
+      "Baddie",
+    ],
+    mark: "W",
+    visualLabel: "LOOPA / WOMEN",
   },
 
   Shoes: {
     eyebrow: "THE SHOE EDIT",
     title: "Shoes",
     description:
-      "The finishing step to every look — from everyday staples to statement pairs.",
+      "The finishing touch. Elevated heels, everyday sneakers, effortless flats and everything between.",
+    tags: [
+      "Heels",
+      "Sneakers",
+      "Flats",
+      "Sandals",
+      "Boots",
+    ],
+    mark: "S",
+    visualLabel: "LOOPA / SHOES",
   },
 
   Bags: {
     eyebrow: "THE BAG EDIT",
     title: "Bags",
     description:
-      "Everyday carryalls, statement pieces and little bags made for your world.",
+      "Carry your look with intention. Discover handbags, shoulder bags, minis, totes and more.",
+    tags: [
+      "Handbags",
+      "Shoulder Bags",
+      "Crossbody",
+      "Mini Bags",
+      "Tote Bags",
+    ],
+    mark: "B",
+    visualLabel: "LOOPA / BAGS",
   },
 
   Accessories: {
     eyebrow: "THE ACCESSORY EDIT",
     title: "Accessories",
     description:
-      "The details that change everything — jewelry, hair pieces, shades and more.",
+      "The little details that make the whole look. Jewelry, hair pieces, sunglasses and more.",
+    tags: [
+      "Jewelry",
+      "Hair Accessories",
+      "Sunglasses",
+      "Belts",
+      "Hats",
+    ],
+    mark: "A",
+    visualLabel: "LOOPA / ACCESSORIES",
   },
 };
 
@@ -2455,9 +2491,9 @@ function App() {
                         🧶 🪝 🧵 📿 🪡 ✂️
                       </div>
                     )}
-                                    </div>
+                  </div>
                 </div>
-              )}
+              )
             </section>
 
           </div>
