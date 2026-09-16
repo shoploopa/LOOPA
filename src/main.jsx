@@ -14,6 +14,12 @@ import {
   EyeOff,
   LogOut,
   UserCircle,
+  Plus,
+  Pencil,
+  Trash2,
+  Store,
+  Package,
+  BarChart3,
 } from "lucide-react";
 import "./style.css";
 import { supabase } from "./supabase";
@@ -436,6 +442,29 @@ function App() {
   const [orders, setOrders] = useState([]);
   const [ordersLoading, setOrdersLoading] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState(null);
+  const [sellerProfile, setSellerProfile] = useState(null);
+  const [sellerProducts, setSellerProducts] = useState([]);
+  const [sellerLoading, setSellerLoading] = useState(false);
+  const [sellerSaving, setSellerSaving] = useState(false);
+  const [sellerMessage, setSellerMessage] = useState("");
+  const [sellerError, setSellerError] = useState("");
+  const [sellerEditingProduct, setSellerEditingProduct] = useState(null);
+  const [sellerForm, setSellerForm] = useState({
+    shopName: "",
+    bio: "",
+    phone: "",
+    logoUrl: "",
+  });
+  const [productForm, setProductForm] = useState({
+    name: "",
+    description: "",
+    price: "",
+    stock: "",
+    categoryId: "",
+    madeToOrder: false,
+    productionDays: "",
+    imageUrl: "",
+  });
 
   /* ---------------------------------------
      CHECK CURRENT USER
@@ -1164,6 +1193,297 @@ function App() {
       top: 0,
       behavior: "smooth",
     });
+  };
+
+  /* ---------------------------------------
+     SELLER DASHBOARD
+  ---------------------------------------- */
+
+  const resetSellerProductForm = () => {
+    setSellerEditingProduct(null);
+    setProductForm({
+      name: "",
+      description: "",
+      price: "",
+      stock: "",
+      categoryId: dbCategories[0]?.id || "",
+      madeToOrder: false,
+      productionDays: "",
+      imageUrl: "",
+    });
+  };
+
+  const loadSellerDashboard = async (userId) => {
+    if (!userId) return;
+
+    setSellerLoading(true);
+    setSellerError("");
+
+    const { data: sellerData, error: sellerErrorData } = await supabase
+      .from("seller_profiles")
+      .select("id, user_id, shop_name, bio, phone, logo_url")
+      .eq("user_id", userId)
+      .maybeSingle();
+
+    if (sellerErrorData && sellerErrorData.code !== "PGRST116") {
+      console.warn("LOOPA seller profile loading error:", sellerErrorData);
+    }
+
+    setSellerProfile(sellerData || null);
+    setSellerForm({
+      shopName: sellerData?.shop_name || "",
+      bio: sellerData?.bio || "",
+      phone: sellerData?.phone || profile?.phone || "",
+      logoUrl: sellerData?.logo_url || "",
+    });
+
+    const { data: products, error: productsError } = await supabase
+      .from("products")
+      .select("id, name, description, price, stock, status, seller_id, category_id, made_to_order, production_days, created_at")
+      .eq("seller_id", userId)
+      .order("created_at", { ascending: false });
+
+    if (productsError) {
+      setSellerError(productsError.message || "We couldn't load your products.");
+      setSellerProducts([]);
+    } else {
+      const productList = products || [];
+      let withImages = productList;
+      if (productList.length) {
+        const ids = productList.map((item) => item.id);
+        const { data: images } = await supabase
+          .from("images")
+          .select("id, product_id, image_url, sort_order")
+          .in("product_id", ids)
+          .order("sort_order", { ascending: true });
+        const first = {};
+        (images || []).forEach((image) => {
+          if (image.product_id && image.image_url && !first[image.product_id]) {
+            first[image.product_id] = image.image_url;
+          }
+        });
+        withImages = productList.map((item) => ({ ...item, image_url: first[item.id] || null }));
+      }
+      setSellerProducts(withImages);
+    }
+
+    setSellerLoading(false);
+  };
+
+  const openSellerDashboard = async () => {
+    if (!user) {
+      openAuth("login");
+      return;
+    }
+    setSellerMessage("");
+    setSellerError("");
+    await loadSellerDashboard(user.id);
+    setPage("seller");
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
+  const saveSellerProfile = async (e) => {
+    e.preventDefault();
+    setSellerMessage("");
+    setSellerError("");
+    if (!sellerForm.shopName.trim()) {
+      setSellerError("Please enter your shop name.");
+      return;
+    }
+    setSellerSaving(true);
+
+    const payload = {
+      user_id: user.id,
+      shop_name: sellerForm.shopName.trim(),
+      bio: sellerForm.bio.trim() || null,
+      phone: sellerForm.phone.trim() || null,
+      logo_url: sellerForm.logoUrl.trim() || null,
+    };
+
+    const { data, error } = await supabase
+      .from("seller_profiles")
+      .upsert(payload, { onConflict: "user_id" })
+      .select()
+      .single();
+
+    if (error) {
+      setSellerError(error.message || "We couldn't save your shop profile.");
+    } else {
+      setSellerProfile(data);
+      setSellerMessage("Your shop profile has been saved. ♡");
+    }
+    setSellerSaving(false);
+  };
+
+  const editSellerProduct = (product) => {
+    setSellerEditingProduct(product);
+    setProductForm({
+      name: product.name || "",
+      description: product.description || "",
+      price: product.price ?? "",
+      stock: product.stock ?? "",
+      categoryId: product.category_id || "",
+      madeToOrder: Boolean(product.made_to_order),
+      productionDays: product.production_days ?? "",
+      imageUrl: product.image_url || "",
+    });
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
+  const saveSellerProduct = async (e) => {
+    e.preventDefault();
+    setSellerMessage("");
+    setSellerError("");
+
+    if (!productForm.name.trim() || !productForm.price || !productForm.categoryId) {
+      setSellerError("Please add a product name, price, and category.");
+      return;
+    }
+
+    setSellerSaving(true);
+    const payload = {
+      name: productForm.name.trim(),
+      description: productForm.description.trim() || null,
+      price: Number(productForm.price),
+      stock: productForm.madeToOrder ? null : Number(productForm.stock || 0),
+      category_id: productForm.categoryId,
+      made_to_order: Boolean(productForm.madeToOrder),
+      production_days: productForm.madeToOrder ? Number(productForm.productionDays || 0) : null,
+      seller_id: user.id,
+    };
+
+    let productId = sellerEditingProduct?.id;
+    let productData;
+    let error;
+
+    if (productId) {
+      ({ data: productData, error } = await supabase
+        .from("products")
+        .update(payload)
+        .eq("id", productId)
+        .eq("seller_id", user.id)
+        .select()
+        .single());
+    } else {
+      ({ data: productData, error } = await supabase
+        .from("products")
+        .insert({ ...payload, status: "pending" })
+        .select()
+        .single());
+      productId = productData?.id;
+    }
+
+    if (error) {
+      setSellerError(error.message || "We couldn't save this product.");
+      setSellerSaving(false);
+      return;
+    }
+
+    if (productForm.imageUrl.trim() && productId) {
+      const { data: existingImage } = await supabase
+        .from("images")
+        .select("id")
+        .eq("product_id", productId)
+        .order("sort_order", { ascending: true })
+        .limit(1)
+        .maybeSingle();
+
+      if (existingImage?.id) {
+        await supabase.from("images").update({ image_url: productForm.imageUrl.trim() }).eq("id", existingImage.id);
+      } else {
+        await supabase.from("images").insert({ product_id: productId, image_url: productForm.imageUrl.trim(), sort_order: 0 });
+      }
+    }
+
+    await loadSellerDashboard(user.id);
+    resetSellerProductForm();
+    setSellerMessage(sellerEditingProduct ? "Product updated successfully. ♡" : "Product submitted for approval. ♡");
+    setSellerSaving(false);
+  };
+
+  const deleteSellerProduct = async (productId) => {
+    if (!window.confirm("Remove this product from your shop?")) return;
+    setSellerError("");
+    const { error } = await supabase
+      .from("products")
+      .delete()
+      .eq("id", productId)
+      .eq("seller_id", user.id);
+    if (error) {
+      setSellerError(error.message || "We couldn't remove this product.");
+      return;
+    }
+    await loadSellerDashboard(user.id);
+    setSellerMessage("Product removed.");
+  };
+
+  const SellerDashboardPage = () => {
+    const totalProducts = sellerProducts.length;
+    const approvedProducts = sellerProducts.filter((item) => item.status === "approved").length;
+    const pendingProducts = sellerProducts.filter((item) => item.status === "pending").length;
+
+    return (
+      <main className="seller-dashboard-page">
+        <section className="seller-dashboard-hero">
+          <div>
+            <p className="standard-eyebrow">LOOPA CREATOR STUDIO</p>
+            <h1>{sellerProfile?.shop_name || "Build your LOOPA shop."}</h1>
+            <p>Create your storefront, add your pieces, and manage your collection from one place.</p>
+          </div>
+          <div className="seller-hero-icon"><Store size={34} /></div>
+        </section>
+
+        <section className="seller-stats-grid">
+          <div className="seller-stat"><Package size={20} /><span>Products</span><strong>{totalProducts}</strong></div>
+          <div className="seller-stat"><Sparkles size={20} /><span>Approved</span><strong>{approvedProducts}</strong></div>
+          <div className="seller-stat"><BarChart3 size={20} /><span>Pending</span><strong>{pendingProducts}</strong></div>
+        </section>
+
+        {sellerMessage && <div className="seller-success">{sellerMessage}</div>}
+        {sellerError && <div className="seller-error">{sellerError}</div>}
+
+        <div className="seller-dashboard-grid">
+          <section className="seller-card">
+            <div className="seller-card-heading">
+              <div><p className="standard-eyebrow">YOUR SHOP</p><h2>Shop profile</h2></div>
+              <Store size={22} />
+            </div>
+            <form onSubmit={saveSellerProfile} className="seller-form">
+              <label>Shop name<input value={sellerForm.shopName} onChange={(e) => setSellerForm({ ...sellerForm, shopName: e.target.value })} placeholder="e.g. Mithi Studio" /></label>
+              <label>Shop bio<textarea value={sellerForm.bio} onChange={(e) => setSellerForm({ ...sellerForm, bio: e.target.value })} placeholder="Tell LOOPA shoppers what makes your pieces special." rows="4" /></label>
+              <label>Phone number<input value={sellerForm.phone} onChange={(e) => setSellerForm({ ...sellerForm, phone: e.target.value })} placeholder="07XX XXX XXX" /></label>
+              <label>Shop logo URL <span className="optional-label">Optional</span><input value={sellerForm.logoUrl} onChange={(e) => setSellerForm({ ...sellerForm, logoUrl: e.target.value })} placeholder="https://..." /></label>
+              <button className="seller-primary-button" disabled={sellerSaving}>{sellerSaving ? "Saving..." : "Save Shop Profile"}</button>
+            </form>
+          </section>
+
+          <section className="seller-card">
+            <div className="seller-card-heading">
+              <div><p className="standard-eyebrow">{sellerEditingProduct ? "EDIT PIECE" : "NEW PIECE"}</p><h2>{sellerEditingProduct ? "Update product" : "Add a product"}</h2></div>
+              <Plus size={22} />
+            </div>
+            <form onSubmit={saveSellerProduct} className="seller-form">
+              <label>Product name<input value={productForm.name} onChange={(e) => setProductForm({ ...productForm, name: e.target.value })} placeholder="Product name" /></label>
+              <label>Description<textarea value={productForm.description} onChange={(e) => setProductForm({ ...productForm, description: e.target.value })} placeholder="Describe the piece." rows="4" /></label>
+              <div className="seller-form-two">
+                <label>Price (KES)<input type="number" min="0" step="1" value={productForm.price} onChange={(e) => setProductForm({ ...productForm, price: e.target.value })} placeholder="2500" /></label>
+                <label>Category<select value={productForm.categoryId} onChange={(e) => setProductForm({ ...productForm, categoryId: e.target.value })}><option value="">Select category</option>{dbCategories.map((category) => <option key={category.id} value={category.id}>{category.name}</option>)}</select></label>
+              </div>
+              <label className="seller-checkbox"><input type="checkbox" checked={productForm.madeToOrder} onChange={(e) => setProductForm({ ...productForm, madeToOrder: e.target.checked })} /><span>Made to order</span></label>
+              {!productForm.madeToOrder ? <label>Stock<input type="number" min="0" step="1" value={productForm.stock} onChange={(e) => setProductForm({ ...productForm, stock: e.target.value })} placeholder="10" /></label> : <label>Production days<input type="number" min="1" step="1" value={productForm.productionDays} onChange={(e) => setProductForm({ ...productForm, productionDays: e.target.value })} placeholder="7" /></label>}
+              <label>Product image URL <span className="optional-label">Optional</span><input value={productForm.imageUrl} onChange={(e) => setProductForm({ ...productForm, imageUrl: e.target.value })} placeholder="https://..." /></label>
+              <div className="seller-form-actions"><button className="seller-primary-button" disabled={sellerSaving}>{sellerSaving ? "Saving..." : sellerEditingProduct ? "Update Product" : "Submit Product"}</button>{sellerEditingProduct && <button type="button" className="seller-secondary-button" onClick={resetSellerProductForm}>Cancel</button>}</div>
+              {!sellerEditingProduct && <p className="seller-note">New products start as pending so they can be reviewed before appearing in the public shop.</p>}
+            </form>
+          </section>
+        </div>
+
+        <section className="seller-card seller-products-card">
+          <div className="seller-card-heading"><div><p className="standard-eyebrow">YOUR COLLECTION</p><h2>Products</h2></div><span>{totalProducts} total</span></div>
+          {sellerLoading ? <div className="seller-empty">Loading your products...</div> : sellerProducts.length === 0 ? <div className="seller-empty"><h3>Your collection is empty.</h3><p>Add your first piece above and send it for review.</p></div> : <div className="seller-product-list">{sellerProducts.map((product) => <article className="seller-product-row" key={product.id}><div className="seller-product-thumb">{product.image_url ? <img src={product.image_url} alt={product.name} /> : <span>LOOPA</span>}</div><div className="seller-product-main"><h3>{product.name}</h3><p>KES {Number(product.price || 0).toLocaleString()} · {product.stock == null ? "Made to Order" : `${product.stock} in stock`}</p></div><span className={`seller-status seller-status-${product.status || "pending"}`}>{prettyOrderStatus(product.status || "pending")}</span><div className="seller-product-actions"><button onClick={() => editSellerProduct(product)} aria-label={`Edit ${product.name}`}><Pencil size={17} /></button><button onClick={() => deleteSellerProduct(product.id)} aria-label={`Delete ${product.name}`}><Trash2 size={17} /></button></div></article>)}</div>}
+        </section>
+      </main>
+    );
   };
 
   /* ---------------------------------------
@@ -2477,6 +2797,17 @@ function App() {
 
             </div>
 
+            {user && (
+              <button
+                className="icon-button seller-header-button"
+                onClick={openSellerDashboard}
+                aria-label="Creator Studio"
+                title="Creator Studio"
+              >
+                <Store size={20} />
+              </button>
+            )}
+
             <button
               className="icon-button"
               onClick={() => {
@@ -2536,6 +2867,12 @@ function App() {
         </div>
 
       </header>
+
+      {/* SELLER DASHBOARD */}
+
+      {page === "seller" && user && (
+        <SellerDashboardPage />
+      )}
 
       {/* AUTH */}
 
