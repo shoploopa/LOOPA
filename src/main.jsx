@@ -23,6 +23,12 @@ import {
   DollarSign,
   ClipboardList,
   RefreshCw,
+  MessageCircle,
+  Send,
+  Star,
+  Check,
+  MapPin,
+  CreditCard,
 } from "lucide-react";
 import "./style.css";
 import { supabase } from "./supabase";
@@ -455,6 +461,43 @@ function App() {
   const [sellerOrders, setSellerOrders] = useState([]);
   const [sellerOrdersLoading, setSellerOrdersLoading] = useState(false);
   const [sellerOrdersError, setSellerOrdersError] = useState("");
+
+  /* ---------------------------------------
+     REVIEWS / MESSAGING / CUSTOM / PAYMENTS
+  ---------------------------------------- */
+
+  const [productReviews, setProductReviews] = useState([]);
+  const [reviewsLoading, setReviewsLoading] = useState(false);
+  const [reviewRating, setReviewRating] = useState(5);
+  const [reviewComment, setReviewComment] = useState("");
+  const [reviewSubmitting, setReviewSubmitting] = useState(false);
+  const [reviewMessage, setReviewMessage] = useState("");
+  const [reviewError, setReviewError] = useState("");
+
+  const [messages, setMessages] = useState([]);
+  const [messageText, setMessageText] = useState("");
+  const [messagesLoading, setMessagesLoading] = useState(false);
+  const [messageSending, setMessageSending] = useState(false);
+  const [activeConversation, setActiveConversation] = useState(null);
+  const [messageSeller, setMessageSeller] = useState(null);
+  const [messageError, setMessageError] = useState("");
+
+  const [customForm, setCustomForm] = useState({
+    title: "",
+    description: "",
+    category: "",
+    budget: "",
+    deadline: "",
+    referenceUrl: "",
+  });
+  const [customSubmitting, setCustomSubmitting] = useState(false);
+  const [customMessage, setCustomMessage] = useState("");
+  const [customError, setCustomError] = useState("");
+  const [customRequests, setCustomRequests] = useState([]);
+
+  const [paymentPhone, setPaymentPhone] = useState("");
+  const [paymentSubmitting, setPaymentSubmitting] = useState(false);
+  const [paymentMessage, setPaymentMessage] = useState("");
   const [sellerForm, setSellerForm] = useState({
     shopName: "",
     bio: "",
@@ -999,6 +1042,11 @@ function App() {
       return;
     }
 
+    if (paymentMethod === "M-Pesa" && !paymentPhone.trim()) {
+      setCheckoutError("Please enter the M-Pesa phone number for this payment.");
+      return;
+    }
+
     setCheckoutSubmitting(true);
 
     const shippingAddress = [
@@ -1011,6 +1059,8 @@ function App() {
       total_amount: cartSubtotal,
       status: "pending",
       shipping_address: shippingAddress,
+      shipping_phone: checkoutPhone.trim(),
+      notes: checkoutNotes.trim() || null,
       payment_method: paymentMethod,
       payment_status: paymentMethod === "Cash on Delivery" ? "pending" : "pending",
     };
@@ -1051,6 +1101,15 @@ function App() {
       setCheckoutError(
         "Your order was created, but we couldn't save its item details. Please contact LOOPA support before placing another order."
       );
+      setPlacedOrder(data);
+      setCheckoutSubmitting(false);
+      return;
+    }
+
+    const paymentResult = await createPaymentRecord(data);
+    if (paymentResult.error) {
+      console.error("LOOPA payment record error:", paymentResult.error);
+      setCheckoutError("Your order was created, but the payment record could not be saved. Please contact LOOPA support.");
       setPlacedOrder(data);
       setCheckoutSubmitting(false);
       return;
@@ -1224,6 +1283,224 @@ function App() {
       top: 0,
       behavior: "smooth",
     });
+  };
+
+  /* ---------------------------------------
+     REVIEWS
+  ---------------------------------------- */
+
+  const loadProductReviews = async (productId) => {
+    if (!productId) return;
+    setReviewsLoading(true);
+    setReviewError("");
+    const { data, error } = await supabase
+      .from("reviews")
+      .select("id, product_id, buyer_id, rating, comment, created_at")
+      .eq("product_id", productId)
+      .order("created_at", { ascending: false });
+    if (error) {
+      console.error("LOOPA reviews loading error:", error);
+      setProductReviews([]);
+      setReviewError(error.message || "Reviews could not be loaded.");
+    } else {
+      setProductReviews(data || []);
+    }
+    setReviewsLoading(false);
+  };
+
+  const submitReview = async (e) => {
+    e.preventDefault();
+    setReviewMessage("");
+    setReviewError("");
+    if (!user) {
+      openAuth("login");
+      return;
+    }
+    if (!selectedProduct) return;
+    if (!reviewComment.trim()) {
+      setReviewError("Please add a short review.");
+      return;
+    }
+    setReviewSubmitting(true);
+    const { error } = await supabase.from("reviews").insert({
+      product_id: selectedProduct.id,
+      buyer_id: user.id,
+      rating: Number(reviewRating),
+      comment: reviewComment.trim(),
+    });
+    if (error) {
+      setReviewError(error.message || "We couldn't submit your review.");
+    } else {
+      setReviewComment("");
+      setReviewRating(5);
+      setReviewMessage("Your review has been added. ♡");
+      await loadProductReviews(selectedProduct.id);
+    }
+    setReviewSubmitting(false);
+  };
+
+  /* ---------------------------------------
+     MESSAGING
+  ---------------------------------------- */
+
+  const openMessaging = async (sellerId, product = null) => {
+    if (!user) {
+      openAuth("login");
+      return;
+    }
+    if (!sellerId || sellerId === user.id) return;
+    setMessageError("");
+    setMessageSeller({ id: sellerId, product });
+    setMessages([]);
+    setPage("messages");
+    window.scrollTo({ top: 0, behavior: "smooth" });
+
+    const { data: existingRows } = await supabase
+      .from("conversations")
+      .select("id, subject, created_at")
+      .eq("buyer_id", user.id)
+      .eq("seller_id", sellerId)
+      .order("created_at", { ascending: false })
+      .limit(1);
+
+    let conversation = existingRows?.[0] || null;
+    if (!conversation) {
+      const { data, error } = await supabase
+        .from("conversations")
+        .insert({ buyer_id: user.id, seller_id: sellerId, subject: product?.name ? `Question about ${product.name}` : "LOOPA message" })
+        .select("id, subject, created_at")
+        .single();
+      if (error) {
+        setMessageError(error.message || "We couldn't start this conversation.");
+        return;
+      }
+      conversation = data;
+    }
+
+    setActiveConversation(conversation);
+    await loadConversationMessages(conversation.id);
+  };
+
+  const loadConversationMessages = async (conversationId) => {
+    if (!conversationId) return;
+    setMessagesLoading(true);
+    const { data, error } = await supabase
+      .from("messages")
+      .select("id, conversation_id, sender_id, body, created_at")
+      .eq("conversation_id", conversationId)
+      .order("created_at", { ascending: true });
+    if (error) {
+      setMessageError(error.message || "Messages could not be loaded.");
+      setMessages([]);
+    } else {
+      setMessages(data || []);
+    }
+    setMessagesLoading(false);
+  };
+
+  const sendMessage = async (e) => {
+    e.preventDefault();
+    if (!user || !activeConversation || !messageText.trim()) return;
+    setMessageSending(true);
+    setMessageError("");
+    const { data, error } = await supabase
+      .from("messages")
+      .insert({
+        conversation_id: activeConversation.id,
+        sender_id: user.id,
+        body: messageText.trim(),
+      })
+      .select("id, conversation_id, sender_id, body, created_at")
+      .single();
+    if (error) {
+      setMessageError(error.message || "We couldn't send your message.");
+    } else {
+      setMessages((old) => [...old, data]);
+      setMessageText("");
+    }
+    setMessageSending(false);
+  };
+
+  /* ---------------------------------------
+     CUSTOM REQUESTS
+  ---------------------------------------- */
+
+  const loadCustomRequests = async () => {
+    if (!user) return;
+    const { data } = await supabase
+      .from("custom_requests")
+      .select("id, title, description, category, budget, deadline, reference_url, status, created_at")
+      .eq("buyer_id", user.id)
+      .order("created_at", { ascending: false });
+    setCustomRequests(data || []);
+  };
+
+  const submitCustomRequest = async (e) => {
+    e.preventDefault();
+    setCustomError("");
+    setCustomMessage("");
+    if (!user) {
+      openAuth("login");
+      return;
+    }
+    if (!customForm.title.trim() || !customForm.description.trim()) {
+      setCustomError("Please add a title and describe what you want made.");
+      return;
+    }
+    setCustomSubmitting(true);
+    const { error } = await supabase.from("custom_requests").insert({
+      buyer_id: user.id,
+      title: customForm.title.trim(),
+      description: customForm.description.trim(),
+      category: customForm.category.trim() || null,
+      budget: customForm.budget ? Number(customForm.budget) : null,
+      deadline: customForm.deadline || null,
+      reference_url: customForm.referenceUrl.trim() || null,
+      status: "open",
+    });
+    if (error) {
+      setCustomError(error.message || "We couldn't submit your request.");
+    } else {
+      setCustomForm({ title: "", description: "", category: "", budget: "", deadline: "", referenceUrl: "" });
+      setCustomMessage("Your custom request has been sent to LOOPA. ♡");
+      await loadCustomRequests();
+    }
+    setCustomSubmitting(false);
+  };
+
+  /* ---------------------------------------
+     PAYMENTS
+  ---------------------------------------- */
+
+  const createPaymentRecord = async (order) => {
+    if (!user || !order?.id) return { error: null };
+    const { data, error } = await supabase
+      .from("payments")
+      .insert({
+        order_id: order.id,
+        buyer_id: user.id,
+        amount: Number(order.total_amount || cartSubtotal),
+        method: paymentMethod,
+        phone: paymentMethod === "M-Pesa" ? paymentPhone.trim() : null,
+        status: "pending",
+      })
+      .select()
+      .single();
+    if (!error) setPaymentMessage("Payment record created. Your payment is pending confirmation.");
+    return { data, error };
+  };
+
+  const updateSellerOrderStatus = async (orderId, nextStatus) => {
+    if (!user || !orderId) return;
+    const { error } = await supabase
+      .from("orders")
+      .update({ status: nextStatus })
+      .eq("id", orderId);
+    if (error) {
+      setSellerOrdersError(error.message || "We couldn't update this order.");
+      return;
+    }
+    await loadSellerOrders(user.id);
   };
 
   /* ---------------------------------------
@@ -1609,10 +1886,14 @@ function App() {
                     <span className="seller-order-number">#{String(item.order_id).slice(0, 8).toUpperCase()}</span>
                     <h3>{item.products?.name || "LOOPA piece"}</h3>
                     <p>{formatOrderDate(item.created_at)} · Qty {item.quantity}</p>
+                    {item.orders?.shipping_address && <small>{item.orders.shipping_address}</small>}
                   </div>
                   <div className="seller-order-meta">
                     <strong>KES {(Number(item.unit_price || 0) * Number(item.quantity || 0)).toLocaleString()}</strong>
                     <span className={`seller-status seller-status-${String(item.orders?.status || "pending").toLowerCase().replace(/[^a-z0-9]+/g, "-")}`}>{prettyOrderStatus(item.orders?.status || "pending")}</span>
+                    <select value={item.orders?.status || "pending"} onChange={(e) => updateSellerOrderStatus(item.order_id, e.target.value)} aria-label="Update order status">
+                      <option value="pending">Pending</option><option value="confirmed">Confirmed</option><option value="processing">Processing</option><option value="shipped">Shipped</option><option value="delivered">Delivered</option><option value="cancelled">Cancelled</option>
+                    </select>
                   </div>
                 </article>
               ))}
@@ -1629,12 +1910,62 @@ function App() {
   };
 
   /* ---------------------------------------
+     MESSAGES PAGE
+  ---------------------------------------- */
+
+  const MessagesPage = () => (
+    <main className="messages-page">
+      <div className="messages-header">
+        <button className="bag-back" onClick={() => setPage("home")}>← Back to LOOPA</button>
+        <p className="standard-eyebrow">LOOPA MESSAGES</p>
+        <h1>Talk to a creator.</h1>
+        <p>Keep questions, customization details, and order conversations in one place.</p>
+      </div>
+      <section className="messages-card">
+        {messageError && <div className="community-error">{messageError}</div>}
+        {activeConversation ? <>
+          <div className="conversation-header"><div><p className="standard-eyebrow">CONVERSATION</p><h2>{activeConversation.subject || "LOOPA message"}</h2></div><span>Creator</span></div>
+          <div className="message-thread">{messagesLoading ? <p className="community-muted">Loading messages...</p> : messages.length === 0 ? <p className="community-muted">Start the conversation below.</p> : messages.map((message) => <div key={message.id} className={`message-bubble ${message.sender_id === user.id ? "mine" : "theirs"}`}><p>{message.body}</p><small>{formatOrderDate(message.created_at)}</small></div>)}</div>
+          <form className="message-compose" onSubmit={sendMessage}><textarea value={messageText} onChange={(e) => setMessageText(e.target.value)} rows="2" placeholder="Write a message..." /><button className="checkout-primary-button" disabled={messageSending}>{messageSending ? "Sending..." : <><Send size={17} /> Send</>}</button></form>
+        </> : <div className="messages-empty"><MessageCircle size={28} /><h2>No conversation selected.</h2><p>Open a product and tap “Message Creator” to start.</p></div>}
+      </section>
+    </main>
+  );
+
+  /* ---------------------------------------
+     CUSTOM REQUEST PAGE
+  ---------------------------------------- */
+
+  const CustomRequestPage = () => {
+    useEffect(() => { if (user) loadCustomRequests(); }, [user]);
+    return (
+      <main className="custom-request-page">
+        <div className="custom-request-header"><button className="bag-back" onClick={() => setPage("home")}>← Back to LOOPA</button><p className="standard-eyebrow">LOOPA CUSTOM</p><h1>Dream it. Make it LOOPA.</h1><p>Tell us what you want made and a creator can help bring it to life.</p></div>
+        <div className="custom-request-layout">
+          <form className="custom-request-form" onSubmit={submitCustomRequest}>
+            <label>Request title<input value={customForm.title} onChange={(e) => setCustomForm({ ...customForm, title: e.target.value })} placeholder="e.g. Pink crochet birthday dress" /></label>
+            <label>What would you like made?<textarea value={customForm.description} onChange={(e) => setCustomForm({ ...customForm, description: e.target.value })} rows="6" placeholder="Describe the style, color, size, materials, or special details." /></label>
+            <div className="seller-form-two"><label>Category<input value={customForm.category} onChange={(e) => setCustomForm({ ...customForm, category: e.target.value })} placeholder="Clothing, bag, crochet..." /></label><label>Budget (KES)<input type="number" min="0" value={customForm.budget} onChange={(e) => setCustomForm({ ...customForm, budget: e.target.value })} placeholder="Optional" /></label></div>
+            <label>Needed by <span className="optional-label">Optional</span><input type="date" value={customForm.deadline} onChange={(e) => setCustomForm({ ...customForm, deadline: e.target.value })} /></label>
+            <label>Reference image URL <span className="optional-label">Optional</span><input value={customForm.referenceUrl} onChange={(e) => setCustomForm({ ...customForm, referenceUrl: e.target.value })} placeholder="https://..." /></label>
+            {customError && <div className="community-error">{customError}</div>}{customMessage && <div className="community-success">{customMessage}</div>}
+            <button className="checkout-primary-button" type="submit" disabled={customSubmitting}>{customSubmitting ? "Sending..." : <><Sparkles size={17} /> Send Custom Request</>}</button>
+          </form>
+          <aside className="custom-request-aside"><p className="standard-eyebrow">YOUR REQUESTS</p><h2>Custom pieces</h2>{customRequests.length === 0 ? <p className="community-muted">Your submitted custom requests will appear here.</p> : <div className="custom-request-list">{customRequests.map((request) => <article key={request.id}><strong>{request.title}</strong><span>{prettyOrderStatus(request.status || "open")}</span><p>{request.description}</p></article>)}</div>}</aside>
+        </div>
+      </main>
+    );
+  };
+
+  /* ---------------------------------------
      PRODUCT DETAIL
   ---------------------------------------- */
 
   const openProduct = (product) => {
     setSelectedProduct(product);
     setSelectedQuantity(1);
+    setProductReviews([]);
+    loadProductReviews(product.id);
     setPage("product");
     setMenuOpen(false);
     window.scrollTo({ top: 0, behavior: "smooth" });
@@ -1796,6 +2127,38 @@ function App() {
               <span>LOOPA</span>
               <p>Your Style. Your World.</p>
             </div>
+          </div>
+        </section>
+
+        <section className="product-community-section">
+          <div className="product-community-grid">
+            <section className="product-community-card">
+              <p className="standard-eyebrow">REVIEWS</p>
+              <div className="review-heading-row">
+                <div>
+                  <h2>What shoppers think</h2>
+                  <p>{productReviews.length} review{productReviews.length === 1 ? "" : "s"}</p>
+                </div>
+                <div className="review-average">
+                  <Star size={17} fill="currentColor" />
+                  <strong>{productReviews.length ? (productReviews.reduce((sum, item) => sum + Number(item.rating || 0), 0) / productReviews.length).toFixed(1) : "—"}</strong>
+                </div>
+              </div>
+              {reviewsLoading ? <p className="community-muted">Loading reviews...</p> : productReviews.length === 0 ? <p className="community-muted">No reviews yet. Be the first to share your experience.</p> : <div className="review-list">{productReviews.map((review) => <article className="review-item" key={review.id}><div className="review-stars">{[1,2,3,4,5].map((star) => <Star key={star} size={14} fill={star <= Number(review.rating) ? "currentColor" : "none"} />)}</div><p>{review.comment}</p><small>{formatOrderDate(review.created_at)}</small></article>)}</div>}
+              <form className="review-form" onSubmit={submitReview}>
+                <div className="review-form-top"><label>Rating<select value={reviewRating} onChange={(e) => setReviewRating(Number(e.target.value))}>{[5,4,3,2,1].map((value) => <option key={value} value={value}>{value} star{value === 1 ? "" : "s"}</option>)}</select></label><label>Your review<textarea value={reviewComment} onChange={(e) => setReviewComment(e.target.value)} rows="3" placeholder="What did you think?" /></label></div>
+                {reviewError && <div className="community-error">{reviewError}</div>}
+                {reviewMessage && <div className="community-success">{reviewMessage}</div>}
+                <button className="product-detail-add" type="submit" disabled={reviewSubmitting}>{reviewSubmitting ? "Posting..." : user ? "Post Review" : "Log In to Review"}</button>
+              </form>
+            </section>
+
+            <section className="product-community-card product-message-card">
+              <p className="standard-eyebrow">TALK TO THE CREATOR</p>
+              <h2>Have a question?</h2>
+              <p>Ask the creator about fit, materials, customization, delivery, or anything else before you order.</p>
+              <button type="button" className="checkout-primary-button" onClick={() => openMessaging(product.seller_id, product)}><MessageCircle size={17} /> Message Creator</button>
+            </section>
           </div>
         </section>
 
@@ -2521,7 +2884,14 @@ function App() {
                 </label>
               </div>
 
-              <p className="checkout-payment-note">Payment processing can be connected to your chosen provider after the checkout flow is live.</p>
+              {paymentMethod === "M-Pesa" && (
+                <label className="checkout-payment-phone">M-Pesa phone number
+                  <input value={paymentPhone} onChange={(e) => setPaymentPhone(e.target.value)} placeholder="07XX XXX XXX" inputMode="tel" required={paymentMethod === "M-Pesa"} />
+                </label>
+              )}
+
+              {paymentMessage && <div className="checkout-success-note">{paymentMessage}</div>}
+              <p className="checkout-payment-note">M-Pesa payment records are created as pending. To collect real STK payments, connect a secure server-side M-Pesa provider or Supabase Edge Function; never put M-Pesa secrets in this React file.</p>
             </section>
 
             {checkoutError && (
@@ -3015,6 +3385,10 @@ function App() {
       {page === "seller" && user && (
         <SellerDashboardPage />
       )}
+
+      {page === "messages" && user && <MessagesPage />}
+
+      {page === "custom" && <CustomRequestPage />}
 
       {/* AUTH */}
 
@@ -3610,10 +3984,11 @@ function App() {
                 className="primary-button"
                 onClick={() => {
                   if (!user) {
-                    openAuth(
-                      "login"
-                    );
+                    openAuth("login");
+                    return;
                   }
+                  setPage("custom");
+                  window.scrollTo({ top: 0, behavior: "smooth" });
                 }}
               >
                 Start a Custom Request
