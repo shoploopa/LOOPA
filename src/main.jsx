@@ -387,6 +387,7 @@ function App() {
   const [wishlist, setWishlist] = useState([]);
   const [cart, setCart] = useState([]);
   const [selectedProduct, setSelectedProduct] = useState(null);
+  const [selectedQuantity, setSelectedQuantity] = useState(1);
 
   /* ---------------------------------------
      AUTH STATE
@@ -808,6 +809,34 @@ function App() {
     });
   };
 
+  const addProductQuantityToBag = (product, quantity) => {
+    const safeQuantity = Math.max(1, Number(quantity) || 1);
+
+    setCart((old) => {
+      const existingItem = old.find((item) => item.id === product.id);
+      const stockLimit =
+        product.stock !== null && product.stock !== undefined
+          ? Number(product.stock)
+          : null;
+
+      if (existingItem) {
+        const nextQuantity = (existingItem.quantity || 1) + safeQuantity;
+        const finalQuantity =
+          stockLimit !== null
+            ? Math.min(nextQuantity, stockLimit)
+            : nextQuantity;
+
+        return old.map((item) =>
+          item.id === product.id
+            ? { ...item, quantity: finalQuantity }
+            : item
+        );
+      }
+
+      return [...old, { ...product, quantity: stockLimit !== null ? Math.min(safeQuantity, stockLimit) : safeQuantity }];
+    });
+  };
+
   const increaseQuantity = (productId) => {
     setCart((old) =>
       old.map((item) =>
@@ -1110,6 +1139,7 @@ function App() {
 
   const openProduct = (product) => {
     setSelectedProduct(product);
+    setSelectedQuantity(1);
     setPage("product");
     setMenuOpen(false);
     window.scrollTo({ top: 0, behavior: "smooth" });
@@ -1121,7 +1151,20 @@ function App() {
     const product = selectedProduct;
     const hasImage = Boolean(product.image_url);
     const isOutOfStock =
-      product.stock !== null && product.stock <= 0;
+      product.stock !== null && product.stock !== undefined && Number(product.stock) <= 0;
+    const stockLimit =
+      product.stock !== null && product.stock !== undefined
+        ? Number(product.stock)
+        : null;
+
+    const relatedProducts = dbProducts
+      .filter((item) => item.id !== product.id && item.category_id === product.category_id)
+      .slice(0, 4);
+
+    const handleAddToBag = () => {
+      addProductQuantityToBag(product, selectedQuantity);
+      setSelectedQuantity(1);
+    };
 
     return (
       <main className="product-detail-page">
@@ -1157,7 +1200,7 @@ function App() {
             <h1>{product.name}</h1>
 
             <p className="product-detail-price">
-              KES {Number(product.price).toLocaleString()}
+              KES {Number(product.price || 0).toLocaleString()}
             </p>
 
             {product.description && (
@@ -1176,8 +1219,8 @@ function App() {
                     ? "Out of stock"
                     : product.made_to_order
                     ? "Made to order"
-                    : product.stock !== null
-                    ? `${product.stock} available`
+                    : stockLimit !== null
+                    ? `${stockLimit} available`
                     : "Available"}
                 </strong>
               </div>
@@ -1190,43 +1233,93 @@ function App() {
               )}
             </div>
 
-            <div className="product-detail-actions">
-              <button
-                type="button"
-                className="product-detail-add"
-                onClick={() => addToBag(product)}
-                disabled={isOutOfStock}
-              >
-                {isOutOfStock ? "Out of Stock" : "Add to Bag"}
-              </button>
+            {!isOutOfStock && (
+              <div className="product-detail-buy-row">
+                <div className="detail-quantity-control" aria-label="Quantity">
+                  <button
+                    type="button"
+                    onClick={() => setSelectedQuantity((value) => Math.max(1, value - 1))}
+                    aria-label="Decrease quantity"
+                  >−</button>
+                  <span>{selectedQuantity}</span>
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setSelectedQuantity((value) =>
+                        stockLimit !== null ? Math.min(stockLimit, value + 1) : value + 1
+                      )
+                    }
+                    aria-label="Increase quantity"
+                  >+</button>
+                </div>
 
-              <button
-                type="button"
-                className={`product-detail-wishlist${
-                  wishlist.includes(product.id) ? " active" : ""
-                }`}
-                onClick={() => toggleWishlist(product.id)}
-                aria-label={
-                  wishlist.includes(product.id)
-                    ? "Remove from wishlist"
-                    : "Add to wishlist"
-                }
-              >
-                <Heart
-                  size={20}
-                  fill={wishlist.includes(product.id) ? "currentColor" : "none"}
-                />
-              </button>
-            </div>
+                <button
+                  type="button"
+                  className="product-detail-add"
+                  onClick={handleAddToBag}
+                >
+                  Add {selectedQuantity > 1 ? `${selectedQuantity} to Bag` : "to Bag"}
+                </button>
+
+                <button
+                  type="button"
+                  className={`product-detail-wishlist${
+                    wishlist.includes(product.id) ? " active" : ""
+                  }`}
+                  onClick={() => toggleWishlist(product.id)}
+                  aria-label={
+                    wishlist.includes(product.id)
+                      ? "Remove from wishlist"
+                      : "Add to wishlist"
+                  }
+                >
+                  <Heart
+                    size={20}
+                    fill={wishlist.includes(product.id) ? "currentColor" : "none"}
+                  />
+                </button>
+              </div>
+            )}
+
+            {isOutOfStock && (
+              <div className="product-detail-actions">
+                <button type="button" className="product-detail-add" disabled>
+                  Out of Stock
+                </button>
+                <button
+                  type="button"
+                  className={`product-detail-wishlist${wishlist.includes(product.id) ? " active" : ""}`}
+                  onClick={() => toggleWishlist(product.id)}
+                  aria-label="Add to wishlist"
+                >
+                  <Heart size={20} fill={wishlist.includes(product.id) ? "currentColor" : "none"} />
+                </button>
+              </div>
+            )}
 
             <div className="product-detail-note">
               <span>LOOPA</span>
-              <p>
-                Your Style. Your World.
-              </p>
+              <p>Your Style. Your World.</p>
             </div>
           </div>
         </section>
+
+        {relatedProducts.length > 0 && (
+          <section className="related-products-section">
+            <div className="related-products-heading">
+              <div>
+                <p className="standard-eyebrow">YOU MAY ALSO LOVE</p>
+                <h2>More from this edit</h2>
+              </div>
+              <button type="button" onClick={() => setPage("shop")}>Shop all <ArrowRight size={16} /></button>
+            </div>
+            <div className="related-products-grid">
+              {relatedProducts.map((item) => (
+                <ProductCard key={item.id} product={item} />
+              ))}
+            </div>
+          </section>
+        )}
       </main>
     );
   };
