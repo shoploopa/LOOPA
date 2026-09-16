@@ -85,7 +85,47 @@ const categoryStructure = {
     "Custom Crochet",
   ],
 };
+const standardWorldContent = {
+  Women: {
+    eyebrow: "THE WOMEN'S EDIT",
+    title: "Women",
+    description:
+      "Curated pieces for every version of you — from everyday essentials to your going-out wardrobe.",
+    tags: ["Dresses", "Tops", "Going Out", "Soft Girl", "Baddie"],
+    mark: "W",
+    visualLabel: "LOOPA / WOMEN",
+  },
 
+  Shoes: {
+    eyebrow: "THE SHOE EDIT",
+    title: "Shoes",
+    description:
+      "The finishing touch. Elevated heels, everyday sneakers, effortless flats and everything between.",
+    tags: ["Heels", "Sneakers", "Flats", "Sandals", "Boots"],
+    mark: "S",
+    visualLabel: "LOOPA / SHOES",
+  },
+
+  Bags: {
+    eyebrow: "THE BAG EDIT",
+    title: "Bags",
+    description:
+      "Carry your look with intention. Discover handbags, shoulder bags, minis, totes and more.",
+    tags: ["Handbags", "Shoulder Bags", "Crossbody", "Mini Bags", "Tote Bags"],
+    mark: "B",
+    visualLabel: "LOOPA / BAGS",
+  },
+
+  Accessories: {
+    eyebrow: "THE ACCESSORY EDIT",
+    title: "Accessories",
+    description:
+      "The little details that make the whole look. Jewelry, hair pieces, sunglasses and more.",
+    tags: ["Jewelry", "Hair Accessories", "Sunglasses", "Belts", "Hats"],
+    mark: "A",
+    visualLabel: "LOOPA / ACCESSORIES",
+  },
+};
 /* ---------------------------------------
    SPECIAL WORLDS
 ---------------------------------------- */
