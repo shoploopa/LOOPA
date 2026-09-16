@@ -4167,7 +4167,7 @@ function App() {
           {standardWorldContent[
             activeCategory
           ] && (
-            {StandardShopHero()}
+            StandardShopHero()
           )}
 
           {/* LITTLE / CROCHET HEADER */}
@@ -4331,7 +4331,7 @@ function App() {
                 </div>
               ) : (
                 <div className="special-empty-wrapper">
-                  {SpecialShopDecor()}
+                  SpecialShopDecor()
 
                   <div className="empty-shop special-empty">
                     <span className="empty-icon">
