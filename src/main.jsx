@@ -386,8 +386,6 @@ function App() {
 
   const [wishlist, setWishlist] = useState([]);
   const [cart, setCart] = useState([]);
-  const [sellerNames, setSellerNames] = useState({});
-  const [selectedProduct, setSelectedProduct] = useState(null);
 
   /* ---------------------------------------
      AUTH STATE
@@ -587,31 +585,6 @@ function App() {
         }
 
         setDbProducts(productsWithImages);
-
-        const sellerIds = [
-          ...new Set(
-            products
-              .map((product) => product.seller_id)
-              .filter(Boolean)
-          ),
-        ];
-
-        if (sellerIds.length > 0) {
-          const { data: sellerData, error: sellerError } = await supabase
-            .from("profiles")
-            .select("id, full_name")
-            .in("id", sellerIds);
-
-          if (sellerError) {
-            console.warn("LOOPA seller names could not be loaded:", sellerError);
-          } else {
-            const names = {};
-            (sellerData || []).forEach((seller) => {
-              if (seller.id) names[seller.id] = seller.full_name || "LOOPA Creator";
-            });
-            setSellerNames(names);
-          }
-        }
       }
 
       setLoadingCategories(false);
@@ -781,7 +754,9 @@ function App() {
   const toggleWishlist = (id) => {
     setWishlist((old) =>
       old.includes(id)
-        ? old.filter((item) => item !== id)
+        ? old.filter(
+            (item) => item !== id
+          )
         : [...old, id]
     );
   };
@@ -791,52 +766,10 @@ function App() {
   ---------------------------------------- */
 
   const addToBag = (product) => {
-    if (!product || (product.stock !== null && product.stock <= 0)) return;
-
-    setCart((old) => {
-      const existing = old.find((item) => item.product.id === product.id);
-
-      if (existing) {
-        return old.map((item) =>
-          item.product.id === product.id
-            ? {
-                ...item,
-                quantity: Math.min(
-                  item.quantity + 1,
-                  product.stock ?? item.quantity + 1
-                ),
-              }
-            : item
-        );
-      }
-
-      return [...old, { product, quantity: 1 }];
-    });
-  };
-
-  const changeCartQuantity = (productId, nextQuantity) => {
-    setCart((old) =>
-      old
-        .map((item) =>
-          item.product.id === productId
-            ? { ...item, quantity: Math.max(0, nextQuantity) }
-            : item
-        )
-        .filter((item) => item.quantity > 0)
-    );
-  };
-
-  const cartCount = cart.reduce((total, item) => total + item.quantity, 0);
-
-  const cartTotal = cart.reduce(
-    (total, item) => total + Number(item.product.price || 0) * item.quantity,
-    0
-  );
-
-  const openProduct = (product) => {
-    setSelectedProduct(product);
-    setPage("product");
-    window.scrollTo({ top: 0, behavior: "smooth" });
+    setCart((old) => [
+      ...old,
+      product,
+    ]);
   };
 
   /* ---------------------------------------
@@ -1010,26 +943,12 @@ function App() {
     const hasImage = Boolean(product.image_url);
     const isOutOfStock =
       product.stock !== null && product.stock <= 0;
-    const sellerName =
-      sellerNames[product.seller_id] || "LOOPA Creator";
 
     return (
       <article className="product-card">
-        <div
-          className={`product-image${hasImage ? " has-image" : ""}`}
-          role="button"
-          tabIndex={0}
-          onClick={() => openProduct(product)}
-          onKeyDown={(e) => {
-            if (e.key === "Enter" || e.key === " ") {
-              e.preventDefault();
-              openProduct(product);
-            }
-          }}
-          aria-label={`View ${product.name}`}
-        >
+        <div className={`product-image${hasImage ? " has-image" : ""}`}>
           <span className="product-tag">
-            {product.made_to_order ? "Made to Order" : isOutOfStock ? "Sold Out" : "Available"}
+            {product.made_to_order ? "Made to Order" : "Available"}
           </span>
 
           <button
@@ -1040,10 +959,7 @@ function App() {
                 ? `Remove ${product.name} from wishlist`
                 : `Add ${product.name} to wishlist`
             }
-            onClick={(e) => {
-              e.stopPropagation();
-              toggleWishlist(product.id);
-            }}
+            onClick={() => toggleWishlist(product.id)}
           >
             <Heart
               size={18}
@@ -1058,10 +974,6 @@ function App() {
               src={product.image_url}
               alt={product.name}
               loading="lazy"
-              onError={(e) => {
-                e.currentTarget.style.display = "none";
-                e.currentTarget.parentElement.classList.remove("has-image");
-              }}
             />
           ) : (
             <div className="product-placeholder" aria-hidden="true">
@@ -1074,10 +986,7 @@ function App() {
             <button
               type="button"
               className="quick-add-button"
-              onClick={(e) => {
-                e.stopPropagation();
-                addToBag(product);
-              }}
+              onClick={() => addToBag(product)}
             >
               Quick Add
             </button>
@@ -1085,15 +994,8 @@ function App() {
         </div>
 
         <div className="product-info">
-          <button
-            type="button"
-            className="product-name-button"
-            onClick={() => openProduct(product)}
-          >
-            <p className="seller">{sellerName}</p>
-            <h3>{product.name}</h3>
-          </button>
-
+          <p className="seller">LOOPA Creator</p>
+          <h3>{product.name}</h3>
           <p className="price">
             KES {Number(product.price).toLocaleString()}
           </p>
@@ -1490,170 +1392,6 @@ function App() {
   };
 
   /* ---------------------------------------
-     PRODUCT DETAIL PAGE
-  ---------------------------------------- */
-
-  const ProductPage = () => {
-    if (!selectedProduct) return null;
-
-    const product = selectedProduct;
-    const hasImage = Boolean(product.image_url);
-    const isOutOfStock = product.stock !== null && product.stock <= 0;
-    const sellerName = sellerNames[product.seller_id] || "LOOPA Creator";
-
-    return (
-      <main className="product-detail-page">
-        <button
-          className="back-home"
-          onClick={() => setPage("shop")}
-        >
-          ← Back to Shop
-        </button>
-
-        <section className="product-detail-grid">
-          <div className="product-detail-image">
-            {hasImage ? (
-              <img src={product.image_url} alt={product.name} />
-            ) : (
-              <div className="product-placeholder large">
-                <span>LOOPA</span>
-                <small>IMAGE COMING SOON</small>
-              </div>
-            )}
-          </div>
-
-          <div className="product-detail-copy">
-            <p className="eyebrow">{sellerName}</p>
-            <h1>{product.name}</h1>
-            <p className="product-detail-price">
-              KES {Number(product.price).toLocaleString()}
-            </p>
-
-            <div className="product-detail-rule" />
-
-            {product.description && (
-              <p className="product-detail-description">
-                {product.description}
-              </p>
-            )}
-
-            <div className="product-detail-meta">
-              <span>{product.made_to_order ? "Made to Order" : "Ready to Shop"}</span>
-              {product.stock !== null && (
-                <span>{isOutOfStock ? "Out of stock" : `${product.stock} available`}</span>
-              )}
-              {product.made_to_order && product.production_days && (
-                <span>{product.production_days} day production time</span>
-              )}
-            </div>
-
-            <button
-              type="button"
-              className="primary-button product-detail-add"
-              disabled={isOutOfStock}
-              onClick={() => addToBag(product)}
-            >
-              {isOutOfStock ? "Out of Stock" : "Add to Bag"}
-              <ShoppingBag size={17} />
-            </button>
-
-            <button
-              type="button"
-              className="detail-wishlist-button"
-              onClick={() => toggleWishlist(product.id)}
-            >
-              <Heart
-                size={18}
-                fill={wishlist.includes(product.id) ? "currentColor" : "none"}
-              />
-              {wishlist.includes(product.id) ? "Saved to Wishlist" : "Save to Wishlist"}
-            </button>
-          </div>
-        </section>
-      </main>
-    );
-  };
-
-  /* ---------------------------------------
-     CART PAGE
-  ---------------------------------------- */
-
-  const CartPage = () => {
-    return (
-      <main className="cart-page">
-        <div className="cart-heading">
-          <div>
-            <p className="eyebrow">YOUR LOOPA BAG</p>
-            <h1>Your Bag</h1>
-          </div>
-          <span>{cartCount} {cartCount === 1 ? "item" : "items"}</span>
-        </div>
-
-        {cart.length === 0 ? (
-          <div className="cart-empty">
-            <ShoppingBag size={42} strokeWidth={1.4} />
-            <h2>Your bag is waiting.</h2>
-            <p>Add something beautiful and it will appear here.</p>
-            <button className="primary-button" onClick={() => openShop("Women")}>
-              Continue Shopping <ArrowRight size={17} />
-            </button>
-          </div>
-        ) : (
-          <div className="cart-layout">
-            <section className="cart-items">
-              {cart.map((item) => {
-                const product = item.product;
-                return (
-                  <article className="cart-item" key={product.id}>
-                    <div className="cart-item-image">
-                      {product.image_url ? (
-                        <img src={product.image_url} alt={product.name} />
-                      ) : (
-                        <span>LOOPA</span>
-                      )}
-                    </div>
-                    <div className="cart-item-copy">
-                      <p className="seller">{sellerNames[product.seller_id] || "LOOPA Creator"}</p>
-                      <h2>{product.name}</h2>
-                      <p>KES {Number(product.price).toLocaleString()}</p>
-                      <div className="quantity-control" aria-label={`Quantity for ${product.name}`}>
-                        <button onClick={() => changeCartQuantity(product.id, item.quantity - 1)} aria-label="Decrease quantity">−</button>
-                        <span>{item.quantity}</span>
-                        <button
-                          onClick={() => changeCartQuantity(product.id, item.quantity + 1)}
-                          disabled={product.stock !== null && item.quantity >= product.stock}
-                          aria-label="Increase quantity"
-                        >+</button>
-                      </div>
-                    </div>
-                    <button
-                      className="cart-remove"
-                      onClick={() => changeCartQuantity(product.id, 0)}
-                      aria-label={`Remove ${product.name}`}
-                    >
-                      <X size={18} />
-                    </button>
-                  </article>
-                );
-              })}
-            </section>
-
-            <aside className="cart-summary">
-              <p className="eyebrow">ORDER SUMMARY</p>
-              <div><span>Subtotal</span><strong>KES {cartTotal.toLocaleString()}</strong></div>
-              <div><span>Delivery</span><span>Calculated at checkout</span></div>
-              <div className="cart-total"><span>Total</span><strong>KES {cartTotal.toLocaleString()}</strong></div>
-              <button className="primary-button" onClick={() => alert("Checkout is the next LOOPA build step.")}>
-                Checkout <ArrowRight size={17} />
-              </button>
-            </aside>
-          </div>
-        )}
-      </main>
-    );
-  };
-
-  /* ---------------------------------------
      SPECIAL SHOP EMPTY STATE
   ---------------------------------------- */
 
@@ -1848,8 +1586,9 @@ function App() {
             <button
               className="icon-button"
               onClick={() => {
-                setPage("wishlist");
-                setMenuOpen(false);
+                if (!user) {
+                  openAuth("login");
+                }
               }}
               aria-label="Wishlist"
             >
@@ -1866,8 +1605,9 @@ function App() {
             <button
               className="icon-button"
               onClick={() => {
-                setPage("cart");
-                setMenuOpen(false);
+                if (!user) {
+                  openAuth("login");
+                }
               }}
               aria-label="Shopping bag"
             >
@@ -1875,9 +1615,9 @@ function App() {
                 size={20}
               />
 
-              {cartCount > 0 && (
+              {cart.length > 0 && (
                 <span className="count">
-                  {cartCount}
+                  {cart.length}
                 </span>
               )}
 
@@ -1901,39 +1641,6 @@ function App() {
         user && (
           <AccountPage />
         )}
-
-      {page === "product" && (
-        <ProductPage />
-      )}
-
-      {page === "cart" && (
-        <CartPage />
-      )}
-
-      {page === "wishlist" && (
-        <main className="wishlist-page">
-          <div className="wishlist-heading">
-            <p className="eyebrow">SAVED FOR LATER</p>
-            <h1>My Wishlist</h1>
-          </div>
-          {wishlist.length === 0 ? (
-            <div className="wishlist-empty">
-              <Heart size={42} strokeWidth={1.4} />
-              <h2>Nothing saved yet.</h2>
-              <p>Tap the heart on any piece you love and it will live here.</p>
-              <button className="primary-button" onClick={() => openShop("Women")}>
-                Explore LOOPA <ArrowRight size={17} />
-              </button>
-            </div>
-          ) : (
-            <div className="home-products">
-              {dbProducts.filter((product) => wishlist.includes(product.id)).map((product) => (
-                <ProductCard key={product.id} product={product} />
-              ))}
-            </div>
-          )}
-        </main>
-      )}
 
       {/* =====================================
           HOME
