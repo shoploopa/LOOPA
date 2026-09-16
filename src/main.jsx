@@ -139,28 +139,33 @@ const standardWorldContent = {
     eyebrow: "THE WOMEN'S EDIT",
     title: "Women",
     description:
-      "Curated fashion for every mood, moment and version of you.",
+      "Your wardrobe, your mood, your moment. Pieces made for every version of you.",
+    tags: ["Dresses", "Tops", "Going Out", "Soft Girl", "Baddie"],
+    visual: "women",
   },
-
   Shoes: {
-    eyebrow: "THE SHOE EDIT",
+    eyebrow: "STEP INTO IT",
     title: "Shoes",
     description:
-      "The finishing step to every look — from everyday staples to statement pairs.",
+      "The finishing touch. Heels, sneakers, flats and little pairs that complete the look.",
+    tags: ["Heels", "Sneakers", "Flats", "Sandals", "Boots"],
+    visual: "shoes",
   },
-
   Bags: {
-    eyebrow: "THE BAG EDIT",
+    eyebrow: "CARRY YOUR LOOK",
     title: "Bags",
     description:
-      "Everyday carryalls, statement pieces and little bags made for your world.",
+      "Mini, shoulder, crossbody or tote — find the bag that makes the outfit.",
+    tags: ["Handbags", "Shoulder Bags", "Crossbody", "Mini Bags", "Tote Bags"],
+    visual: "bags",
   },
-
   Accessories: {
-    eyebrow: "THE ACCESSORY EDIT",
+    eyebrow: "THE LITTLE DETAILS",
     title: "Accessories",
     description:
-      "The details that change everything — jewelry, hair pieces, shades and more.",
+      "Jewelry, hair pieces, sunglasses and finishing touches made to pull everything together.",
+    tags: ["Jewelry", "Hair Accessories", "Sunglasses", "Belts", "Hats"],
+    visual: "accessories",
   },
 };
 
@@ -1418,52 +1423,86 @@ function App() {
   ---------------------------------------- */
 
   const StandardShopHero = () => {
-    const content =
-      standardWorldContent[
-        activeCategory
-      ];
+    const content = standardWorldContent[activeCategory];
 
     if (!content) {
       return null;
     }
 
     return (
-      <section className="shop-world-hero">
-
+      <section className={`shop-world-hero ${content.visual}-editorial`}>
         <div className="shop-world-copy">
+          <p className="standard-eyebrow">{content.eyebrow}</p>
+          <h1>{content.title}</h1>
+          <p className="standard-world-description">{content.description}</p>
 
-          <p className="eyebrow">
-            {content.eyebrow}
-          </p>
-
-          <h2>
-            {content.title}
-          </h2>
-
-          <p>
-            {content.description}
-          </p>
-
+          <div className="standard-shop-tags">
+            {content.tags.map((tag) => (
+              <button
+                key={tag}
+                type="button"
+                onClick={() => setActiveSubcategory(tag)}
+                className={
+                  activeSubcategory === tag ? "active" : ""
+                }
+              >
+                {tag}
+              </button>
+            ))}
+          </div>
         </div>
 
-        <div
-          className="standard-world-visual"
-          aria-hidden="true"
-        >
-          <span className="floating-visual">
-            {activeCategory ===
-            "Women"
-              ? "👗"
-              : activeCategory ===
-                "Shoes"
-              ? "👠"
-              : activeCategory ===
-                "Bags"
-              ? "👜"
-              : "💎"}
-          </span>
-        </div>
+        <div className="category-art" aria-hidden="true">
+          {content.visual === "women" && (
+            <div className="women-art">
+              <span className="lip-print lip-one" />
+              <span className="lip-print lip-two" />
+              <span className="nail nail-one" />
+              <span className="nail nail-two" />
+              <span className="nail nail-three" />
+              <span className="nail nail-four" />
+              <span className="tiny-bow">⌁</span>
+              <span className="art-label">LOOPA / WOMEN</span>
+            </div>
+          )}
 
+          {content.visual === "shoes" && (
+            <div className="shoes-art">
+              <span className="footstep step-one">♡</span>
+              <span className="footstep step-two">♡</span>
+              <span className="shoe-sparkle">✦</span>
+              <span className="art-label">LOOPA / SHOES</span>
+            </div>
+          )}
+
+          {content.visual === "bags" && (
+            <div className="bags-art">
+              <div className="bag-shape">
+                <span className="bag-handle" />
+                <span className="bag-bow">⌁</span>
+              </div>
+              <span className="bag-star star-one">✦</span>
+              <span className="bag-star star-two">·</span>
+              <span className="art-label">LOOPA / BAGS</span>
+            </div>
+          )}
+
+          {content.visual === "accessories" && (
+            <div className="accessories-art">
+              <div className="chain-frame">
+                {Array.from({ length: 26 }).map((_, index) => (
+                  <span key={index} />
+                ))}
+              </div>
+              <div className="jewel-stack">
+                <span className="jewel jewel-one">○</span>
+                <span className="jewel jewel-two">◇</span>
+                <span className="jewel jewel-three">○</span>
+              </div>
+              <span className="art-label">LOOPA / ACCESSORIES</span>
+            </div>
+          )}
+        </div>
       </section>
     );
   };
@@ -2210,21 +2249,18 @@ function App() {
 
       {page === "shop" && (
         <main
-          className={`shop-page ${
-            activeCategory ===
-            "Little Loves"
-              ? "shop-page-little"
-              : activeCategory ===
-                "Crochet Corner"
-              ? "shop-page-crochet"
-              : `standard-shop-page ${activeCategory
-                  .toLowerCase()
-                  .replace(
-                    /\s+/g,
-                    "-"
-                  )}-shop-page`
-          }`}
-        >
+  className={`shop-page ${
+    activeCategory === "Little Loves"
+      ? "shop-page-little"
+      : activeCategory === "Crochet Corner"
+      ? "shop-page-crochet"
+      : ["Women", "Shoes", "Bags", "Accessories"].includes(activeCategory)
+      ? `standard-shop-page ${activeCategory
+          .toLowerCase()
+          .replace(/\s+/g, "-")}-shop-page`
+      : ""
+  }`}
+>
 
           <button
             className="back-home"
@@ -2389,14 +2425,31 @@ function App() {
 
                 </div>
 
+              ) : standardWorldContent[
+                  activeCategory
+                ] ? (
+                <div className="standard-empty">
+                  <div className="standard-empty-line" aria-hidden="true" />
+
+                  <p className="standard-eyebrow">
+                    COMING SOON
+                  </p>
+
+                  <h2>
+                    New pieces are on the way.
+                  </h2>
+
+                  <p>
+                    We're curating something special
+                    for this edit. Check back soon
+                    for new LOOPA pieces.
+                  </p>
+                </div>
               ) : (
-
                 <div className="special-empty-wrapper">
-
                   <SpecialShopDecor />
 
                   <div className="empty-shop special-empty">
-
                     <span className="empty-icon">
                       {worldContent[
                         activeCategory
@@ -2430,13 +2483,9 @@ function App() {
                         🧶 🪝 🧵 📿 🪡 ✂️
                       </div>
                     )}
-
                   </div>
-
                 </div>
-
               )}
-
             </section>
 
           </div>
