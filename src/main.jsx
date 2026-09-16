@@ -85,47 +85,7 @@ const categoryStructure = {
     "Custom Crochet",
   ],
 };
-const standardWorldContent = {
-  Women: {
-    eyebrow: "THE WOMEN'S EDIT",
-    title: "Women",
-    description:
-      "Curated pieces for every version of you — from everyday essentials to your going-out wardrobe.",
-    tags: ["Dresses", "Tops", "Going Out", "Soft Girl", "Baddie"],
-    mark: "W",
-    visualLabel: "LOOPA / WOMEN",
-  },
 
-  Shoes: {
-    eyebrow: "THE SHOE EDIT",
-    title: "Shoes",
-    description:
-      "The finishing touch. Elevated heels, everyday sneakers, effortless flats and everything between.",
-    tags: ["Heels", "Sneakers", "Flats", "Sandals", "Boots"],
-    mark: "S",
-    visualLabel: "LOOPA / SHOES",
-  },
-
-  Bags: {
-    eyebrow: "THE BAG EDIT",
-    title: "Bags",
-    description:
-      "Carry your look with intention. Discover handbags, shoulder bags, minis, totes and more.",
-    tags: ["Handbags", "Shoulder Bags", "Crossbody", "Mini Bags", "Tote Bags"],
-    mark: "B",
-    visualLabel: "LOOPA / BAGS",
-  },
-
-  Accessories: {
-    eyebrow: "THE ACCESSORY EDIT",
-    title: "Accessories",
-    description:
-      "The little details that make the whole look. Jewelry, hair pieces, sunglasses and more.",
-    tags: ["Jewelry", "Hair Accessories", "Sunglasses", "Belts", "Hats"],
-    mark: "A",
-    visualLabel: "LOOPA / ACCESSORIES",
-  },
-};
 /* ---------------------------------------
    SPECIAL WORLDS
 ---------------------------------------- */
@@ -1469,41 +1429,48 @@ function App() {
 
     return (
       <section className="shop-world-hero">
-
         <div className="shop-world-copy">
-
-          <p className="eyebrow">
+          <p className="standard-eyebrow">
             {content.eyebrow}
           </p>
 
-          <h2>
+          <h1>
             {content.title}
-          </h2>
+          </h1>
 
-          <p>
+          <p className="standard-world-description">
             {content.description}
           </p>
 
+          <div className="standard-shop-tags">
+            {content.tags.map(
+              (tag) => (
+                <span key={tag}>
+                  {tag}
+                </span>
+              )
+            )}
+          </div>
         </div>
 
         <div
           className="standard-world-visual"
           aria-hidden="true"
         >
-          <span className="floating-visual">
-            {activeCategory ===
-            "Women"
-              ? "👗"
-              : activeCategory ===
-                "Shoes"
-              ? "👠"
-              : activeCategory ===
-                "Bags"
-              ? "👜"
-              : "💎"}
-          </span>
-        </div>
+          <div className="standard-visual-frame">
+            <span className="standard-visual-label">
+              {content.visualLabel}
+            </span>
 
+            <span className="standard-visual-mark">
+              {content.mark}
+            </span>
+
+            <span className="standard-visual-caption">
+              YOUR STYLE. YOUR WORLD.
+            </span>
+          </div>
+        </div>
       </section>
     );
   };
@@ -2426,14 +2393,35 @@ function App() {
 
                 </div>
 
+              ) : standardWorldContent[
+                  activeCategory
+                ] ? (
+                <div className="standard-empty">
+                  <div className="standard-empty-mark">
+                    {standardWorldContent[
+                      activeCategory
+                    ].mark}
+                  </div>
+
+                  <p className="standard-eyebrow">
+                    COMING SOON
+                  </p>
+
+                  <h2>
+                    New pieces are on the way.
+                  </h2>
+
+                  <p>
+                    We're curating something special
+                    for this edit. Check back soon
+                    for new LOOPA pieces.
+                  </p>
+                </div>
               ) : (
-
                 <div className="special-empty-wrapper">
-
                   <SpecialShopDecor />
 
                   <div className="empty-shop special-empty">
-
                     <span className="empty-icon">
                       {worldContent[
                         activeCategory
@@ -2467,13 +2455,9 @@ function App() {
                         🧶 🪝 🧵 📿 🪡 ✂️
                       </div>
                     )}
-
                   </div>
-
                 </div>
-
-              )}
-
+              )
             </section>
 
           </div>
