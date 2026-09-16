@@ -433,6 +433,9 @@ function App() {
   const [checkoutError, setCheckoutError] = useState("");
   const [checkoutSubmitting, setCheckoutSubmitting] = useState(false);
   const [placedOrder, setPlacedOrder] = useState(null);
+  const [orders, setOrders] = useState([]);
+  const [ordersLoading, setOrdersLoading] = useState(false);
+  const [selectedOrder, setSelectedOrder] = useState(null);
 
   /* ---------------------------------------
      CHECK CURRENT USER
@@ -449,6 +452,7 @@ function App() {
       if (user) {
         setUser(user);
         await loadProfile(user.id);
+        await loadOrders(user.id);
       }
 
       setAuthLoading(false);
@@ -469,6 +473,7 @@ function App() {
           await loadProfile(
             currentUser.id
           );
+          await loadOrders(currentUser.id);
         } else {
           setProfile(null);
         }
@@ -502,6 +507,34 @@ function App() {
     }
 
     setProfile(data);
+  };
+
+  /* ---------------------------------------
+     LOAD CUSTOMER ORDERS
+  ---------------------------------------- */
+
+  const loadOrders = async (userId) => {
+    if (!userId) {
+      setOrders([]);
+      return;
+    }
+
+    setOrdersLoading(true);
+
+    const { data, error } = await supabase
+      .from("orders")
+      .select("id, buyer_id, total_amount, status, shipping_address, payment_method, payment_status, created_at")
+      .eq("buyer_id", userId)
+      .order("created_at", { ascending: false });
+
+    if (error) {
+      console.error("LOOPA orders loading error:", error);
+      setOrders([]);
+    } else {
+      setOrders(data || []);
+    }
+
+    setOrdersLoading(false);
   };
 
   /* ---------------------------------------
@@ -1726,76 +1759,218 @@ function App() {
   };
 
   /* ---------------------------------------
+     ACCOUNT / ORDERS NAVIGATION
+  ---------------------------------------- */
+
+  const openOrders = async () => {
+    if (!user) {
+      openAuth("login");
+      return;
+    }
+
+    await loadOrders(user.id);
+    setSelectedOrder(null);
+    setPage("orders");
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
+  const openOrderDetail = (order) => {
+    setSelectedOrder(order);
+    setPage("order-detail");
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
+  const formatOrderDate = (date) => {
+    if (!date) return "";
+    return new Date(date).toLocaleDateString("en-US", {
+      month: "long",
+      day: "numeric",
+      year: "numeric",
+    });
+  };
+
+  const prettyOrderStatus = (status) => {
+    if (!status) return "Pending";
+    return String(status)
+      .replace(/[_-]+/g, " ")
+      .replace(/\b\w/g, (letter) => letter.toUpperCase());
+  };
+
+  /* ---------------------------------------
      ACCOUNT PAGE
   ---------------------------------------- */
 
   const AccountPage = () => {
     return (
       <main className="account-page">
-
         <div className="account-card">
-
           <div className="account-avatar">
-            <UserCircle
-              size={58}
-            />
+            <UserCircle size={58} />
           </div>
 
-          <p className="eyebrow">
-            MY LOOPA
-          </p>
+          <p className="eyebrow">MY LOOPA</p>
 
-          <h1>
-            {profile?.full_name ||
-              "Welcome to LOOPA"}
-          </h1>
-
-          <p className="account-email">
-            {user?.email}
-          </p>
+          <h1>{profile?.full_name || "Welcome to LOOPA"}</h1>
+          <p className="account-email">{user?.email}</p>
 
           <div className="account-menu">
-
-            <button>
+            <button type="button" onClick={() => setPage("account")}>
               <User size={19} />
               My Profile
-              <ChevronRight
-                size={17}
-              />
+              <ChevronRight size={17} />
             </button>
 
-            <button>
+            <button type="button" onClick={() => setPage("home")}>
               <Heart size={19} />
               My Wishlist
-              <ChevronRight
-                size={17}
-              />
+              <ChevronRight size={17} />
             </button>
 
-            <button>
-              <ShoppingBag
-                size={19}
-              />
+            <button type="button" onClick={openOrders}>
+              <ShoppingBag size={19} />
               My Orders
-              <ChevronRight
-                size={17}
-              />
+              <span className="account-menu-count">{orders.length}</span>
+              <ChevronRight size={17} />
             </button>
-
           </div>
 
-          <button
-            className="logout-button"
-            onClick={
-              handleLogout
-            }
-          >
+          <button className="logout-button" onClick={handleLogout}>
             <LogOut size={18} />
             Log Out
           </button>
+        </div>
+      </main>
+    );
+  };
 
+  /* ---------------------------------------
+     ORDERS PAGE
+  ---------------------------------------- */
+
+  const OrdersPage = () => {
+    return (
+      <main className="orders-page">
+        <div className="orders-header">
+          <button className="bag-back" onClick={() => setPage("account")}>
+            ← Back to Account
+          </button>
+          <p className="standard-eyebrow">MY LOOPA</p>
+          <h1>My Orders</h1>
+          <p>Everything you've ordered from LOOPA, all in one place.</p>
         </div>
 
+        {ordersLoading ? (
+          <section className="orders-empty-card">
+            <div className="orders-loader" aria-hidden="true" />
+            <p>Loading your orders...</p>
+          </section>
+        ) : orders.length === 0 ? (
+          <section className="orders-empty-card">
+            <div className="orders-empty-icon"><ShoppingBag size={30} /></div>
+            <p className="standard-eyebrow">NOTHING HERE YET</p>
+            <h2>Your LOOPA story starts here.</h2>
+            <p>You haven't placed an order yet. Find something you love and make it yours.</p>
+            <button className="checkout-primary-button" onClick={() => setPage("home")}>
+              Start Shopping <ArrowRight size={18} />
+            </button>
+          </section>
+        ) : (
+          <section className="orders-list">
+            {orders.map((order) => (
+              <button
+                className="order-card"
+                key={order.id}
+                type="button"
+                onClick={() => openOrderDetail(order)}
+              >
+                <div className="order-card-top">
+                  <div>
+                    <p className="standard-eyebrow">ORDER</p>
+                    <h2>#{String(order.id).slice(0, 8).toUpperCase()}</h2>
+                  </div>
+                  <span className={`order-status order-status-${String(order.status || "pending").toLowerCase().replace(/[^a-z0-9]+/g, "-")}`}>
+                    {prettyOrderStatus(order.status)}
+                  </span>
+                </div>
+
+                <div className="order-card-bottom">
+                  <span>{formatOrderDate(order.created_at)}</span>
+                  <strong>KES {Number(order.total_amount || 0).toLocaleString()}</strong>
+                  <ChevronRight size={18} />
+                </div>
+              </button>
+            ))}
+          </section>
+        )}
+      </main>
+    );
+  };
+
+  /* ---------------------------------------
+     ORDER DETAIL PAGE
+  ---------------------------------------- */
+
+  const OrderDetailPage = () => {
+    if (!selectedOrder) {
+      return (
+        <main className="orders-page">
+          <div className="orders-header">
+            <button className="bag-back" onClick={openOrders}>← Back to Orders</button>
+            <h1>Order not found.</h1>
+          </div>
+        </main>
+      );
+    }
+
+    const order = selectedOrder;
+
+    return (
+      <main className="order-detail-page">
+        <div className="order-detail-header">
+          <button className="bag-back" onClick={openOrders}>← Back to Orders</button>
+          <p className="standard-eyebrow">ORDER DETAILS</p>
+          <h1>#{String(order.id).slice(0, 8).toUpperCase()}</h1>
+          <p>Placed {formatOrderDate(order.created_at)}</p>
+        </div>
+
+        <div className="order-detail-grid">
+          <section className="order-detail-card">
+            <p className="standard-eyebrow">STATUS</p>
+            <div className="order-detail-status-row">
+              <strong>{prettyOrderStatus(order.status)}</strong>
+              <span className={`order-status order-status-${String(order.status || "pending").toLowerCase().replace(/[^a-z0-9]+/g, "-")}`}>
+                {order.payment_status ? prettyOrderStatus(order.payment_status) : "Pending"}
+              </span>
+            </div>
+            <div className="order-timeline">
+              <div className="timeline-dot active" />
+              <div>
+                <strong>Order received</strong>
+                <p>Your LOOPA order has been received.</p>
+              </div>
+            </div>
+          </section>
+
+          <section className="order-detail-card">
+            <p className="standard-eyebrow">DELIVERY</p>
+            <h2>Where it's going</h2>
+            <p className="order-address">{order.shipping_address || "Delivery details will be confirmed."}</p>
+          </section>
+
+          <section className="order-detail-card">
+            <p className="standard-eyebrow">PAYMENT</p>
+            <h2>{order.payment_method || "Payment"}</h2>
+            <p className="order-muted">Payment status: {prettyOrderStatus(order.payment_status || "pending")}</p>
+          </section>
+
+          <section className="order-detail-card order-total-card">
+            <p className="standard-eyebrow">ORDER TOTAL</p>
+            <div className="order-total-big">
+              <span>Total</span>
+              <strong>KES {Number(order.total_amount || 0).toLocaleString()}</strong>
+            </div>
+          </section>
+        </div>
       </main>
     );
   };
@@ -2374,6 +2549,18 @@ function App() {
         user && (
           <AccountPage />
         )}
+
+      {/* ORDERS */}
+
+      {page === "orders" && user && (
+        <OrdersPage />
+      )}
+
+      {/* ORDER DETAIL */}
+
+      {page === "order-detail" && user && (
+        <OrderDetailPage />
+      )}
 
       {/* CHECKOUT */}
 
