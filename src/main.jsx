@@ -3678,7 +3678,7 @@ function App() {
 
             </div>
 
-            {user && profile?.role === "admin" && (
+            {user && (
               <button
                 className="admin-header-button"
                 onClick={openAdminApproval}
