@@ -914,8 +914,17 @@ const [selectedProduct, setSelectedProduct] = useState(null);
   className="product-card"
   onClick={() => setSelectedProduct(product)}
 >
-        <div className="product-image">
-
+<div
+  className="product-image"
+  onClick={() => {
+    setSelectedProduct(product);
+    setPage("product");
+    window.scrollTo({
+      top: 0,
+      behavior: "smooth",
+    });
+  }}
+>
           <span className="product-tag">
             {product.made_to_order
               ? "Made to Order"
