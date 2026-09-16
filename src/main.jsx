@@ -521,6 +521,8 @@ function App() {
     productionDays: "",
     imageUrl: "",
   });
+  const [sellerLogoFile, setSellerLogoFile] = useState(null);
+  const [sellerLogoPreview, setSellerLogoPreview] = useState("");
   const [productImageFile, setProductImageFile] = useState(null);
   const [productImagePreview, setProductImagePreview] = useState("");
 
@@ -2016,12 +2018,38 @@ function App() {
     }
     setSellerSaving(true);
 
+    let logoUrl = sellerForm.logoUrl.trim() || null;
+
+    if (sellerLogoFile) {
+      if (!sellerLogoFile.type.startsWith("image/")) {
+        setSellerError("Please choose an image file for your logo.");
+        setSellerSaving(false);
+        return;
+      }
+      if (sellerLogoFile.size > 5 * 1024 * 1024) {
+        setSellerError("Your logo must be 5 MB or smaller.");
+        setSellerSaving(false);
+        return;
+      }
+      const ext = sellerLogoFile.name.split(".").pop()?.toLowerCase() || "jpg";
+      const path = `${user.id}/logo-${Date.now()}.${ext}`;
+      const { error: uploadError } = await supabase.storage
+        .from("product-images")
+        .upload(path, sellerLogoFile, { contentType: sellerLogoFile.type, upsert: false });
+      if (uploadError) {
+        setSellerError(uploadError.message || "We couldn't upload your logo.");
+        setSellerSaving(false);
+        return;
+      }
+      logoUrl = supabase.storage.from("product-images").getPublicUrl(path).data.publicUrl;
+    }
+
     const payload = {
       user_id: user.id,
       shop_name: sellerForm.shopName.trim(),
       bio: sellerForm.bio.trim() || null,
       phone: sellerForm.phone.trim() || null,
-      logo_url: sellerForm.logoUrl.trim() || null,
+      logo_url: logoUrl,
     };
 
     const { data, error } = await supabase
@@ -2299,7 +2327,8 @@ function App() {
               <label>Shop name<input value={sellerForm.shopName} onChange={(e) => setSellerForm({ ...sellerForm, shopName: e.target.value })} placeholder="e.g. Mithi Studio" /></label>
               <label>Shop bio<textarea value={sellerForm.bio} onChange={(e) => setSellerForm({ ...sellerForm, bio: e.target.value })} placeholder="Tell LOOPA shoppers what makes your pieces special." rows="4" /></label>
               <label>Phone number<input value={sellerForm.phone} onChange={(e) => setSellerForm({ ...sellerForm, phone: e.target.value })} placeholder="07XX XXX XXX" /></label>
-              <label>Shop logo URL <span className="optional-label">Optional</span><input value={sellerForm.logoUrl} onChange={(e) => setSellerForm({ ...sellerForm, logoUrl: e.target.value })} placeholder="https://..." /></label>
+              <label>Shop logo <span className="optional-label">Optional</span><input type="file" accept="image/*" onChange={(e) => { const file = e.target.files?.[0]; if (!file) return; setSellerLogoFile(file); setSellerLogoPreview(URL.createObjectURL(file)); }} /></label>
+              {(sellerLogoPreview || sellerForm.logoUrl) && <img src={sellerLogoPreview || sellerForm.logoUrl} alt="Shop logo preview" style={{ width: 88, height: 88, objectFit: "cover", borderRadius: 16, marginTop: 8 }} />}
               <button className="seller-primary-button" disabled={sellerSaving}>{sellerSaving ? "Saving..." : "Save Shop Profile"}</button>
             </form>
           </section>
