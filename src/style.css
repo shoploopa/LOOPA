@@ -3294,3 +3294,347 @@ em {
     gap: 12px;
   }
 }
+
+/* =========================================================
+   LOOPA — CUSTOMER ORDERS
+========================================================= */
+
+.account-menu-count {
+  margin-left: auto;
+  min-width: 24px;
+  height: 24px;
+  padding: 0 7px;
+  border-radius: 999px;
+  background: #fff0f5;
+  color: #d85b84;
+  display: inline-grid;
+  place-items: center;
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.account-menu button .account-menu-count + svg {
+  margin-left: 0;
+}
+
+.orders-page,
+.order-detail-page {
+  min-height: calc(100vh - 78px);
+  padding: 72px 22px 100px;
+  background: #fffafc;
+}
+
+.orders-header,
+.order-detail-header {
+  width: min(100%, 920px);
+  margin: 0 auto 40px;
+  text-align: center;
+}
+
+.orders-header .bag-back,
+.order-detail-header .bag-back {
+  display: inline-flex;
+  margin-bottom: 34px;
+}
+
+.orders-header h1,
+.order-detail-header h1 {
+  margin: 0;
+  color: #2d2228;
+  font-family: "Bodoni Moda", Didot, "Bodoni 72", "Bodoni MT", "Times New Roman", serif;
+  font-size: clamp(52px, 8vw, 92px);
+  font-weight: 400;
+  letter-spacing: -0.055em;
+  line-height: .9;
+}
+
+.orders-header > p:last-child,
+.order-detail-header > p:last-child {
+  max-width: 600px;
+  margin: 22px auto 0;
+  color: #806e77;
+  line-height: 1.7;
+}
+
+.orders-list {
+  width: min(100%, 920px);
+  margin: 0 auto;
+  display: grid;
+  gap: 14px;
+}
+
+.order-card {
+  width: 100%;
+  padding: 25px 28px;
+  border: 1px solid #eadde3;
+  border-radius: 24px;
+  background: #fff;
+  color: #3c2e35;
+  text-align: left;
+  box-shadow: 0 14px 45px rgba(79, 43, 58, 0.045);
+  transition: transform .2s ease, box-shadow .2s ease, border-color .2s ease;
+}
+
+.order-card:hover {
+  transform: translateY(-2px);
+  border-color: #e1c8d3;
+  box-shadow: 0 20px 55px rgba(79, 43, 58, 0.08);
+}
+
+.order-card-top,
+.order-card-bottom,
+.order-detail-status-row,
+.order-total-big {
+  display: flex;
+  align-items: center;
+}
+
+.order-card-top {
+  justify-content: space-between;
+  gap: 18px;
+}
+
+.order-card-top h2 {
+  margin: 0;
+  font-size: 22px;
+  letter-spacing: -.5px;
+}
+
+.order-status {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 30px;
+  padding: 7px 12px;
+  border-radius: 999px;
+  background: #fff2f6;
+  color: #c8547d;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: .8px;
+  text-transform: uppercase;
+}
+
+.order-status-completed,
+.order-status-delivered,
+.order-status-paid {
+  background: #edf8f1;
+  color: #3b8056;
+}
+
+.order-status-cancelled,
+.order-status-failed {
+  background: #fff0f0;
+  color: #b34f55;
+}
+
+.order-card-bottom {
+  margin-top: 22px;
+  padding-top: 17px;
+  border-top: 1px solid #f1e6eb;
+  gap: 18px;
+  color: #8a7880;
+  font-size: 12px;
+}
+
+.order-card-bottom strong {
+  margin-left: auto;
+  color: #34272e;
+  font-size: 14px;
+}
+
+.order-card-bottom svg {
+  color: #b69ca8;
+}
+
+.orders-empty-card {
+  width: min(100%, 620px);
+  margin: 0 auto;
+  padding: 70px 35px;
+  border: 1px solid #eadde3;
+  border-radius: 30px;
+  background: #fff;
+  text-align: center;
+  box-shadow: 0 20px 65px rgba(79, 43, 58, 0.055);
+}
+
+.orders-empty-icon {
+  width: 72px;
+  height: 72px;
+  margin: 0 auto 22px;
+  border-radius: 50%;
+  background: #fff0f5;
+  color: #ed4f8c;
+  display: grid;
+  place-items: center;
+}
+
+.orders-empty-card h2 {
+  margin: 0;
+  color: #34272e;
+  font-family: "Bodoni Moda", Didot, "Bodoni 72", "Bodoni MT", "Times New Roman", serif;
+  font-size: 35px;
+  font-weight: 400;
+}
+
+.orders-empty-card > p:not(.standard-eyebrow) {
+  max-width: 470px;
+  margin: 16px auto 25px;
+  color: #806e77;
+  line-height: 1.7;
+}
+
+.orders-loader {
+  width: 38px;
+  height: 38px;
+  margin: 0 auto 18px;
+  border: 3px solid #f2dce5;
+  border-top-color: #ed4f8c;
+  border-radius: 50%;
+  animation: loopa-spin .8s linear infinite;
+}
+
+@keyframes loopa-spin {
+  to { transform: rotate(360deg); }
+}
+
+.order-detail-header {
+  margin-bottom: 48px;
+}
+
+.order-detail-grid {
+  width: min(100%, 920px);
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.order-detail-card {
+  padding: 30px;
+  border: 1px solid #eadde3;
+  border-radius: 25px;
+  background: #fff;
+  box-shadow: 0 15px 45px rgba(79, 43, 58, 0.045);
+}
+
+.order-detail-card h2 {
+  margin: 0 0 12px;
+  font-size: 20px;
+}
+
+.order-detail-status-row {
+  justify-content: space-between;
+  gap: 14px;
+  margin-bottom: 26px;
+}
+
+.order-detail-status-row > strong {
+  font-size: 22px;
+}
+
+.order-timeline {
+  display: flex;
+  gap: 13px;
+  padding-top: 18px;
+  border-top: 1px solid #f0e5e9;
+}
+
+.timeline-dot {
+  width: 12px;
+  height: 12px;
+  margin-top: 4px;
+  flex: 0 0 12px;
+  border-radius: 50%;
+  background: #e6d9df;
+}
+
+.timeline-dot.active {
+  background: #ed4f8c;
+  box-shadow: 0 0 0 5px #fff0f5;
+}
+
+.order-timeline strong {
+  font-size: 13px;
+}
+
+.order-timeline p,
+.order-address,
+.order-muted {
+  margin: 6px 0 0;
+  color: #806e77;
+  font-size: 13px;
+  line-height: 1.65;
+}
+
+.order-total-card {
+  grid-column: 1 / -1;
+}
+
+.order-total-big {
+  justify-content: space-between;
+  gap: 20px;
+}
+
+.order-total-big span {
+  color: #806e77;
+}
+
+.order-total-big strong {
+  color: #2d2228;
+  font-size: 28px;
+}
+
+@media (max-width: 700px) {
+  .orders-page,
+  .order-detail-page {
+    padding: 48px 15px 75px;
+  }
+
+  .orders-header,
+  .order-detail-header {
+    margin-bottom: 30px;
+  }
+
+  .orders-header h1,
+  .order-detail-header h1 {
+    font-size: clamp(48px, 15vw, 70px);
+  }
+
+  .order-card {
+    padding: 22px 18px;
+    border-radius: 20px;
+  }
+
+  .order-card-top {
+    align-items: flex-start;
+  }
+
+  .order-card-bottom {
+    flex-wrap: wrap;
+  }
+
+  .order-card-bottom strong {
+    margin-left: 0;
+  }
+
+  .order-card-bottom svg {
+    margin-left: auto;
+  }
+
+  .order-detail-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .order-total-card {
+    grid-column: auto;
+  }
+
+  .order-detail-card {
+    padding: 24px 20px;
+  }
+
+  .orders-empty-card {
+    padding: 55px 22px;
+  }
+}
