@@ -464,6 +464,10 @@ function App() {
   const [sellerOrders, setSellerOrders] = useState([]);
   const [sellerOrdersLoading, setSellerOrdersLoading] = useState(false);
   const [sellerOrdersError, setSellerOrdersError] = useState("");
+  const [adminProducts, setAdminProducts] = useState([]);
+  const [adminLoading, setAdminLoading] = useState(false);
+  const [adminError, setAdminError] = useState("");
+  const [adminMessage, setAdminMessage] = useState("");
 
   /* ---------------------------------------
      REVIEWS / MESSAGING / CUSTOM / PAYMENTS
@@ -1650,6 +1654,145 @@ function App() {
       return;
     }
     await loadSellerOrders(user.id);
+  };
+
+  const loadAdminProducts = async () => {
+    if (profile?.role !== "admin") {
+      setAdminProducts([]);
+      return;
+    }
+
+    setAdminLoading(true);
+    setAdminError("");
+
+    const { data, error } = await supabase
+      .from("products")
+      .select("id, seller_id, name, description, price, stock, status, category_id, made_to_order, production_days, created_at")
+      .order("created_at", { ascending: false });
+
+    if (error) {
+      console.error("LOOPA admin products loading error:", error);
+      setAdminProducts([]);
+      setAdminError(error.message || "We couldn't load products for review.");
+      setAdminLoading(false);
+      return;
+    }
+
+    const productList = data || [];
+    if (productList.length) {
+      const ids = productList.map((item) => item.id);
+      const { data: images } = await supabase
+        .from("images")
+        .select("id, product_id, image_url, sort_order")
+        .in("product_id", ids)
+        .order("sort_order", { ascending: true });
+
+      const firstImage = {};
+      (images || []).forEach((image) => {
+        if (image.product_id && image.image_url && !firstImage[image.product_id]) {
+          firstImage[image.product_id] = image.image_url;
+        }
+      });
+
+      setAdminProducts(productList.map((item) => ({ ...item, image_url: firstImage[item.id] || null })));
+    } else {
+      setAdminProducts([]);
+    }
+
+    setAdminLoading(false);
+  };
+
+  const openAdminDashboard = async () => {
+    if (!user || profile?.role !== "admin") return;
+    setAdminMessage("");
+    setAdminError("");
+    await loadAdminProducts();
+    setPage("admin");
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
+  const updateProductApproval = async (productId, status) => {
+    if (profile?.role !== "admin") return;
+
+    setAdminError("");
+    setAdminMessage("");
+
+    const { error } = await supabase
+      .from("products")
+      .update({ status })
+      .eq("id", productId);
+
+    if (error) {
+      console.error("LOOPA product approval error:", error);
+      setAdminError(error.message || "We couldn't update this product.");
+      return;
+    }
+
+    await loadAdminProducts();
+    setAdminMessage(status === "approved" ? "Product approved. ♡" : "Product moved back to pending.");
+  };
+
+  const AdminDashboardPage = () => {
+    const pending = adminProducts.filter((item) => item.status === "pending");
+    const approved = adminProducts.filter((item) => item.status === "approved");
+
+    return (
+      <main className="seller-dashboard-page">
+        <section className="seller-dashboard-hero">
+          <div>
+            <p className="standard-eyebrow">LOOPA ADMIN</p>
+            <h1>Product approval</h1>
+            <p>Review creator submissions before they appear in the public LOOPA shop.</p>
+          </div>
+          <div className="seller-hero-icon"><Check size={34} /></div>
+        </section>
+
+        <section className="seller-stats-grid">
+          <div className="seller-stat"><ClipboardList size={20} /><span>Pending review</span><strong>{pending.length}</strong></div>
+          <div className="seller-stat"><Sparkles size={20} /><span>Approved</span><strong>{approved.length}</strong></div>
+          <div className="seller-stat"><Package size={20} /><span>Total products</span><strong>{adminProducts.length}</strong></div>
+        </section>
+
+        {adminMessage && <div className="seller-success">{adminMessage}</div>}
+        {adminError && <div className="seller-error">{adminError}</div>}
+
+        <section className="seller-card seller-products-card">
+          <div className="seller-card-heading">
+            <div><p className="standard-eyebrow">CREATOR SUBMISSIONS</p><h2>Review products</h2></div>
+            <button type="button" className="seller-refresh-button" onClick={loadAdminProducts} disabled={adminLoading}>
+              <RefreshCw size={16} className={adminLoading ? "seller-spin" : ""} /> Refresh
+            </button>
+          </div>
+
+          {adminLoading ? (
+            <div className="seller-empty">Loading products for review...</div>
+          ) : adminProducts.length === 0 ? (
+            <div className="seller-empty"><h3>No products yet.</h3><p>Creator submissions will appear here when they are sent for approval.</p></div>
+          ) : (
+            <div className="seller-product-list">
+              {adminProducts.map((product) => (
+                <article className="seller-product-row" key={product.id}>
+                  <div className="seller-product-thumb">{product.image_url ? <img src={product.image_url} alt={product.name} /> : <span>LOOPA</span>}</div>
+                  <div className="seller-product-main">
+                    <h3>{product.name}</h3>
+                    <p>KES {Number(product.price || 0).toLocaleString()} · {product.stock == null ? "Made to Order" : `${product.stock} in stock`}</p>
+                    {product.description && <small>{product.description}</small>}
+                  </div>
+                  <span className={`seller-status seller-status-${product.status || "pending"}`}>{product.status === "approved" ? "Approved" : "Pending"}</span>
+                  <div className="seller-product-actions">
+                    {product.status === "pending" ? (
+                      <button type="button" onClick={() => updateProductApproval(product.id, "approved")} aria-label={`Approve ${product.name}`} title="Approve"><Check size={17} /></button>
+                    ) : (
+                      <button type="button" onClick={() => updateProductApproval(product.id, "pending")} aria-label={`Move ${product.name} back to pending`} title="Move to pending"><RefreshCw size={17} /></button>
+                    )}
+                  </div>
+                </article>
+              ))}
+            </div>
+          )}
+        </section>
+      </main>
+    );
   };
 
   /* ---------------------------------------
@@ -3527,6 +3670,17 @@ function App() {
 
             </div>
 
+            {user && profile?.role === "admin" && (
+              <button
+                className="icon-button seller-header-button"
+                onClick={openAdminDashboard}
+                aria-label="Admin approval"
+                title="Admin approval"
+              >
+                <Check size={20} />
+              </button>
+            )}
+
             {user && (
               <button
                 className="icon-button seller-header-button"
@@ -3599,6 +3753,8 @@ function App() {
       </header>
 
       {/* SELLER DASHBOARD */}
+
+      {page === "admin" && user && profile?.role === "admin" && AdminDashboardPage()}
 
       {page === "seller" && user && SellerDashboardPage()}
 
