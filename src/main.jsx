@@ -1703,7 +1703,27 @@ function App() {
   };
 
   const openAdminDashboard = async () => {
-    if (!user || profile?.role !== "admin") return;
+    if (!user) return;
+
+    const { data: freshProfile, error: profileError } = await supabase
+      .from("profiles")
+      .select("id, full_name, email, phone, avatar_url, role")
+      .eq("id", user.id)
+      .maybeSingle();
+
+    if (profileError) {
+      console.error("LOOPA admin profile lookup error:", profileError);
+      setAdminError(profileError.message || "We couldn't verify admin access.");
+      return;
+    }
+
+    setProfile(freshProfile);
+
+    if (String(freshProfile?.role || "").toLowerCase() !== "admin") {
+      setAdminError("Admin access is not enabled for this account.");
+      return;
+    }
+
     setAdminMessage("");
     setAdminError("");
     await loadAdminProducts();
@@ -3670,14 +3690,16 @@ function App() {
 
             </div>
 
-            {user && profile?.role === "admin" && (
+            {user && String(profile?.role || "").toLowerCase() === "admin" && (
               <button
-                className="icon-button seller-header-button"
+                className="seller-header-button"
                 onClick={openAdminDashboard}
                 aria-label="Admin approval"
                 title="Admin approval"
+                type="button"
               >
-                <Check size={20} />
+                <Check size={18} />
+                <span>Admin Approval</span>
               </button>
             )}
 
