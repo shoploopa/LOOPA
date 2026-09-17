@@ -674,7 +674,7 @@ function App() {
 
     const { data, error } = await supabase
       .from("orders")
-      .select("id, customer_id, total_amount, status, delivery_address, delivery_phone, notes, payment_method, payment_status, created_at")
+      .select("id, customer_id, total_amount, status, delivery_address, delivery_phone, notes, created_at")
       .eq("customer_id", userId)
       .order("created_at", { ascending: false });
 
@@ -1191,8 +1191,6 @@ function App() {
       delivery_address: shippingAddress,
       delivery_phone: checkoutPhone.trim(),
       notes: checkoutNotes.trim() || null,
-      payment_method: paymentMethod,
-      payment_status: paymentMethod === "Cash on Delivery" ? "pending" : "pending",
     };
 
     const { data, error } = await supabase
@@ -3328,8 +3326,8 @@ function App() {
 
           <section className="order-detail-card">
             <p className="standard-eyebrow">PAYMENT</p>
-            <h2>{order.payment_method || "Payment"}</h2>
-            <p className="order-muted">Payment status: {prettyOrderStatus(order.payment_status || "pending")}</p>
+            <h2>{order.payment_method || "Payment method selected at checkout"}</h2>
+            <p className="order-muted">Payment status will be confirmed with your order.</p>
           </section>
 
           <section className="order-detail-card order-total-card">
