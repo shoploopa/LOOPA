@@ -1129,15 +1129,17 @@ function App() {
     ].filter(Boolean).join(", ");
 
     const orderPayload = {
-      customer_id: user.id,
-      total_amount: cartSubtotal,
-      status: "pending",
-      delivery_address: shippingAddress,
-      delivery_phone: checkoutPhone.trim(),
-      notes: checkoutNotes.trim() || null,
-      payment_method: paymentMethod,
-      payment_status: paymentMethod === "Cash on Delivery" ? "pending" : "pending",
-    };
+  customer_id: user.id,
+  order_number: `LOOPA-${Date.now()}-${Math.random()
+    .toString(36)
+    .slice(2, 8)
+    .toUpperCase()}`,
+  total_amount: cartSubtotal,
+  status: "pending",
+  delivery_address: shippingAddress,
+  delivery_phone: checkoutPhone.trim(),
+  notes: checkoutNotes.trim() || null,
+};
 
     const { data, error } = await supabase
       .from("orders")
