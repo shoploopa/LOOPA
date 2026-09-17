@@ -674,8 +674,8 @@ function App() {
 
     const { data, error } = await supabase
       .from("orders")
-      .select("id, buyer_id, total_amount, status, shipping_address, payment_method, payment_status, created_at")
-      .eq("buyer_id", userId)
+      .select("id, customer_id, total_amount, status, delivery_address, delivery_phone, notes, payment_method, payment_status, created_at")
+      .eq("customer_id", userId)
       .order("created_at", { ascending: false });
 
     if (error) {
@@ -1185,11 +1185,11 @@ function App() {
     ].filter(Boolean).join(", ");
 
     const orderPayload = {
-      buyer_id: user.id,
+      customer_id: user.id,
       total_amount: cartSubtotal,
       status: "pending",
-      shipping_address: shippingAddress,
-      shipping_phone: checkoutPhone.trim(),
+      delivery_address: shippingAddress,
+      delivery_phone: checkoutPhone.trim(),
       notes: checkoutNotes.trim() || null,
       payment_method: paymentMethod,
       payment_status: paymentMethod === "Cash on Delivery" ? "pending" : "pending",
