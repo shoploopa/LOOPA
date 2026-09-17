@@ -1257,6 +1257,7 @@ function App() {
       seller_id: productById[item.id].seller_id,
       quantity: item.quantity || 1,
       unit_price: Number(item.price || 0),
+      total_price: Number(item.price || 0) * (item.quantity || 1),
     }));
 
     const { error: orderItemsError } = await supabase
