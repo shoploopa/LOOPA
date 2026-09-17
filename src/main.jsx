@@ -464,10 +464,6 @@ function App() {
   const [sellerOrders, setSellerOrders] = useState([]);
   const [sellerOrdersLoading, setSellerOrdersLoading] = useState(false);
   const [sellerOrdersError, setSellerOrdersError] = useState("");
-  const [adminProducts, setAdminProducts] = useState([]);
-  const [adminLoading, setAdminLoading] = useState(false);
-  const [adminError, setAdminError] = useState("");
-  const [adminActionId, setAdminActionId] = useState(null);
 
   /* ---------------------------------------
      REVIEWS / MESSAGING / CUSTOM / PAYMENTS
@@ -521,10 +517,6 @@ function App() {
     productionDays: "",
     imageUrl: "",
   });
-  const [productImageFile, setProductImageFile] = useState(null);
-  const [productImagePreview, setProductImagePreview] = useState("");
-  const [sellerLogoFile, setSellerLogoFile] = useState(null);
-  const [sellerLogoPreview, setSellerLogoPreview] = useState("");
 
   /* ---------------------------------------
      ENSURE PROFILE
@@ -584,7 +576,6 @@ function App() {
         await ensureProfile(user);
         await loadProfile(user.id);
         await loadOrders(user.id);
-        await loadWishlist(user.id);
       }
 
       setAuthLoading(false);
@@ -617,10 +608,8 @@ function App() {
           await ensureProfile(currentUser);
           await loadProfile(currentUser.id);
           await loadOrders(currentUser.id);
-          await loadWishlist(currentUser.id);
         } else {
           setProfile(null);
-          setWishlist([]);
         }
       }
     );
@@ -674,8 +663,8 @@ function App() {
 
     const { data, error } = await supabase
       .from("orders")
-      .select("id, customer_id, total_amount, status, delivery_address, delivery_phone, notes, created_at")
-      .eq("customer_id", userId)
+      .select("id, buyer_id, total_amount, status, shipping_address, payment_method, payment_status, created_at")
+      .eq("buyer_id", userId)
       .order("created_at", { ascending: false });
 
     if (error) {
@@ -952,71 +941,14 @@ function App() {
      WISHLIST
   ---------------------------------------- */
 
-  const loadWishlist = async (userId) => {
-    if (!userId) {
-      setWishlist([]);
-      return;
-    }
-
-    const { data, error } = await supabase
-      .from("wishlists")
-      .select("product_id")
-      .eq("user_id", userId);
-
-    if (error) {
-      console.warn("LOOPA wishlist could not be loaded:", error);
-      const local = JSON.parse(localStorage.getItem(`loopa-wishlist-${userId}`) || "[]");
-      setWishlist(Array.isArray(local) ? local : []);
-      return;
-    }
-
-    const ids = (data || []).map((row) => row.product_id).filter(Boolean);
-    setWishlist(ids);
-    localStorage.setItem(`loopa-wishlist-${userId}`, JSON.stringify(ids));
-  };
-
-  const toggleWishlist = async (id) => {
-    if (!user) {
-      openAuth("login");
-      return;
-    }
-
-    const isSaved = wishlist.includes(id);
-    const next = isSaved
-      ? wishlist.filter((item) => item !== id)
-      : [...wishlist, id];
-
-    setWishlist(next);
-    localStorage.setItem(`loopa-wishlist-${user.id}`, JSON.stringify(next));
-
-    if (isSaved) {
-      const { error } = await supabase
-        .from("wishlists")
-        .delete()
-        .eq("user_id", user.id)
-        .eq("product_id", id);
-      if (error) console.warn("LOOPA wishlist remove failed:", error);
-    } else {
-      const { error } = await supabase
-        .from("wishlists")
-        .insert({ user_id: user.id, product_id: id });
-      if (error) {
-        console.warn("LOOPA wishlist save failed:", error);
-        setWishlist(wishlist);
-        localStorage.setItem(`loopa-wishlist-${user.id}`, JSON.stringify(wishlist));
-      }
-    }
-  };
-
-  const openWishlist = async () => {
-    if (!user) {
-      openAuth("login");
-      return;
-    }
-    await loadWishlist(user.id);
-    setPage("wishlist");
-    setMenuOpen(false);
-    window.scrollTo({ top: 0, behavior: "smooth" });
+  const toggleWishlist = (id) => {
+    setWishlist((old) =>
+      old.includes(id)
+        ? old.filter(
+            (item) => item !== id
+          )
+        : [...old, id]
+    );
   };
 
   /* ---------------------------------------
@@ -1185,13 +1117,14 @@ function App() {
     ].filter(Boolean).join(", ");
 
     const orderPayload = {
-      customer_id: user.id,
-      order_number: `LOOPA-${Date.now()}-${Math.random().toString(36).slice(2, 8).toUpperCase()}`,
+      buyer_id: user.id,
       total_amount: cartSubtotal,
       status: "pending",
-      delivery_address: shippingAddress,
-      delivery_phone: checkoutPhone.trim(),
+      shipping_address: shippingAddress,
+      shipping_phone: checkoutPhone.trim(),
       notes: checkoutNotes.trim() || null,
+      payment_method: paymentMethod,
+      payment_status: paymentMethod === "Cash on Delivery" ? "pending" : "pending",
     };
 
     const { data, error } = await supabase
@@ -1210,54 +1143,13 @@ function App() {
       return;
     }
 
-    // Save each purchased item with the seller_profile ID stored on the product.
-    // The cart can contain an older/stale product object, so do not trust
-    // item.seller_id from local cart state. Fetch the current seller IDs
-    // directly from products before creating order_items.
-    const cartProductIds = cart.map((item) => item.id).filter(Boolean);
-
-    const { data: orderProducts, error: orderProductsError } = await supabase
-      .from("products")
-      .select("id, name, seller_id")
-      .in("id", cartProductIds);
-
-    if (orderProductsError) {
-      console.error("LOOPA order products lookup error:", orderProductsError);
-      setCheckoutError(
-        orderProductsError.message ||
-          "We couldn't verify the items in your order. Please try again."
-      );
-      setPlacedOrder(data);
-      setCheckoutSubmitting(false);
-      return;
-    }
-
-    const productById = Object.fromEntries(
-      (orderProducts || []).map((product) => [product.id, product])
-    );
-
-    const missingProduct = cart.find(
-      (item) => !item.id || !productById[item.id]?.seller_id || !productById[item.id]?.name
-    );
-
-    if (missingProduct) {
-      console.error("LOOPA order item seller lookup failed:", missingProduct);
-      setCheckoutError(
-        "One of the items in your bag is no longer available. Please remove it and add it again before checking out."
-      );
-      setPlacedOrder(data);
-      setCheckoutSubmitting(false);
-      return;
-    }
-
+    // Save each purchased item so creators can see their sales.
     const orderItems = cart.map((item) => ({
       order_id: data.id,
       product_id: item.id,
-      product_name: productById[item.id].name,
-      seller_id: productById[item.id].seller_id,
+      seller_id: item.seller_id || null,
       quantity: item.quantity || 1,
       unit_price: Number(item.price || 0),
-      total_price: Number(item.price || 0) * (item.quantity || 1),
     }));
 
     const { error: orderItemsError } = await supabase
@@ -1266,22 +1158,24 @@ function App() {
 
     if (orderItemsError) {
       console.error("LOOPA order items error:", orderItemsError);
+      // Keep the order itself intact, but tell the shopper that order tracking
+      // may be incomplete until the order_items table/RLS is configured.
       setCheckoutError(
-        orderItemsError.message ||
-          "We couldn't save the items in your order. Please try again."
+        "Your order was created, but we couldn't save its item details. Please contact LOOPA support before placing another order."
       );
       setPlacedOrder(data);
       setCheckoutSubmitting(false);
       return;
     }
 
+    // Payment records are optional at checkout for now. The order itself stores
+    // the selected payment method/status, and the real M-Pesa transaction will
+    // be confirmed server-side when the payment integration is connected.
+    // Do not block a successful order because the optional payments table has
+    // a schema/RLS mismatch.
     const paymentResult = await createPaymentRecord(data);
     if (paymentResult.error) {
-      console.error("LOOPA payment record error:", paymentResult.error);
-      setCheckoutError("Your order was created, but the payment record could not be saved. Please contact LOOPA support.");
-      setPlacedOrder(data);
-      setCheckoutSubmitting(false);
-      return;
+      console.warn("LOOPA payment record was not saved; continuing with order:", paymentResult.error);
     }
 
     setPlacedOrder(data);
@@ -1730,19 +1624,29 @@ function App() {
 
   const createPaymentRecord = async (order) => {
     if (!user || !order?.id) return { error: null };
+
+    // Keep payment recording separate from order creation. This prevents a
+    // payments-table schema/RLS issue from making a valid order fail.
+    // The order already stores payment_method/payment_status.
+    const paymentPayload = {
+      order_id: order.id,
+      buyer_id: user.id,
+      amount: Number(order.total_amount || cartSubtotal),
+      method: paymentMethod,
+      phone: paymentMethod === "M-Pesa" ? paymentPhone.trim() : null,
+      status: "pending",
+    };
+
     const { data, error } = await supabase
       .from("payments")
-      .insert({
-        order_id: order.id,
-        buyer_id: user.id,
-        amount: Number(order.total_amount || cartSubtotal),
-        method: paymentMethod,
-        phone: paymentMethod === "M-Pesa" ? paymentPhone.trim() : null,
-        status: "pending",
-      })
+      .insert(paymentPayload)
       .select()
       .single();
-    if (!error) setPaymentMessage("Payment record created. Your payment is pending confirmation.");
+
+    if (!error) {
+      setPaymentMessage("Payment record created. Your payment is pending confirmation.");
+    }
+
     return { data, error };
   };
 
@@ -1765,8 +1669,6 @@ function App() {
 
   const resetSellerProductForm = () => {
     setSellerEditingProduct(null);
-    setProductImageFile(null);
-    setProductImagePreview("");
     setProductForm({
       name: "",
       description: "",
@@ -1803,19 +1705,10 @@ function App() {
       logoUrl: sellerData?.logo_url || "",
     });
 
-    const sellerId = sellerData?.id;
-
-    if (!sellerId) {
-      setSellerError("Your seller profile could not be found.");
-      setSellerProducts([]);
-      setSellerLoading(false);
-      return;
-    }
-
     const { data: products, error: productsError } = await supabase
       .from("products")
       .select("id, name, description, price, stock, status, seller_id, category_id, made_to_order, production_days, created_at")
-      .eq("seller_id", sellerId)
+      .eq("seller_id", userId)
       .order("created_at", { ascending: false });
 
     if (productsError) {
@@ -1854,21 +1747,6 @@ function App() {
     setSellerOrdersLoading(true);
     setSellerOrdersError("");
 
-    const { data: sellerData, error: sellerProfileError } = await supabase
-      .from("seller_profiles")
-      .select("id")
-      .eq("user_id", userId)
-      .maybeSingle();
-
-    if (sellerProfileError || !sellerData?.id) {
-      setSellerOrders([]);
-      setSellerOrdersError(
-        sellerProfileError?.message || "Your seller profile could not be found."
-      );
-      setSellerOrdersLoading(false);
-      return;
-    }
-
     const { data, error } = await supabase
       .from("order_items")
       .select(`
@@ -1881,15 +1759,12 @@ function App() {
         created_at,
         orders:order_id (
           id,
-          customer_id,
-          order_number,
-          status,
-          subtotal,
-          delivery_fee,
+          buyer_id,
           total_amount,
-          delivery_address,
-          delivery_phone,
-          notes,
+          status,
+          shipping_address,
+          payment_method,
+          payment_status,
           created_at
         ),
         products:product_id (
@@ -1897,188 +1772,20 @@ function App() {
           name
         )
       `)
-      .eq("seller_id", sellerData.id)
+      .eq("seller_id", userId)
       .order("created_at", { ascending: false });
 
     if (error) {
       console.error("LOOPA seller orders loading error:", error);
       setSellerOrders([]);
-      setSellerOrdersError(error.message || "We couldn't load your sales right now.");
+      setSellerOrdersError(
+        "Seller sales tracking needs the order_items table and its RLS policy. Once those are enabled in Supabase, your sales will appear here."
+      );
     } else {
       setSellerOrders(data || []);
     }
 
     setSellerOrdersLoading(false);
-  };
-
-  const loadAdminProducts = async () => {
-    setAdminLoading(true);
-    setAdminError("");
-
-    const { data: currentProfile, error: profileError } = await supabase
-      .from("profiles")
-      .select("id, role")
-      .eq("id", user?.id || "")
-      .maybeSingle();
-
-    if (profileError) {
-      setAdminError(profileError.message || "We couldn't verify your admin access.");
-      setAdminLoading(false);
-      return;
-    }
-
-    if (currentProfile?.role !== "admin") {
-      setAdminError("Admin access is required to review products.");
-      setAdminLoading(false);
-      return;
-    }
-
-    const { data, error } = await supabase
-      .from("products")
-      .select(`
-        id, seller_id, name, description, price, stock, status, made_to_order, production_days, created_at,
-        categories:category_id (id, name),
-        images:product_id (id, image_url, sort_order)
-      `)
-      .order("created_at", { ascending: false });
-
-    if (error) {
-      // Fall back to a simpler query if the nested images relationship isn't available.
-      const fallback = await supabase
-        .from("products")
-        .select("id, seller_id, name, description, price, stock, status, made_to_order, production_days, created_at, category_id")
-        .order("created_at", { ascending: false });
-
-      if (fallback.error) {
-        setAdminError(fallback.error.message || "We couldn't load products for approval.");
-        setAdminProducts([]);
-      } else {
-        setAdminProducts(fallback.data || []);
-      }
-    } else {
-      const normalized = (data || []).map((item) => ({
-        ...item,
-        image_url: Array.isArray(item.images)
-          ? item.images.sort((a, b) => Number(a.sort_order || 0) - Number(b.sort_order || 0))[0]?.image_url || null
-          : null,
-      }));
-      setAdminProducts(normalized);
-    }
-
-    setAdminLoading(false);
-  };
-
-  const openAdminApproval = async () => {
-    if (!user) {
-      openAuth("login");
-      return;
-    }
-
-    const liveProfile = await loadProfile(user.id);
-    if (liveProfile?.role !== "admin") {
-      setAdminError("Admin access is required to review products.");
-      return;
-    }
-
-    await loadAdminProducts();
-    setPage("admin");
-    setMenuOpen(false);
-    window.scrollTo({ top: 0, behavior: "smooth" });
-  };
-
-  const updateAdminProductStatus = async (productId, status) => {
-    setAdminActionId(productId);
-    setAdminError("");
-
-    const { data: liveProfile } = await supabase
-      .from("profiles")
-      .select("role")
-      .eq("id", user?.id || "")
-      .maybeSingle();
-
-    if (liveProfile?.role !== "admin") {
-      setAdminError("Admin access is required to review products.");
-      setAdminActionId(null);
-      return;
-    }
-
-    const { error } = await supabase
-      .from("products")
-      .update({ status })
-      .eq("id", productId);
-
-    if (error) {
-      setAdminError(error.message || "We couldn't update this product.");
-      setAdminActionId(null);
-      return;
-    }
-
-    await loadAdminProducts();
-    setAdminActionId(null);
-  };
-
-  const AdminApprovalPage = () => {
-    const pending = adminProducts.filter((item) => item.status === "pending");
-
-    return (
-      <main className="admin-approval-page">
-        <section className="seller-dashboard-hero">
-          <div>
-            <p className="standard-eyebrow">LOOPA ADMIN</p>
-            <h1>Product Approval</h1>
-            <p>Review creator submissions before they appear in the public LOOPA shop.</p>
-          </div>
-          <div className="seller-hero-icon">✓</div>
-        </section>
-
-        <section className="admin-approval-section">
-          <div className="section-heading">
-            <div>
-              <p className="standard-eyebrow">SUBMISSIONS</p>
-              <h2>Pending products</h2>
-            </div>
-            <button className="secondary-button" type="button" onClick={loadAdminProducts}>Refresh</button>
-          </div>
-
-          {adminError && <p className="seller-error">{adminError}</p>}
-          {adminLoading ? (
-            <div className="empty-shop"><h2>Loading submissions...</h2></div>
-          ) : pending.length === 0 ? (
-            <div className="empty-shop"><h2>No pending products.</h2><p>New creator submissions will appear here.</p></div>
-          ) : (
-            <div className="admin-product-list">
-              {pending.map((product) => (
-                <article className="admin-product-card" key={product.id}>
-                  <div className="admin-product-image">
-                    {product.image_url ? <img src={product.image_url} alt={product.name} /> : <span>LOOPA</span>}
-                  </div>
-                  <div className="admin-product-info">
-                    <p className="standard-eyebrow">PENDING REVIEW</p>
-                    <h2>{product.name}</h2>
-                    <p>{product.description || "No description provided."}</p>
-                    <strong>KES {Number(product.price || 0).toLocaleString()}</strong>
-                    <p>{product.made_to_order ? `Made to order${product.production_days ? ` • ${product.production_days} days` : ""}` : `${Number(product.stock || 0).toLocaleString()} in stock`}</p>
-                    <div className="admin-product-actions">
-                      <button className="primary-button" type="button" disabled={adminActionId === product.id} onClick={() => updateAdminProductStatus(product.id, "approved")}>
-                        {adminActionId === product.id ? "Updating..." : "Approve"}
-                      </button>
-                      <button className="secondary-button" type="button" disabled={adminActionId === product.id} onClick={() => updateAdminProductStatus(product.id, "rejected")}>Reject</button>
-                    </div>
-                  </div>
-                </article>
-              ))}
-            </div>
-          )}
-
-          {adminProducts.filter((item) => item.status === "approved").length > 0 && (
-            <div className="admin-approved-list">
-              <p className="standard-eyebrow">APPROVED</p>
-              <h2>{adminProducts.filter((item) => item.status === "approved").length} approved product(s)</h2>
-            </div>
-          )}
-        </section>
-      </main>
-    );
   };
 
   const refreshSellerStudio = async () => {
@@ -2116,35 +1823,12 @@ function App() {
     }
     setSellerSaving(true);
 
-    let logoUrl = sellerForm.logoUrl.trim() || null;
-    if (sellerLogoFile) {
-      if (!sellerLogoFile.type.startsWith("image/")) {
-        setSellerError("Please choose an image file for your logo.");
-        setSellerSaving(false);
-        return;
-      }
-      if (sellerLogoFile.size > 5 * 1024 * 1024) {
-        setSellerError("Your logo must be 5 MB or smaller.");
-        setSellerSaving(false);
-        return;
-      }
-      const ext = sellerLogoFile.name.split(".").pop()?.toLowerCase() || "jpg";
-      const path = `${user.id}/logo-${Date.now()}.${ext}`;
-      const { error: uploadError } = await supabase.storage.from("product-images").upload(path, sellerLogoFile, { contentType: sellerLogoFile.type, upsert: false });
-      if (uploadError) {
-        setSellerError(uploadError.message || "We couldn't upload your logo.");
-        setSellerSaving(false);
-        return;
-      }
-      logoUrl = supabase.storage.from("product-images").getPublicUrl(path).data.publicUrl;
-    }
-
     const payload = {
       user_id: user.id,
       shop_name: sellerForm.shopName.trim(),
       bio: sellerForm.bio.trim() || null,
       phone: sellerForm.phone.trim() || null,
-      logo_url: logoUrl,
+      logo_url: sellerForm.logoUrl.trim() || null,
     };
 
     const { data, error } = await supabase
@@ -2174,8 +1858,6 @@ function App() {
       productionDays: product.production_days ?? "",
       imageUrl: product.image_url || "",
     });
-    setProductImageFile(null);
-    setProductImagePreview(product.image_url || "");
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
@@ -2190,28 +1872,15 @@ function App() {
     }
 
     setSellerSaving(true);
-
-    const sellerId = sellerProfile?.id || (await supabase
-      .from("seller_profiles")
-      .select("id")
-      .eq("user_id", user.id)
-      .maybeSingle()).data?.id;
-
-    if (!sellerId) {
-      setSellerError("Your seller profile could not be found.");
-      setSellerSaving(false);
-      return;
-    }
-
     const payload = {
       name: productForm.name.trim(),
       description: productForm.description.trim() || null,
       price: Number(productForm.price),
-      stock: Number(productForm.stock || 0),
+      stock: productForm.madeToOrder ? null : Number(productForm.stock || 0),
       category_id: productForm.categoryId,
       made_to_order: Boolean(productForm.madeToOrder),
       production_days: productForm.madeToOrder ? Number(productForm.productionDays || 0) : null,
-      seller_id: sellerId,
+      seller_id: user.id,
     };
 
     let productId = sellerEditingProduct?.id;
@@ -2223,7 +1892,7 @@ function App() {
         .from("products")
         .update(payload)
         .eq("id", productId)
-        .eq("seller_id", sellerId)
+        .eq("seller_id", user.id)
         .select()
         .single());
     } else {
@@ -2241,48 +1910,19 @@ function App() {
       return;
     }
 
-    if (productId) {
-      let imageUrl = productForm.imageUrl.trim();
+    if (productForm.imageUrl.trim() && productId) {
+      const { data: existingImage } = await supabase
+        .from("images")
+        .select("id")
+        .eq("product_id", productId)
+        .order("sort_order", { ascending: true })
+        .limit(1)
+        .maybeSingle();
 
-      if (productImageFile) {
-        if (!productImageFile.type.startsWith("image/")) {
-          setSellerError("Please choose an image file for your product.");
-          setSellerSaving(false);
-          return;
-        }
-        if (productImageFile.size > 5 * 1024 * 1024) {
-          setSellerError("Your product image must be 5 MB or smaller.");
-          setSellerSaving(false);
-          return;
-        }
-        const ext = productImageFile.name.split(".").pop()?.toLowerCase() || "jpg";
-        const path = `${user.id}/product-${productId}-${Date.now()}.${ext}`;
-        const { error: uploadError } = await supabase.storage.from("product-images").upload(path, productImageFile, { contentType: productImageFile.type, upsert: false });
-        if (uploadError) {
-          setSellerError(uploadError.message || "We couldn't upload your product image.");
-          setSellerSaving(false);
-          return;
-        }
-        imageUrl = supabase.storage.from("product-images").getPublicUrl(path).data.publicUrl;
-      }
-
-      if (imageUrl) {
-        const { data: existingImage } = await supabase.from("images").select("id").eq("product_id", productId).order("sort_order", { ascending: true }).limit(1).maybeSingle();
-        if (existingImage?.id) {
-          const { error: imageUpdateError } = await supabase.from("images").update({ image_url: imageUrl }).eq("id", existingImage.id);
-          if (imageUpdateError) {
-            setSellerError(imageUpdateError.message || "We couldn't save the product image.");
-            setSellerSaving(false);
-            return;
-          }
-        } else {
-          const { error: imageInsertError } = await supabase.from("images").insert({ product_id: productId, image_url: imageUrl, sort_order: 0 });
-          if (imageInsertError) {
-            setSellerError(imageInsertError.message || "We couldn't save the product image.");
-            setSellerSaving(false);
-            return;
-          }
-        }
+      if (existingImage?.id) {
+        await supabase.from("images").update({ image_url: productForm.imageUrl.trim() }).eq("id", existingImage.id);
+      } else {
+        await supabase.from("images").insert({ product_id: productId, image_url: productForm.imageUrl.trim(), sort_order: 0 });
       }
     }
 
@@ -2295,22 +1935,11 @@ function App() {
   const deleteSellerProduct = async (productId) => {
     if (!window.confirm("Remove this product from your shop?")) return;
     setSellerError("");
-    const sellerId = sellerProfile?.id || (await supabase
-      .from("seller_profiles")
-      .select("id")
-      .eq("user_id", user.id)
-      .maybeSingle()).data?.id;
-
-    if (!sellerId) {
-      setSellerError("Your seller profile could not be found.");
-      return;
-    }
-
     const { error } = await supabase
       .from("products")
       .delete()
       .eq("id", productId)
-      .eq("seller_id", sellerId);
+      .eq("seller_id", user.id);
     if (error) {
       setSellerError(error.message || "We couldn't remove this product.");
       return;
@@ -2365,8 +1994,7 @@ function App() {
               <label>Shop name<input value={sellerForm.shopName} onChange={(e) => setSellerForm({ ...sellerForm, shopName: e.target.value })} placeholder="e.g. Mithi Studio" /></label>
               <label>Shop bio<textarea value={sellerForm.bio} onChange={(e) => setSellerForm({ ...sellerForm, bio: e.target.value })} placeholder="Tell LOOPA shoppers what makes your pieces special." rows="4" /></label>
               <label>Phone number<input value={sellerForm.phone} onChange={(e) => setSellerForm({ ...sellerForm, phone: e.target.value })} placeholder="07XX XXX XXX" /></label>
-              <label>Shop logo <span className="optional-label">Optional</span><input type="file" accept="image/*" onChange={(e) => { const file = e.target.files?.[0]; if (!file) return; setSellerLogoFile(file); setSellerLogoPreview(URL.createObjectURL(file)); }} /></label>
-              {(sellerLogoPreview || sellerForm.logoUrl) && <img src={sellerLogoPreview || sellerForm.logoUrl} alt="Shop logo preview" style={{ width: 88, height: 88, objectFit: "cover", borderRadius: 16, marginTop: 8 }} />}
+              <label>Shop logo URL <span className="optional-label">Optional</span><input value={sellerForm.logoUrl} onChange={(e) => setSellerForm({ ...sellerForm, logoUrl: e.target.value })} placeholder="https://..." /></label>
               <button className="seller-primary-button" disabled={sellerSaving}>{sellerSaving ? "Saving..." : "Save Shop Profile"}</button>
             </form>
           </section>
@@ -2385,8 +2013,7 @@ function App() {
               </div>
               <label className="seller-checkbox"><input type="checkbox" checked={productForm.madeToOrder} onChange={(e) => setProductForm({ ...productForm, madeToOrder: e.target.checked })} /><span>Made to order</span></label>
               {!productForm.madeToOrder ? <label>Stock<input type="number" min="0" step="1" value={productForm.stock} onChange={(e) => setProductForm({ ...productForm, stock: e.target.value })} placeholder="10" /></label> : <label>Production days<input type="number" min="1" step="1" value={productForm.productionDays} onChange={(e) => setProductForm({ ...productForm, productionDays: e.target.value })} placeholder="7" /></label>}
-              <label>Product photo <span className="optional-label">Choose a photo</span><input type="file" accept="image/*" onChange={(e) => { const file = e.target.files?.[0]; if (!file) return; setProductImageFile(file); setProductImagePreview(URL.createObjectURL(file)); }} /></label>
-              {(productImagePreview || productForm.imageUrl) && <img src={productImagePreview || productForm.imageUrl} alt="Product preview" style={{ width: 120, height: 120, objectFit: "cover", borderRadius: 16, marginTop: 8 }} />}
+              <label>Product image URL <span className="optional-label">Optional</span><input value={productForm.imageUrl} onChange={(e) => setProductForm({ ...productForm, imageUrl: e.target.value })} placeholder="https://..." /></label>
               <div className="seller-form-actions"><button className="seller-primary-button" disabled={sellerSaving}>{sellerSaving ? "Saving..." : sellerEditingProduct ? "Update Product" : "Submit Product"}</button>{sellerEditingProduct && <button type="button" className="seller-secondary-button" onClick={resetSellerProductForm}>Cancel</button>}</div>
               {!sellerEditingProduct && <p className="seller-note">New products start as pending so they can be reviewed before appearing in the public shop.</p>}
             </form>
@@ -2508,8 +2135,7 @@ function App() {
     if (!selectedProduct) return null;
 
     const product = selectedProduct;
-    const imageUrl = getProductImageUrl(product);
-    const hasImage = Boolean(imageUrl);
+    const hasImage = Boolean(product.image_url);
     const isOutOfStock =
       product.stock !== null && product.stock !== undefined && Number(product.stock) <= 0;
     const stockLimit =
@@ -2540,16 +2166,12 @@ function App() {
           <div className="product-detail-media">
             {hasImage ? (
               <img
-                src={imageUrl}
+                src={product.image_url}
                 alt={product.name}
                 className="product-detail-photo"
-                onError={(event) => {
-                  event.currentTarget.style.display = "none";
-                  event.currentTarget.nextElementSibling?.classList.remove("image-hidden");
-                }}
               />
             ) : (
-              <div className="product-detail-placeholder image-hidden">
+              <div className="product-detail-placeholder">
                 <span>LOOPA</span>
                 <small>IMAGE COMING SOON</small>
               </div>
@@ -2724,20 +2346,8 @@ function App() {
      PRODUCT CARD
   ---------------------------------------- */
 
-  const getProductImageUrl = (product) => {
-    if (!product) return "";
-    return (
-      product.image_url ||
-      product.imageUrl ||
-      product.images?.[0]?.image_url ||
-      product.images?.[0]?.imageUrl ||
-      ""
-    );
-  };
-
   const ProductCard = ({ product }) => {
-    const imageUrl = getProductImageUrl(product);
-    const hasImage = Boolean(imageUrl);
+    const hasImage = Boolean(product.image_url);
     const isOutOfStock =
       product.stock !== null && product.stock <= 0;
 
@@ -2782,16 +2392,12 @@ function App() {
           {hasImage ? (
             <img
               className="product-photo"
-              src={imageUrl}
+              src={product.image_url}
               alt={product.name}
               loading="lazy"
-              onError={(event) => {
-                event.currentTarget.style.display = "none";
-                event.currentTarget.nextElementSibling?.classList.remove("image-hidden");
-              }}
             />
           ) : (
-            <div className="product-placeholder image-hidden" aria-hidden="true">
+            <div className="product-placeholder" aria-hidden="true">
               <span>LOOPA</span>
               <small>IMAGE COMING SOON</small>
             </div>
@@ -3196,7 +2802,7 @@ function App() {
               <ChevronRight size={17} />
             </button>
 
-            <button type="button" onClick={openWishlist}>
+            <button type="button" onClick={() => setPage("home")}>
               <Heart size={19} />
               My Wishlist
               <ChevronRight size={17} />
@@ -3215,38 +2821,6 @@ function App() {
             Log Out
           </button>
         </div>
-      </main>
-    );
-  };
-
-  /* ---------------------------------------
-     WISHLIST PAGE
-  ---------------------------------------- */
-
-  const WishlistPage = () => {
-    const savedProducts = dbProducts.filter((product) => wishlist.includes(product.id));
-
-    return (
-      <main className="shop-page">
-        <div className="shop-header">
-          <button className="bag-back" onClick={() => setPage("account")}>← Back to Account</button>
-          <p className="standard-eyebrow">MY LOOPA</p>
-          <h1>My Wishlist</h1>
-          <p>Your saved LOOPA favorites, all in one place.</p>
-        </div>
-
-        {savedProducts.length === 0 ? (
-          <section className="orders-empty-card">
-            <Heart size={42} strokeWidth={1.5} />
-            <h2>Your wishlist is empty</h2>
-            <p>Tap the heart on any product you love and it will appear here.</p>
-            <button className="primary-button" onClick={() => { setPage("home"); setActiveCategory("Little Loves"); }}>Shop LOOPA</button>
-          </section>
-        ) : (
-          <section className="product-grid">
-            {savedProducts.map((product) => ProductCard({ product }))}
-          </section>
-        )}
       </main>
     );
   };
@@ -3347,7 +2921,7 @@ function App() {
             <div className="order-detail-status-row">
               <strong>{prettyOrderStatus(order.status)}</strong>
               <span className={`order-status order-status-${String(order.status || "pending").toLowerCase().replace(/[^a-z0-9]+/g, "-")}`}>
-                {"Pending"}
+                {order.payment_status ? prettyOrderStatus(order.payment_status) : "Pending"}
               </span>
             </div>
             <div className="order-timeline">
@@ -3367,8 +2941,8 @@ function App() {
 
           <section className="order-detail-card">
             <p className="standard-eyebrow">PAYMENT</p>
-            <h2>{"Payment method"}</h2>
-            <p className="order-muted">Payment status will be confirmed with your order.</p>
+            <h2>{order.payment_method || "Payment"}</h2>
+            <p className="order-muted">Payment status: {prettyOrderStatus(order.payment_status || "pending")}</p>
           </section>
 
           <section className="order-detail-card order-total-card">
@@ -3892,18 +3466,6 @@ function App() {
 
             </div>
 
-            {user && profile?.role === "admin" && (
-              <button
-                className="admin-header-button"
-                onClick={openAdminApproval}
-                type="button"
-                aria-label="Admin Approval"
-                title="Admin Approval"
-              >
-                Admin Approval
-              </button>
-            )}
-
             {user && (
               <button
                 className="icon-button seller-header-button"
@@ -3931,7 +3493,11 @@ function App() {
 
             <button
               className="icon-button"
-              onClick={openWishlist}
+              onClick={() => {
+                if (!user) {
+                  openAuth("login");
+                }
+              }}
               aria-label="Wishlist"
             >
               <Heart size={20} />
@@ -3971,10 +3537,6 @@ function App() {
 
       </header>
 
-      {/* ADMIN APPROVAL */}
-
-      {page === "admin" && user && AdminApprovalPage()}
-
       {/* SELLER DASHBOARD */}
 
       {page === "seller" && user && SellerDashboardPage()}
@@ -3993,7 +3555,6 @@ function App() {
 
       {/* ORDERS */}
 
-      {page === "wishlist" && user && WishlistPage()}
       {page === "orders" && user && OrdersPage()}
 
       {/* ORDER DETAIL */}
