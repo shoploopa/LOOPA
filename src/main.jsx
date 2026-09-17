@@ -1186,6 +1186,7 @@ function App() {
 
     const orderPayload = {
       customer_id: user.id,
+      order_number: `LOOPA-${Date.now()}-${Math.random().toString(36).slice(2, 8).toUpperCase()}`,
       total_amount: cartSubtotal,
       status: "pending",
       delivery_address: shippingAddress,
