@@ -1210,11 +1210,50 @@ function App() {
       return;
     }
 
-    // Save each purchased item so creators can see their sales.
+    // Save each purchased item with the seller_profile ID stored on the product.
+    // The cart can contain an older/stale product object, so do not trust
+    // item.seller_id from local cart state. Fetch the current seller IDs
+    // directly from products before creating order_items.
+    const cartProductIds = cart.map((item) => item.id).filter(Boolean);
+
+    const { data: orderProducts, error: orderProductsError } = await supabase
+      .from("products")
+      .select("id, seller_id")
+      .in("id", cartProductIds);
+
+    if (orderProductsError) {
+      console.error("LOOPA order products lookup error:", orderProductsError);
+      setCheckoutError(
+        orderProductsError.message ||
+          "We couldn't verify the items in your order. Please try again."
+      );
+      setPlacedOrder(data);
+      setCheckoutSubmitting(false);
+      return;
+    }
+
+    const sellerByProductId = Object.fromEntries(
+      (orderProducts || []).map((product) => [product.id, product.seller_id])
+    );
+
+    const missingProduct = cart.find(
+      (item) => !item.id || !sellerByProductId[item.id]
+    );
+
+    if (missingProduct) {
+      console.error("LOOPA order item seller lookup failed:", missingProduct);
+      setCheckoutError(
+        "One of the items in your bag is no longer available. Please remove it and add it again before checking out."
+      );
+      setPlacedOrder(data);
+      setCheckoutSubmitting(false);
+      return;
+    }
+
     const orderItems = cart.map((item) => ({
       order_id: data.id,
       product_id: item.id,
-      seller_id: item.seller_id || null,
+      seller_id: sellerByProductId[item.id],
       quantity: item.quantity || 1,
       unit_price: Number(item.price || 0),
     }));
@@ -1222,6 +1261,17 @@ function App() {
     const { error: orderItemsError } = await supabase
       .from("order_items")
       .insert(orderItems);
+
+    if (orderItemsError) {
+      console.error("LOOPA order items error:", orderItemsError);
+      setCheckoutError(
+        orderItemsError.message ||
+          "We couldn't save the items in your order. Please try again."
+      );
+      setPlacedOrder(data);
+      setCheckoutSubmitting(false);
+      return;
+    }
 
     if (orderItemsError) {
       console.error("LOOPA order items error:", orderItemsError);
