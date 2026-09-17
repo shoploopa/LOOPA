@@ -1218,7 +1218,7 @@ function App() {
 
     const { data: orderProducts, error: orderProductsError } = await supabase
       .from("products")
-      .select("id, seller_id")
+      .select("id, name, seller_id")
       .in("id", cartProductIds);
 
     if (orderProductsError) {
@@ -1232,12 +1232,12 @@ function App() {
       return;
     }
 
-    const sellerByProductId = Object.fromEntries(
-      (orderProducts || []).map((product) => [product.id, product.seller_id])
+    const productById = Object.fromEntries(
+      (orderProducts || []).map((product) => [product.id, product])
     );
 
     const missingProduct = cart.find(
-      (item) => !item.id || !sellerByProductId[item.id]
+      (item) => !item.id || !productById[item.id]?.seller_id || !productById[item.id]?.name
     );
 
     if (missingProduct) {
@@ -1253,7 +1253,8 @@ function App() {
     const orderItems = cart.map((item) => ({
       order_id: data.id,
       product_id: item.id,
-      seller_id: sellerByProductId[item.id],
+      product_name: productById[item.id].name,
+      seller_id: productById[item.id].seller_id,
       quantity: item.quantity || 1,
       unit_price: Number(item.price || 0),
     }));
@@ -1267,18 +1268,6 @@ function App() {
       setCheckoutError(
         orderItemsError.message ||
           "We couldn't save the items in your order. Please try again."
-      );
-      setPlacedOrder(data);
-      setCheckoutSubmitting(false);
-      return;
-    }
-
-    if (orderItemsError) {
-      console.error("LOOPA order items error:", orderItemsError);
-      // Keep the order itself intact, but tell the shopper that order tracking
-      // may be incomplete until the order_items table/RLS is configured.
-      setCheckoutError(
-        "Your order was created, but we couldn't save its item details. Please contact LOOPA support before placing another order."
       );
       setPlacedOrder(data);
       setCheckoutSubmitting(false);
