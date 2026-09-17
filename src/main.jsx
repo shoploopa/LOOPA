@@ -3306,7 +3306,7 @@ function App() {
             <div className="order-detail-status-row">
               <strong>{prettyOrderStatus(order.status)}</strong>
               <span className={`order-status order-status-${String(order.status || "pending").toLowerCase().replace(/[^a-z0-9]+/g, "-")}`}>
-                {order.payment_status ? prettyOrderStatus(order.payment_status) : "Pending"}
+                {"Pending"}
               </span>
             </div>
             <div className="order-timeline">
@@ -3326,7 +3326,7 @@ function App() {
 
           <section className="order-detail-card">
             <p className="standard-eyebrow">PAYMENT</p>
-            <h2>{order.payment_method || "Payment method selected at checkout"}</h2>
+            <h2>{"Payment method"}</h2>
             <p className="order-muted">Payment status will be confirmed with your order.</p>
           </section>
 
