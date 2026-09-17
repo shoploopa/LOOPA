@@ -2346,7 +2346,7 @@ function App() {
               </div>
               <label className="seller-checkbox"><input type="checkbox" checked={productForm.madeToOrder} onChange={(e) => setProductForm({ ...productForm, madeToOrder: e.target.checked })} /><span>Made to order</span></label>
               {!productForm.madeToOrder ? <label>Stock<input type="number" min="0" step="1" value={productForm.stock} onChange={(e) => setProductForm({ ...productForm, stock: e.target.value })} placeholder="10" /></label> : <label>Production days<input type="number" min="1" step="1" value={productForm.productionDays} onChange={(e) => setProductForm({ ...productForm, productionDays: e.target.value })} placeholder="7" /></label>}
-              <label>Product photo <span className="optional-label">Optional</span><input type="file" accept="image/*" onChange={(e) => { const file = e.target.files?.[0]; if (!file) return; setProductImageFile(file); setProductImagePreview(URL.createObjectURL(file)); }} /></label>
+              <label>Product photo <span className="optional-label">Choose a photo</span><input type="file" accept="image/*" onChange={(e) => { const file = e.target.files?.[0]; if (!file) return; setProductImageFile(file); setProductImagePreview(URL.createObjectURL(file)); }} /></label>
               {(productImagePreview || productForm.imageUrl) && <img src={productImagePreview || productForm.imageUrl} alt="Product preview" style={{ width: 120, height: 120, objectFit: "cover", borderRadius: 16, marginTop: 8 }} />}
               <div className="seller-form-actions"><button className="seller-primary-button" disabled={sellerSaving}>{sellerSaving ? "Saving..." : sellerEditingProduct ? "Update Product" : "Submit Product"}</button>{sellerEditingProduct && <button type="button" className="seller-secondary-button" onClick={resetSellerProductForm}>Cancel</button>}</div>
               {!sellerEditingProduct && <p className="seller-note">New products start as pending so they can be reviewed before appearing in the public shop.</p>}
@@ -2469,7 +2469,8 @@ function App() {
     if (!selectedProduct) return null;
 
     const product = selectedProduct;
-    const hasImage = Boolean(product.image_url);
+    const imageUrl = getProductImageUrl(product);
+    const hasImage = Boolean(imageUrl);
     const isOutOfStock =
       product.stock !== null && product.stock !== undefined && Number(product.stock) <= 0;
     const stockLimit =
@@ -2500,12 +2501,16 @@ function App() {
           <div className="product-detail-media">
             {hasImage ? (
               <img
-                src={product.image_url}
+                src={imageUrl}
                 alt={product.name}
                 className="product-detail-photo"
+                onError={(event) => {
+                  event.currentTarget.style.display = "none";
+                  event.currentTarget.nextElementSibling?.classList.remove("image-hidden");
+                }}
               />
             ) : (
-              <div className="product-detail-placeholder">
+              <div className="product-detail-placeholder image-hidden">
                 <span>LOOPA</span>
                 <small>IMAGE COMING SOON</small>
               </div>
@@ -2680,8 +2685,20 @@ function App() {
      PRODUCT CARD
   ---------------------------------------- */
 
+  const getProductImageUrl = (product) => {
+    if (!product) return "";
+    return (
+      product.image_url ||
+      product.imageUrl ||
+      product.images?.[0]?.image_url ||
+      product.images?.[0]?.imageUrl ||
+      ""
+    );
+  };
+
   const ProductCard = ({ product }) => {
-    const hasImage = Boolean(product.image_url);
+    const imageUrl = getProductImageUrl(product);
+    const hasImage = Boolean(imageUrl);
     const isOutOfStock =
       product.stock !== null && product.stock <= 0;
 
@@ -2726,12 +2743,16 @@ function App() {
           {hasImage ? (
             <img
               className="product-photo"
-              src={product.image_url}
+              src={imageUrl}
               alt={product.name}
               loading="lazy"
+              onError={(event) => {
+                event.currentTarget.style.display = "none";
+                event.currentTarget.nextElementSibling?.classList.remove("image-hidden");
+              }}
             />
           ) : (
-            <div className="product-placeholder" aria-hidden="true">
+            <div className="product-placeholder image-hidden" aria-hidden="true">
               <span>LOOPA</span>
               <small>IMAGE COMING SOON</small>
             </div>
